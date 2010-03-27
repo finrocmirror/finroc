@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    description_builder.pl
+# \file    configure
 #
 # \author  Tobias Foehst
 #
@@ -32,19 +32,45 @@ use Data::Dumper;
 # config file
 my $config_filename = ".finroc.conf";
 
+############################
+##  Command line options  ##
+############################
+
 # command line options
 my %command_line_options;
 my $result = GetOptions \%command_line_options,	"verbose+", "help", "project:s", "target:s", "local=s";
 
 sub INFOMSG($) { print STDERR @_; }
+sub ERRORMSG($) { print STDERR @_; exit 1; }
 sub DEBUGMSG($) { print STDERR @_ if defined $command_line_options{"verbose"}; }
 
 DEBUGMSG sprintf "command line options:\n%s\n", Dumper(\%command_line_options);
+
+# handle illegal values
+if (defined $command_line_options{"project"})
+{
+    ERRORMSG sprintf "Project `%s' does not exist!\n", $command_line_options{"project"} unless -d sprintf "projects/%s", $command_line_options{"project"};
+}
+#if (defined $command_line_options{"target"})
+#{
+#    ERRORMSG sprintf "Target `%s' does not exist!\n", $command_line_options{"target"} unless -f sprintf "etc/targets/%s", $command_line_options{"target"};
+#}
+if (defined $command_line_options{"local"})
+{
+    ERRORMSG "Possible values for --local: yes|no\n" unless $command_line_options{"local"} =~ /yes|no/;
+}
+
+
+
+#############
+##  Usage  ##
+#############
 
 # print help and terminate if requested
 if (defined $command_line_options{"help"})
 {
     sub PrintOption($$) { INFOMSG sprintf "  %-35s %s\n", @_; }
+
     INFOMSG "usage: $0 [options]\n";
     INFOMSG "options:\n";
     PrintOption "-h, --help", "show this help";
@@ -114,6 +140,7 @@ DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper(\%configurati
 ##########################
 
 sub PrintSetting($$) { INFOMSG sprintf " %-14s %s\n", shift().":", shift; }
+
 INFOMSG "----------------------------------\n";
 INFOMSG " Finroc Settings\n";
 INFOMSG "----------------------------------\n";
