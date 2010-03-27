@@ -1,0 +1,189 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    description_builder.pl
+#
+# \author  Tobias Foehst
+#
+# \date    2010-03-26
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Getopt::Long;
+use Data::Dumper;
+
+
+# config file
+my $config_filename = ".finroc.conf";
+
+# command line options
+my %command_line_options;
+my $result = GetOptions \%command_line_options,	"verbose+", "help", "project:s", "target:s", "local=s";
+
+sub INFOMSG($) { print STDERR @_; }
+sub DEBUGMSG($) { print STDERR @_ if defined $command_line_options{"verbose"}; }
+
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper(\%command_line_options);
+
+# print help and terminate if requested
+if (defined $command_line_options{"help"})
+{
+    sub PrintOption($$) { INFOMSG sprintf "  %-35s %s\n", @_; }
+    INFOMSG "usage: $0 [options]\n";
+    INFOMSG "options:\n";
+    PrintOption "-h, --help", "show this help";
+    PrintOption "-p PROJECT, --project=PROJECT", "override project name";
+    PrintOption "-t TARGETNAME, --target=TARGETNAME", "target name - default debug";
+    PrintOption "-l [yes|no], --local=[yes|no]", "use only local source files? - default yes";
+    INFOMSG "\n";
+    exit 0;
+}
+
+
+
+###########################
+##  Build configuration  ##
+###########################
+
+# read configuration from file
+my %configuration;
+open CONFIG, "<$config_filename" and eval
+{
+    while (<CONFIG>)
+    {
+	chomp;
+	my ($option, $value) = split " = ";
+	$configuration{$option} = $value;
+    }
+    close CONFIG;
+};
+
+DEBUGMSG sprintf "configuration from file:\n%s\n", Dumper(\%configuration);
+
+# overwrite settings using command line options
+foreach my $option (keys %command_line_options)
+{
+    next if $option =~ /help|verbose/;
+    $configuration{$option} = $command_line_options{$option};
+}
+
+# default values if not set
+$configuration{"project"} = "test" unless defined $configuration{"project"} and $configuration{"project"} ne "";
+$configuration{"target"} = "debug" unless defined $configuration{"target"} and $configuration{"target"} ne "";
+$configuration{"local"} = "yes" unless defined $configuration{"local"};
+
+DEBUGMSG sprintf "resulting configuration:\n%s\n", Dumper(\%configuration);
+
+# write configuration to file
+open CONFIG, ">$config_filename" or die "Could not write to `$config_filename'!";
+foreach my $option (keys %configuration)
+{
+    printf CONFIG "%s = %s\n", $option, $configuration{$option};
+}
+close CONFIG;
+
+# additional configuration
+use Config;
+$configuration{"target"} = sprintf "%s_%s", $Config{archname}, $configuration{"target"};
+use Cwd;
+$configuration{"home"} = getcwd;
+$configuration{"project_home"} = sprintf "%s/projects/%s", $configuration{"home"}, $configuration{"project"};
+
+DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper(\%configuration);
+
+
+
+##########################
+##  Print new settings  ##
+##########################
+
+sub PrintSetting($$) { INFOMSG sprintf " %-14s %s\n", shift().":", shift; }
+INFOMSG "----------------------------------\n";
+INFOMSG " Finroc Settings\n";
+INFOMSG "----------------------------------\n";
+PrintSetting "Home", $configuration{"home"};
+PrintSetting "Project", $configuration{"project"};
+PrintSetting "Project Home", $configuration{"project_home"};
+PrintSetting "Target", $configuration{"target"};
+PrintSetting "Local Build", $configuration{"local"};
+INFOMSG "----------------------------------\n";
+
+
+
+#########################
+##  Setup environment  ##
+#########################
+
+sub SetEnvironment($) {
+    my ($command) = @_;
+    print "$command;\n";
+    DEBUGMSG "$command;\n";
+}
+
+# FINROC_HOME
+SetEnvironment sprintf "export FINROC_HOME=%s", $configuration{"home"};
+
+# FINROC_PROJECT
+SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"};
+
+# FINROC_PROJECT_HOME
+SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"};
+
+# FINROC_TARGET
+SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
+
+# FINROC_LOCAL
+SetEnvironment sprintf "export FINROC_LOCAL=%s", $configuration{"local"};
+
+# PATH
+my (@path, @finroc_path, %finroc_path_elements);
+push @finroc_path, sprintf "%s/export/%s/bin", $configuration{"home"}, $configuration{"target"};
+push @finroc_path, sprintf "%s/script", $configuration{"project_home"};
+push @finroc_path, sprintf "%s/scripts", $configuration{"project_home"};
+push @finroc_path, sprintf "%s/make_builder/script", $configuration{"home"};
+push @finroc_path, sprintf "%s/make_builder/scripts", $configuration{"home"};
+push @finroc_path, sprintf "%s/scripts", $configuration{"home"};
+push @finroc_path, "/usr/local/share/finroc/bin" if $configuration{"local"} eq "no";
+
+if (exists $ENV{"PATH"})
+{
+    %finroc_path_elements = map { $_ => 1 } (split ":", $ENV{"FINROC_PATH"}) if exists $ENV{"FINROC_PATH"};
+    eval { push @path, $_ unless exists $finroc_path_elements{$_} } foreach (split ":", $ENV{"PATH"});
+}
+
+SetEnvironment sprintf "export PATH=%s", join ":", @path;
+SetEnvironment sprintf "export FINROC_PATH=%s", join ":", @finroc_path;
+SetEnvironment 'export PATH=$FINROC_PATH:$PATH';
+
+# LD_LIBRARY_PATH
+my (@ld_library_path, @finroc_ld_library_path, %finroc_ld_library_path_elements);
+push @finroc_ld_library_path, sprintf "%s/export/%s/lib", $configuration{"home"}, $configuration{"target"};
+
+if (exists $ENV{"LD_LIBRARY_PATH"})
+{
+    %finroc_ld_library_path_elements = map { $_ => 1 } (split ":", $ENV{"FINROC_LD_LIBRARY_PATH"}) if exists $ENV{"FINROC_LD_LIBRARY_PATH"};
+    eval { push @ld_library_path, $_ unless exists $finroc_ld_library_path_elements{$_} } foreach (split ":", $ENV{"LD_LIBRARY_PATH"});
+}
+
+SetEnvironment sprintf "export LD_LIBRARY_PATH=%s", join ":", @ld_library_path;
+SetEnvironment sprintf "export FINROC_LD_LIBRARY_PATH=%s", join ":", @finroc_ld_library_path;
+SetEnvironment 'export LD_LIBRARY_PATH=$FINROC_LD_LIBRARY_PATH:$LD_LIBRARY_PATH';
+
+
+exit 0;
