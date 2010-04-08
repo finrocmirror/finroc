@@ -52,7 +52,7 @@ if (defined $command_line_options{"project"})
     unless (-d sprintf "projects/%s", $command_line_options{"project"})
     {
         INFOMSG sprintf "\nWarning: Project `%s' does not exist!\n\n", $command_line_options{"project"};
-	$command_line_options{"project"} = undef;
+        $command_line_options{"project"} = undef;
     }
 }
 #if (defined $command_line_options{"target"})
@@ -73,14 +73,15 @@ if (defined $command_line_options{"local"})
 # print help and terminate if requested
 if (defined $command_line_options{"help"})
 {
-    sub PrintOption($$) { INFOMSG sprintf "  %-35s %s\n", @_; }
+    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
 
     INFOMSG "usage: $0 [options]\n";
     INFOMSG "options:\n";
     PrintOption "-h, --help", "show this help";
+    PrintOption "-v, --verbose", "more output for debugging";
     PrintOption "-p PROJECT, --project=PROJECT", "override project name";
-    PrintOption "-t TARGETNAME, --target=TARGETNAME", "target name - default debug";
-    PrintOption "-l [yes|no], --local=[yes|no]", "use only local source files? - default yes";
+    PrintOption "-t TARGET, --target=TARGET", "target name - default: debug";
+    PrintOption "-l [yes|no], --local=[yes|no]", "use only local source files? - default: yes";
     INFOMSG "\n";
     exit 0;
 }
@@ -97,9 +98,9 @@ open CONFIG, "<$config_filename" and eval
 {
     while (<CONFIG>)
     {
-	chomp;
-	my ($option, $value) = split " = ";
-	$configuration{$option} = $value;
+        chomp;
+        my ($option, $value) = split " = ";
+        $configuration{$option} = $value;
     }
     close CONFIG;
 };
@@ -146,7 +147,7 @@ DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper(\%configurati
 sub PrintSetting($$) { INFOMSG sprintf " %-14s %s\n", shift().":", shift; }
 
 INFOMSG "----------------------------------\n";
-INFOMSG " Finroc Settings\n";
+INFOMSG " FINROC Settings\n";
 INFOMSG "----------------------------------\n";
 PrintSetting "Home", $configuration{"home"};
 PrintSetting "Project", defined $configuration{"project"} ? $configuration{"project"} : "<unknown>";
@@ -213,6 +214,7 @@ if (exists $ENV{"LD_LIBRARY_PATH"})
 SetEnvironment sprintf "export LD_LIBRARY_PATH=%s", join ":", @ld_library_path;
 SetEnvironment sprintf "export FINROC_LD_LIBRARY_PATH=%s", join ":", @finroc_ld_library_path;
 SetEnvironment 'export LD_LIBRARY_PATH=$FINROC_LD_LIBRARY_PATH:$LD_LIBRARY_PATH';
+
 
 
 exit 0;

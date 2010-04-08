@@ -1,0 +1,241 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_get
+#
+# \author  Tobias Foehst
+#
+# \date    2010-04-07
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+
+use Getopt::Long;
+use Data::Dumper;
+
+
+
+############################
+##  Command line options  ##
+############################
+
+# command line options
+my %command_line_options;
+my $result = GetOptions \%command_line_options,	"verbose+", "help", "recurse", "optional=s";
+
+my $indent_level = 0;
+sub INFOMSG($) { print STDERR @_; }
+sub ERRORMSG($) { print STDERR @_; exit 1; }
+sub DEBUGMSG($) { printf STDERR "%".($indent_level*4)."s%s", "", @_ if defined $command_line_options{"verbose"}; }
+
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper(\%command_line_options);
+
+# handle illegal values
+if (defined $command_line_options{"optional"})
+{
+    ERRORMSG "Possible values for --optional: yes|no\n" unless $command_line_options{"optional"} =~ /yes|no/;
+    ERRORMSG "Option optional has no effect without --recurse\n" unless defined $command_line_options{"recurse"};
+}
+
+
+
+#############
+##  Usage  ##
+#############
+
+# print help and terminate if requested
+if (defined $command_line_options{"help"})
+{
+    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+
+    INFOMSG "usage: finroc_get [options] <repository_list>\n";
+    INFOMSG "options:\n";
+    PrintOption "-h, --help", "show this help";
+    PrintOption "-v, --verbose", "more output for debugging";
+    PrintOption "-r, --recursive", "get dependencies";
+    PrintOption "-o [yes|no], --optional=[yes|no]", "get optional dependencies? - default: ask";
+    INFOMSG "\n";
+    exit 0;
+}
+
+
+
+# non-optional arguments
+ERRORMSG "<repository_list> not specified. Use finroc_get --help for more information.\n" unless defined $ARGV[0];
+#ERRORMSG "Invalid number of arguments. Use finroc_get --help for more information.\n" unless $#ARGV != 1;
+
+
+
+############################
+##  Process repositories  ##
+############################
+
+my $processed_component = 0;
+
+
+
+sub ProcessDependencies($)
+{
+    my ($directory) = @_;
+
+    # build command to call finroc_get with same options
+    my @options;
+    push @options, "-v" if defined $command_line_options{"verbose"};
+    push @options, "-r" if defined $command_line_options{"recurse"};
+    push @options, sprintf "-o %s", $command_line_options{"optional"} if defined $command_line_options{"optional"};
+    my $command_prefix = sprintf "finroc_get %s", join " ", @options;
+
+    # read depedencies file and call finroc_get for every line
+    my $dependencies_filename = sprintf "%s/.dependencies", $directory;
+    open DEPENDENCIES, sprintf "<$dependencies_filename", $directory and eval {
+        while (<DEPENDENCIES>)
+        {
+            chomp;
+            my $command = sprintf "%s %s", $command_prefix, $_;
+            DEBUGMSG sprintf "Executing '%s'\n", $command;
+            system $command;
+        }
+        1;
+    } or DEBUGMSG sprintf "Could not read '%s'\n", $dependencies_filename;
+}
+
+
+
+sub Checkout($$)
+{
+    my ($repository, $directory) = @_;
+    $repository = sprintf "https://agrosy.informatik.uni-kl.de/svn/%s/trunk", $repository;
+    $directory = sprintf "%s/%s", $FINROC_HOME, $directory;
+    $processed_component = 1;
+    ERRORMSG sprintf "'%s' should be used for checkout but is a file\n", $directory if -f $directory;
+    if (-e $directory)
+    {
+        DEBUGMSG sprintf "'%s' already exists\n", $directory;
+    }
+    else
+    {
+        my $command = sprintf "svn co %s %s", $repository, $directory;
+        INFOMSG sprintf "Executing '%s'\n", $command;
+        system $command;
+    }
+
+    return unless defined $command_line_options{"recurse"};
+
+    DEBUGMSG "Processing dependencies ...\n";
+    $indent_level++;
+    ProcessDependencies $directory;
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+
+
+sub HandleCore($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing FINROC core component '%s' ...\n", $name;
+    $indent_level++;
+    Checkout "finroc_core_$name", "core/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandlePlugins($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing FINROC plugin '%s' ...\n", $name;
+    $indent_level++;
+    Checkout "finroc_plugins_$name", "plugins/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleLibraries($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing FINROC library '%s' ...\n", $name;
+    $indent_level++;
+    Checkout "finroc_libraries_$name", "libraries/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleProjects($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing FINROC project '%s' ...\n", $name;
+    $indent_level++;
+    Checkout "finroc_projects_$name", "projects/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleRRLib($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing RRLib '%s' ...\n", $name;
+    $indent_level++;
+    Checkout "rrlib_$name", "rrlib/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleFINROC($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing FINROC component '%s' ...\n", $name;
+    $indent_level++;
+    HandleCore $1 if $name =~ /^core_(.*)/;
+    HandlePlugins $1 if $name =~ /^plugins_(.*)/;
+    HandleLibraries $1 if $name =~ /^libraries_(.*)/;
+    HandleProjects $1 if $name =~ /^projects_(.*)/;
+    $indent_level--;
+    DEBUGMSG "Done.\n" if $processed_component;
+}
+
+sub HandleLocal($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Trying to process local component '%s' ...\n", $name;
+    $indent_level++;
+    my $directory = `pwd`;
+    HandleCore"$name" if $directory =~ /core$/;
+    HandlePlugins "$name" if $directory =~ /plugins$/;
+    HandleLibraries "$name" if $directory =~ /libraries$/;
+    HandleProjects "$name" if $directory =~ /projects$/;
+    HandleRRLib "$name" if $directory =~ /rrlib$/;
+    INFOMSG sprintf "Could not process '%s'\n", $name unless $processed_component;
+    $indent_level--;
+    DEBUGMSG "Done.\n" if $processed_component;
+}
+
+
+
+foreach my $name (@ARGV)
+{
+    $processed_component = 0;
+    HandleFINROC $1 if $name =~ /^finroc_(.*)/;
+    HandleRRLib $1 if $name =~ /^rrlib_(.*)/;
+    HandleLocal $name unless $processed_component;
+}
+
+
+
+exit 0;
