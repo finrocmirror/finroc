@@ -1,0 +1,7 @@
+#!/bin/bash
+cd $FINROC_HOME
+ls
+rm Makefile
+[ "x$FINROC_LOCAL" == "xno" ] && USE_SYSTEM_INSTALL=--usesysteminstall
+java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$FINROC_TARGET --combine $USE_SYSTEM_INSTALL "$@"
+
