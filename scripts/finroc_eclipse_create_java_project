@@ -1,0 +1,150 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    configure
+#
+# \author  Max Reichardt
+#
+# \date    2010-04-10
+#
+# Creates/updates Eclipse Java project for Finroc.
+# This project includes all java sources that are currently checked out.
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use XML::TreeBuilder;
+use XML::Element;
+use Cwd;
+use File::Copy::Recursive qw(dircopy);
+
+sub FindJavaSourceDirs($);
+
+# directory and file names
+my $cwd = getcwd();
+my $projectDir = "$cwd/eclipse_project_java";
+my $projectFile = "$projectDir/.project";
+my $classpathFile = "$projectDir/.classpath";
+my $templateDir = "$cwd/etc/eclipse/java_project_template";
+
+# copy Eclipse project directory from etc, if we don't have one yet
+unless (-e $projectDir) {
+    dircopy($templateDir, $projectDir) or die $!;
+}
+
+#exit 0;
+
+# Find all java source trees in finroc directory...
+my %javaSourceDirs = (); #(ought to be a set - so key and value are always identical)
+FindJavaSourceDirs("jcore");
+FindJavaSourceDirs("libraries");
+FindJavaSourceDirs("plugins");
+FindJavaSourceDirs("projects");
+FindJavaSourceDirs("rrlib");
+FindJavaSourceDirs("tools");
+
+# setup directories and stuff
+my @jdirs = sort keys %javaSourceDirs;
+
+# insert java source directories in .project file
+my $tree = XML::TreeBuilder->new; # empty tree
+$tree->parse_file($projectFile);
+my $linkedRes = $tree->find("linkedResources");
+$linkedRes->delete_content();
+foreach my $jdir (@jdirs) {
+    my $link = HTML::Element->new("link");
+    my $name = HTML::Element->new("name");
+    my $n = $jdir;
+    $n =~ s/\//_/g;  # replace slashes with underscores
+    $name->push_content($n);
+    my $type = HTML::Element->new("type");
+    $type->push_content("2");
+    my $location = HTML::Element->new("location");
+    $location->push_content("$cwd/$jdir");
+    $link->push_content("\n\t\t\t", $name, "\n\t\t\t", $type, "\n\t\t\t", $location, "\n\t\t");
+    $linkedRes->push_content("\n\t\t", $link);
+}
+open(my $out, ">", $projectFile) or die "Can't open $projectFile: $!";
+#print "And here it is, bizarrely rerendered as XML:\n", $tree->as_XML, "\n";
+print $out $tree->as_XML;
+close $out or die "$out: $!";
+$tree = $tree->delete;
+
+# insert java source directories in .classpath file
+$tree = XML::TreeBuilder->new; # empty tree
+$tree->parse_file($classpathFile);
+my $classpath = $tree->find("classpath");
+$classpath->delete_content();
+foreach my $jdir (@jdirs) {
+    my $n = $jdir;
+    $n =~ s/\//_/g;  # replace slashes with underscores
+    my $cpe = HTML::Element->new("classpathentry", "kind" => "src", "path" => $n);
+    $classpath->push_content("\n\t", $cpe);
+}
+$classpath->push_content("\n\t", HTML::Element->new("classpathentry", "kind" => "con", "path" => "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"));
+$classpath->push_content("\n\t", HTML::Element->new("classpathentry", "kind" => "output", "path" => "bin"), "\n");
+
+open($out, ">", $classpathFile) or die "Can't open $classpathFile: $!";
+#print "And here it is, bizarrely rerendered as XML:\n", $tree->as_XML, "\n";
+print $out $tree->as_XML;
+close $out or die "$out: $!";
+$tree = $tree->delete;
+
+
+
+# Extracts java package from java source file (takes file name as argument
+sub ExtractJavaPackage($) {
+    my $jfile = shift;
+    open(my $in, "<", $jfile) or die "Can't open $jfile: $!";
+    while (<$in>) {
+        if ($_ =~ /^package[\s]+(.+)[\s]*;/) {
+            close $in or die "$in: $!";
+            return $1;
+        }
+    }
+    close $in or die "$in: $!";
+    print "Couldn't find package statement in ", $jfile;
+    return "";
+}
+
+# If this method finds java sources in the specified directory or any sub-directory
+# it will add source root to %javaSourceDirs
+sub FindJavaSourceDirs($) {
+    my $curdir = shift;
+
+    # go through each subdir
+    my @subdirs = <$curdir/*>;
+    foreach (@subdirs) {
+        my $subdir = $_;
+        
+        # any Java sources here?
+        my @files = <$subdir/*.java>;
+        if (@files > 0) {
+            my $pkg = ExtractJavaPackage($files[0]);
+            unless ($pkg eq "") {
+                my $srcroot = substr($subdir, 0, length($subdir) - (length($pkg) + 1));
+                print "Found java source tree in ", $srcroot, "\n";
+                $javaSourceDirs{ $srcroot } = $srcroot;
+            }
+        } else {
+
+            # search deeper...
+            FindJavaSourceDirs($_);
+        }
+    }
+}

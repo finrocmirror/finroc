@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>jfinroc</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<linkedResources>
+		<!--link>
+			<name>finroc_jcore_utils</name>
+			<type>2</type>
+			<location>/home/max/rrlab/finroc/rrlib/finroc_jcore_utils</location>
+		</link-->
+		<!--link>
+			<name>jcore</name>
+			<type>2</type>
+			<location>/home/max/rrlab/finroc/jcore</location>
+		</link-->
+	</linkedResources>
+</projectDescription>
