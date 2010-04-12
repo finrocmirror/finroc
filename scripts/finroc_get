@@ -197,6 +197,16 @@ sub HandleLibraries($)
     DEBUGMSG "Done.\n";
 }
 
+sub HandleTools($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing FINROC tool '%s' ...\n", $name;
+    $indent_level++;
+    Checkout "finroc_tools_$name", "tools/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
 sub HandleProjects($)
 {
     my ($name) = @_;
