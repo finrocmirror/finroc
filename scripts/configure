@@ -40,9 +40,11 @@ my $config_filename = ".finroc.conf";
 my %command_line_options;
 my $result = GetOptions \%command_line_options,	"verbose+", "help", "project:s", "target:s", "local=s";
 
+my $indent_level = 0;
 sub INFOMSG($) { print STDERR @_; }
-sub ERRORMSG($) { print STDERR @_; exit 1; }
-sub DEBUGMSG($) { print STDERR @_ if defined $command_line_options{"verbose"}; }
+sub WARNMSG($) { printf STDERR "\033[33m%s\033[0m", @_; }
+sub ERRORMSG($) { printf STDERR "\033[31m%s\033[0m", @_; exit 1; }
+sub DEBUGMSG($) { printf STDERR "\033[36m%".($indent_level*4)."s%s\033[0m", "", @_ if defined $command_line_options{"verbose"}; }
 
 DEBUGMSG sprintf "command line options:\n%s\n", Dumper(\%command_line_options);
 

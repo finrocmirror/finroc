@@ -42,15 +42,16 @@ my $result = GetOptions \%command_line_options,	"verbose+", "help", "recurse", "
 
 my $indent_level = 0;
 sub INFOMSG($) { print STDERR @_; }
-sub ERRORMSG($) { print STDERR @_; exit 1; }
-sub DEBUGMSG($) { printf STDERR "%".($indent_level*4)."s%s", "", @_ if defined $command_line_options{"verbose"}; }
+sub WARNMSG($) { printf STDERR "\033[33m%s\033[0m", @_; }
+sub ERRORMSG($) { printf STDERR "\033[31m%s\033[0m", @_; exit 1; }
+sub DEBUGMSG($) { printf STDERR "\033[36m%".($indent_level*4)."s%s\033[0m", "", @_ if defined $command_line_options{"verbose"}; }
 
 DEBUGMSG sprintf "command line options:\n%s\n", Dumper(\%command_line_options);
 
 # handle illegal values
 if (defined $command_line_options{"optional"})
 {
-    ERRORMSG "Possible values for --optional: yes|no\n" unless $command_line_options{"optional"} =~ /yes|no/;
+    ERRORMSG "Possible values for --optional: yes|no|ask\n" unless $command_line_options{"optional"} =~ /yes|no|ask/;
     ERRORMSG "Option optional has no effect without --recurse\n" unless defined $command_line_options{"recurse"};
 }
 
@@ -83,6 +84,11 @@ ERRORMSG "<repository_list> not specified. Use finroc_get --help for more inform
 
 
 
+# default values if not set
+$command_line_options{"optional"} = "ask" unless defined $command_line_options{"optional"} and $command_line_options{"optional"} ne "";
+
+
+
 ############################
 ##  Process repositories  ##
 ############################
@@ -91,29 +97,42 @@ my $processed_component = 0;
 
 
 
-sub ProcessDependencies($)
+sub AskForOptional($)
 {
-    my ($directory) = @_;
+    my ($dependency) = @_;
 
-    # build command to call finroc_get with same options
+    INFOMSG sprintf "Get optional dependency '%s'? [yes/No] ", $dependency;
+    my $answer;
+    read STDIN, $answer, 1;
+
+    return $answer eq "y";
+}
+
+
+
+sub ProcessDependencies($$)
+{
+    my ($filename, $get_all) = @_;
+
+    # build command prefix for recursive finroc_get calls with same options
     my @options;
     push @options, "-v" if defined $command_line_options{"verbose"};
     push @options, "-r" if defined $command_line_options{"recurse"};
     push @options, sprintf "-o %s", $command_line_options{"optional"} if defined $command_line_options{"optional"};
     my $command_prefix = sprintf "finroc_get %s", join " ", @options;
 
-    # read depedencies file and call finroc_get for every line
-    my $dependencies_filename = sprintf "%s/.dependencies", $directory;
-    open DEPENDENCIES, sprintf "<$dependencies_filename", $directory and eval {
+    # read dependencies file and call finroc_get for every line
+    open DEPENDENCIES, "<$filename" and eval {
         while (<DEPENDENCIES>)
         {
             chomp;
+	    next unless $get_all or AskForOptional $_;
             my $command = sprintf "%s %s", $command_prefix, $_;
             DEBUGMSG sprintf "Executing '%s'\n", $command;
             system $command;
         }
         1;
-    } or DEBUGMSG sprintf "Could not read '%s'\n", $dependencies_filename;
+    } or DEBUGMSG sprintf "Could not read '%s'\n", $filename;
 }
 
 
@@ -140,7 +159,8 @@ sub Checkout($$)
 
     DEBUGMSG "Processing dependencies ...\n";
     $indent_level++;
-    ProcessDependencies $directory;
+    ProcessDependencies "$directory/.dependencies", 1;
+    ProcessDependencies "$directory/.optional_dependencies", $command_line_options{"optional"} eq "yes" unless $command_line_options{"optional"} eq "no";
     $indent_level--;
     DEBUGMSG "Done.\n";
 }
