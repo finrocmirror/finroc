@@ -147,6 +147,7 @@ sub Checkout($$)
     if (-e $directory)
     {
         DEBUGMSG sprintf "'%s' already exists\n", $directory;
+	return; # FIXME: Right now we have some problems with cyclic dependencies -> fork-bombs
     }
     else
     {
@@ -167,12 +168,20 @@ sub Checkout($$)
 
 
 
-sub HandleCore($)
+sub HandleCore
 {
-    my ($name) = @_;
-    DEBUGMSG sprintf "Processing FINROC core component '%s' ...\n", $name;
+    DEBUGMSG "Processing FINROC core component ...\n";
     $indent_level++;
-    Checkout "finroc_core_$name", "core/$name";
+    Checkout "finroc_core", "core";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleJCore
+{
+    DEBUGMSG "Processing FINROC core component ...\n";
+    $indent_level++;
+    Checkout "finroc_jcore", "jcore";
     $indent_level--;
     DEBUGMSG "Done.\n";
 }
@@ -217,6 +226,20 @@ sub HandleProjects($)
     DEBUGMSG "Done.\n";
 }
 
+sub HandleFINROC($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing FINROC component '%s' ...\n", $name;
+    $indent_level++;
+    HandleCore if $name =~ /^core$/;
+    HandleJCore if $name =~ /^jcore$/;
+    HandlePlugins $1 if $name =~ /^plugins_(.*)/;
+    HandleLibraries $1 if $name =~ /^libraries_(.*)/;
+    HandleProjects $1 if $name =~ /^projects_(.*)/;
+    $indent_level--;
+    DEBUGMSG "Done.\n" if $processed_component;
+}
+
 sub HandleRRLib($)
 {
     my ($name) = @_;
@@ -227,31 +250,81 @@ sub HandleRRLib($)
     DEBUGMSG "Done.\n";
 }
 
-sub HandleFINROC($)
-{
-    my ($name) = @_;
-    DEBUGMSG sprintf "Processing FINROC component '%s' ...\n", $name;
-    $indent_level++;
-    HandleCore $1 if $name =~ /^core_(.*)/;
-    HandlePlugins $1 if $name =~ /^plugins_(.*)/;
-    HandleLibraries $1 if $name =~ /^libraries_(.*)/;
-    HandleProjects $1 if $name =~ /^projects_(.*)/;
-    $indent_level--;
-    DEBUGMSG "Done.\n" if $processed_component;
-}
-
 sub HandleLocal($)
 {
     my ($name) = @_;
     DEBUGMSG sprintf "Trying to process local component '%s' ...\n", $name;
     $indent_level++;
     my $directory = `pwd`;
-    HandleCore"$name" if $directory =~ /core$/;
-    HandlePlugins "$name" if $directory =~ /plugins$/;
-    HandleLibraries "$name" if $directory =~ /libraries$/;
-    HandleProjects "$name" if $directory =~ /projects$/;
-    HandleRRLib "$name" if $directory =~ /rrlib$/;
+    ERRORMSG "Processing of local component within mca2-legacy directory is not supported!\n" if $directory =~ /\/mca2-legacy\//;   # FIXME: ONLY FOR MCA2 LEGACY
+    HandlePlugins "$name" if $directory =~ /\/plugins$/;
+    HandleLibraries "$name" if $directory =~ /\/libraries$/;
+    HandleProjects "$name" if $directory =~ /\/projects$/;
+    HandleRRLib "$name" if $directory =~ /\/rrlib$/;
     INFOMSG sprintf "Could not process '%s'\n", $name unless $processed_component;
+    $indent_level--;
+    DEBUGMSG "Done.\n" if $processed_component;
+}
+
+
+
+# FIXME: ONLY FOR MCA2 LEGACY
+###############################
+##  Support for MCA2 legacy  ##
+###############################
+
+sub HandleMCA2Base
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing MCA2 base ...\n", $name;
+    $indent_level++;
+    Checkout "mca2", "mca2-legacy";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleMCA2Libraries($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing MCA2 legacy library '%s' ...\n", $name;
+    ERRORMSG "MCA2 legacy support not active!\nExecute 'finroc_get mca2' first.\n" unless -d "$FINROC_HOME/mca2-legacy";
+    $indent_level++;
+    Checkout "mcal_$name", "mca2-legacy/libraries/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleMCA2Projects($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing MCA2 legacy project '%s' ...\n", $name;
+    ERRORMSG "MCA2 legacy support not active!\nExecute 'finroc_get mca2' first.\n" unless -d "$FINROC_HOME/mca2-legacy";
+    $indent_level++;
+    Checkout "mcap_$name", "mca2-legacy/projects/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleMCA2Resources($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing MCA2 legacy resource '%s' ...\n", $name;
+    ERRORMSG "MCA2 legacy support not active!\nExecute 'finroc_get mca2' first.\n" unless -d "$FINROC_HOME/mca2-legacy";
+    $indent_level++;
+    Checkout "mcar_$name", "mca2-legacy/resources/$name";
+    $indent_level--;
+    DEBUGMSG "Done.\n";
+}
+
+sub HandleMCA2($)
+{
+    my ($name) = @_;
+    DEBUGMSG sprintf "Processing MCA2 legacy component '%s' ...\n", $name;
+    $indent_level++;
+    HandleMCA2Base if $name =~ /^2$/;
+    HandleMCA2Libraries $1 if $name =~ /^l_(.*)/;
+    HandleMCA2Projects $1 if $name =~ /^p_(.*)/;
+    HandleMCA2Resources $1 if $name =~ /^r_(.*)/;
     $indent_level--;
     DEBUGMSG "Done.\n" if $processed_component;
 }
@@ -263,6 +336,7 @@ foreach my $name (@ARGV)
     $processed_component = 0;
     HandleFINROC $1 if $name =~ /^finroc_(.*)/;
     HandleRRLib $1 if $name =~ /^rrlib_(.*)/;
+    HandleMCA2 $1 if $name =~ /^mca(.*)/;
     HandleLocal $name unless $processed_component;
 }
 
