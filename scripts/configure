@@ -28,6 +28,9 @@ use strict;
 use Getopt::Long;
 use Data::Dumper;
 
+BEGIN{ push @INC, "scripts/perl"; }
+use FINROC::messages;
+
 
 # config file
 my $config_filename = ".finroc.conf";
@@ -38,12 +41,9 @@ my $config_filename = ".finroc.conf";
 
 # command line options
 my %command_line_options;
-my $result = GetOptions \%command_line_options,	"verbose+", "help", "project:s", "target:s", "local=s";
+GetOptions \%command_line_options, "verbose+", "help", "project:s", "target:s", "local=s";
 
-sub INFOMSG($) { print STDERR @_; }
-sub WARNMSG($) { printf STDERR "\033[33m%s\033[0m", @_; }
-sub ERRORMSG($) { printf STDERR "\033[31m%s\033[0m", @_; exit 1; }
-sub DEBUGMSG($) { printf STDERR "\033[36m%s\033[0m", @_ if defined $command_line_options{"verbose"}; }
+EnableVerboseMessages if defined $command_line_options{"verbose"};
 
 DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
 

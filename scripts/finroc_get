@@ -30,6 +30,8 @@ use Env '$FINROC_HOME';
 use Getopt::Long;
 use Data::Dumper;
 
+BEGIN{ push @INC, "$FINROC_HOME/scripts/perl"; }
+use FINROC::messages;
 
 
 ############################
@@ -38,12 +40,9 @@ use Data::Dumper;
 
 # command line options
 my %command_line_options;
-my $result = GetOptions \%command_line_options,	"verbose+", "help", "recurse", "optional=s";
+GetOptions \%command_line_options, "verbose+", "help", "recurse", "optional=s";
 
-sub INFOMSG($) { print STDERR @_; }
-sub WARNMSG($) { printf STDERR "\033[33m%s\033[0m", @_; }
-sub ERRORMSG($) { printf STDERR "\033[31m%s\033[0m", @_; exit 1; }
-sub DEBUGMSG($) { printf STDERR "\033[36m%s\033[0m", "", @_ if defined $command_line_options{"verbose"}; }
+EnableVerboseMessages if defined $command_line_options{"verbose"};
 
 DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
 
@@ -209,10 +208,10 @@ sub AddDependencies($)
         while (<DEPENDENCIES>)
         {
             chomp;
-	    my ($name, $data) = Component $_;
-	    AddComponent $name, $data;
+            my ($name, $data) = Component $_;
+            AddComponent $name, $data;
         }
-	close DEPENDENCIES;
+        close DEPENDENCIES;
         1;
     } or DEBUGMSG sprintf "Could not read '%s'\n", $dependencies_filename;
 
@@ -221,10 +220,10 @@ sub AddDependencies($)
         while (<DEPENDENCIES>)
         {
             chomp;
-	    my ($name, $data) = Component $_;
-	    AddOptionalComponent $name, $data;
+            my ($name, $data) = Component $_;
+            AddOptionalComponent $name, $data;
         }
-	close DEPENDENCIES;
+        close DEPENDENCIES;
         1;
     } or DEBUGMSG sprintf "Could not read '%s'\n", $optional_dependencies_filename;
 }
@@ -237,19 +236,19 @@ unless (-d "$FINROC_HOME/mca2-legacy")
 {
     foreach my $name (keys %components)
     {
-	if ($name =~ /^mca/)
-	{
-	    if (exists $components{"mca2"})
-	    {
-		Checkout "mca2", "mca2-legacy";
-		last;
-	    }
-	    else
-	    {
-		delete $components{$name} if $name =~ /^mca/;
-		$warn_about_mca2_legacy_support = 1;
-	    }
-	}
+        if ($name =~ /^mca/)
+        {
+            if (exists $components{"mca2"})
+            {
+        	Checkout "mca2", "mca2-legacy";
+        	last;
+            }
+            else
+            {
+        	delete $components{$name} if $name =~ /^mca/;
+        	$warn_about_mca2_legacy_support = 1;
+            }
+        }
     }
 }
 
@@ -301,15 +300,15 @@ unless ($command_line_options{"optional"} eq "no")
 
     foreach my $name (keys %optional_components)
     {
-	DEBUGMSG sprintf "Processing '%s'\n", $name;
+        DEBUGMSG sprintf "Processing '%s'\n", $name;
 
-	next unless $command_line_options{"optional"} eq "yes" or AskForOptional $name;
+        next unless $command_line_options{"optional"} eq "yes" or AskForOptional $name;
 
-	my $command = sprintf "%s %s", $command_prefix, $name;
-	DEBUGMSG sprintf "Executing '%s'\n", $command;
-	system $command;
+        my $command = sprintf "%s %s", $command_prefix, $name;
+        DEBUGMSG sprintf "Executing '%s'\n", $command;
+        system $command;
 
-	$components{$name}{"processed"} = 1;
+        $components{$name}{"processed"} = 1;
     }
 }
 
