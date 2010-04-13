@@ -40,13 +40,12 @@ my $config_filename = ".finroc.conf";
 my %command_line_options;
 my $result = GetOptions \%command_line_options,	"verbose+", "help", "project:s", "target:s", "local=s";
 
-my $indent_level = 0;
 sub INFOMSG($) { print STDERR @_; }
 sub WARNMSG($) { printf STDERR "\033[33m%s\033[0m", @_; }
 sub ERRORMSG($) { printf STDERR "\033[31m%s\033[0m", @_; exit 1; }
-sub DEBUGMSG($) { printf STDERR "\033[36m%".($indent_level*4)."s%s\033[0m", "", @_ if defined $command_line_options{"verbose"}; }
+sub DEBUGMSG($) { printf STDERR "\033[36m%s\033[0m", @_ if defined $command_line_options{"verbose"}; }
 
-DEBUGMSG sprintf "command line options:\n%s\n", Dumper(\%command_line_options);
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
 
 # handle illegal values
 if (defined $command_line_options{"project"})
@@ -107,7 +106,7 @@ open CONFIG, "<$config_filename" and eval
     close CONFIG;
 };
 
-DEBUGMSG sprintf "configuration from file:\n%s\n", Dumper(\%configuration);
+DEBUGMSG sprintf "configuration from file:\n%s\n", Dumper \%configuration;
 
 # overwrite settings using command line options
 foreach my $option (keys %command_line_options)
@@ -121,7 +120,7 @@ $configuration{"project"} = undef unless defined $configuration{"project"} and $
 $configuration{"target"} = "debug" unless defined $configuration{"target"} and $configuration{"target"} ne "";
 $configuration{"local"} = "yes" unless defined $configuration{"local"};
 
-DEBUGMSG sprintf "resulting configuration:\n%s\n", Dumper(\%configuration);
+DEBUGMSG sprintf "resulting configuration:\n%s\n", Dumper \%configuration;
 
 # write configuration to file
 open CONFIG, ">$config_filename" or die "Could not write to `$config_filename'!";
@@ -138,7 +137,7 @@ use Cwd;
 $configuration{"home"} = getcwd;
 $configuration{"project_home"} = sprintf "%s/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"};
 
-DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper(\%configuration);
+DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper \%configuration;
 
 
 
