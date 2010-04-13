@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    configure
+# \file    finroc_eclipse_create_java_project
 #
 # \author  Max Reichardt
 #
@@ -57,8 +57,6 @@ FindJavaSourceDirs("plugins");
 FindJavaSourceDirs("projects");
 FindJavaSourceDirs("rrlib");
 FindJavaSourceDirs("tools");
-
-# setup directories and stuff
 my @jdirs = sort keys %javaSourceDirs;
 
 # insert java source directories in .project file
