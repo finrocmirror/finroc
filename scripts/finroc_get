@@ -91,7 +91,7 @@ $command_line_options{"optional"} = "ask" unless defined $command_line_options{"
 #  Component information  #
 ###########################
 
-sub ComponentInfo($$) { return ( shift, { "directory" => shift, "processed" => 0 } ); }
+sub ComponentInfo($$) { return ( shift, { "directory" => shift, "selected" => 0, "processed" => 0 } ); }
 
 sub FINROC($)
 {
@@ -100,6 +100,7 @@ sub FINROC($)
     return ComponentInfo "finroc_jcore", "jcore" if $name =~ /^jcore$/;
     return ComponentInfo "finroc_plugins_$1", "plugins/$1" if $name =~ /^plugins_(.*)/;
     return ComponentInfo "finroc_libraries_$1", "libraries/$1" if $name =~ /^libraries_(.*)/;
+    return ComponentInfo "finroc_tools_jgui_plugins_$1", "tools/jgui/plugins/$1" if $name =~ /^tools_jgui_plugins_(.*)/;
     return ComponentInfo "finroc_tools_$1", "tools/$1" if $name =~ /^tools_(.*)/;
     return ComponentInfo "finroc_projects_$1", "projects/$1" if $name =~ /^projects_(.*)/;
     ERRORMSG sprintf "Could not identify FINROC component '%s'\n", $name;
@@ -142,12 +143,11 @@ sub MCA2($)
 
 
 
-##########################
-#  Process repositories  #
-##########################
+#######################################
+#  Process components (repositories)  #
+#######################################
 
 my %components;
-my %optional_components;
 
 sub Component($)
 {
@@ -159,29 +159,83 @@ sub Component($)
     ERRORMSG sprintf "Could not identify component '%s'\n", $name;
 }
 
-sub AddComponent($$)
+sub AddMandatoryComponent
 {
     my ($name, $data) = @_;
     $components{$name} = $data unless exists $components{$name};
+    $components{$name}{"selected"} = 1;
 }
 
-sub AddOptionalComponent($$)
+sub AddOptionalComponent
 {
     my ($name, $data) = @_;
-    $optional_components{$name} = $data unless exists $optional_components{$name};
+    $components{$name} = $data unless exists $components{$name};
 }
 
 
 
 foreach my $component (@ARGV)
 {
-    my ($name, $data) = Component $component;
-    AddComponent $name, $data;
+    AddMandatoryComponent Component $component;
 }
 
 DEBUGMSG sprintf "components:\n%s\n", Dumper \%components;
 
 
+
+#########################
+#  Handle dependencies  #
+#########################
+
+sub AddDependencies($)
+{
+    my ($directory) = @_;
+
+    my $dependencies_filename = sprintf "%s/.dependencies", $directory;
+    open DEPENDENCIES, "<$dependencies_filename" and eval {
+        while (<DEPENDENCIES>)
+        {
+            chomp;
+            AddMandatoryComponent Component $_;
+        }
+        close DEPENDENCIES;
+        1;
+    } or DEBUGMSG sprintf "Could not read '%s'\n", $dependencies_filename;
+
+    my $optional_dependencies_filename = sprintf "%s/.optional_dependencies", $directory;
+    open DEPENDENCIES, "<$optional_dependencies_filename" and eval {
+        while (<DEPENDENCIES>)
+        {
+            chomp;
+            AddOptionalComponent Component $_;
+        }
+        close DEPENDENCIES;
+        1;
+    } or DEBUGMSG sprintf "Could not read '%s'\n", $optional_dependencies_filename;
+}
+
+sub FixImplicitDependencies()
+{
+    foreach my $name (sort keys %components)
+    {
+        AddMandatoryComponent Component "finroc_tools_jgui" if $name =~ /^finroc_tools_jgui_/;
+        AddMandatoryComponent Component "mca2" if $name =~ /^mca/; # FIXME: ONLY FOR MCA2 LEGACY
+    }
+}
+
+sub AskForOptionalComponent($)
+{
+    my ($dependency) = @_;
+
+    INFOMSG sprintf "Get optional component '%s'? [yes/No] ", $dependency;
+    return <STDIN> =~ /^y/;
+}
+
+
+
+###########################
+#  Checkout repositories  #
+###########################
 
 sub Checkout($$)
 {
@@ -199,123 +253,50 @@ sub Checkout($$)
     system $command;
 }
 
-sub AddDependencies($)
-{
-    my ($directory) = @_;
 
-    my $dependencies_filename = sprintf "%s/.dependencies", $directory;
-    open DEPENDENCIES, "<$dependencies_filename" and eval {
-        while (<DEPENDENCIES>)
-        {
-            chomp;
-            my ($name, $data) = Component $_;
-            AddComponent $name, $data;
-        }
-        close DEPENDENCIES;
-        1;
-    } or DEBUGMSG sprintf "Could not read '%s'\n", $dependencies_filename;
-
-    my $optional_dependencies_filename = sprintf "%s/.optional_dependencies", $directory;
-    open DEPENDENCIES, "<$optional_dependencies_filename" and eval {
-        while (<DEPENDENCIES>)
-        {
-            chomp;
-            my ($name, $data) = Component $_;
-            AddOptionalComponent $name, $data;
-        }
-        close DEPENDENCIES;
-        1;
-    } or DEBUGMSG sprintf "Could not read '%s'\n", $optional_dependencies_filename;
-}
-
-
-
-# FIXME: ONLY FOR MCA2 LEGACY: mca2 has to be checked out first
-my $warn_about_mca2_legacy_support = 0;
-unless (-d "$FINROC_HOME/mca2-legacy")
-{
-    foreach my $name (keys %components)
-    {
-        if ($name =~ /^mca/)
-        {
-            if (exists $components{"mca2"})
-            {
-        	Checkout "mca2", "mca2-legacy";
-        	last;
-            }
-            else
-            {
-        	delete $components{$name} if $name =~ /^mca/;
-        	$warn_about_mca2_legacy_support = 1;
-            }
-        }
-    }
-}
 
 my $complete = 0;
 while (!$complete)
 {
-    $complete = 1;
-    foreach my $name (keys %components)
+    # mandatory (or selected optional)
+    while (!$complete)
     {
-        next if $components{$name}{"processed"};
-        $complete = 0;
+        FixImplicitDependencies;
+        $complete = 1;
+        foreach my $name (sort keys %components)
+        {
+            next unless $components{$name}{"selected"};
+            next if $components{$name}{"processed"};
+            $complete = 0;
 
-        DEBUGMSG sprintf "Processing '%s'\n", $name;
+            DEBUGMSG sprintf "Processing '%s'\n%s\n", $name, Dumper \$components{$name};
 
-        Checkout $name, $components{$name}{"directory"};
-        AddDependencies $components{$name}{"directory"} if defined $command_line_options{"recurse"};
+            Checkout $name, $components{$name}{"directory"};
+            AddDependencies $components{$name}{"directory"} if defined $command_line_options{"recurse"};
 
-        $components{$name}{"processed"} = 1;
+            $components{$name}{"processed"} = 1;
+        }
+    }
+
+    # optional
+    unless ($command_line_options{"optional"} eq "no")
+    {
+        foreach my $name (sort keys %components)
+        {
+            next if $components{$name}{"selected"};
+            next if $components{$name}{"processed"};
+            $complete = 0;
+            
+            if ($command_line_options{"optional"} eq "yes" or AskForOptionalComponent $name)
+            {
+        	$components{$name}{"selected"} = 1;
+        	next;
+            }
+
+            $components{$name}{"processed"} = 1;
+        }
     }
 }
-
-
-
-###########################
-#  Optional dependencies  #
-###########################
-
-DEBUGMSG sprintf "optional components:\n%s\n", Dumper \%optional_components;
-
-sub AskForOptional($)
-{
-    my ($dependency) = @_;
-
-    INFOMSG sprintf "Get optional dependency '%s'? [yes/No] ", $dependency;
-    my $answer;
-    read STDIN, $answer, 1;
-
-    return $answer eq "y";
-}
-
-unless ($command_line_options{"optional"} eq "no")
-{
-    # build command prefix for recursive finroc_get calls with same options
-    my @options;
-    push @options, "-v" if defined $command_line_options{"verbose"};
-    push @options, "-r";
-    push @options, sprintf "-o %s", $command_line_options{"optional"} if defined $command_line_options{"optional"};
-    my $command_prefix = sprintf "finroc_get %s", join " ", @options;
-
-    foreach my $name (keys %optional_components)
-    {
-        DEBUGMSG sprintf "Processing '%s'\n", $name;
-
-        next unless $command_line_options{"optional"} eq "yes" or AskForOptional $name;
-
-        my $command = sprintf "%s %s", $command_prefix, $name;
-        DEBUGMSG sprintf "Executing '%s'\n", $command;
-        system $command;
-
-        $components{$name}{"processed"} = 1;
-    }
-}
-
-
-
-# FIXME: ONLY FOR MCA2 LEGACY
-WARNMSG "MCA2 legacy support not active!\nExecute 'finroc_get mca2' first.\n" if $warn_about_mca2_legacy_support;
 
 
 
