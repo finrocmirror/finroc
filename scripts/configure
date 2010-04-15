@@ -76,7 +76,7 @@ if (defined $command_line_options{"help"})
 {
     sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
 
-    INFOMSG "usage: $0 [options]\n";
+    INFOMSG sprintf "usage: scripts/setenv [options]\n";
     INFOMSG "options:\n";
     PrintOption "-h, --help", "show this help";
     PrintOption "-v, --verbose", "more output for debugging";

@@ -64,7 +64,7 @@ if (defined $command_line_options{"help"})
 {
     sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
 
-    INFOMSG "usage: finroc_get [options] <repository_list>\n";
+    INFOMSG sprintf "usage: %s [options] <repository_list>\n", (reverse (split "/", $0))[0];
     INFOMSG "options:\n";
     PrintOption "-h, --help", "show this help";
     PrintOption "-v, --verbose", "more output for debugging";
@@ -289,8 +289,8 @@ while (!$complete)
             
             if ($command_line_options{"optional"} eq "yes" or AskForOptionalComponent $name)
             {
-        	$components{$name}{"selected"} = 1;
-        	next;
+                $components{$name}{"selected"} = 1;
+                next;
             }
 
             $components{$name}{"processed"} = 1;

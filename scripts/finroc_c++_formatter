@@ -1,0 +1,188 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_c++_formatter
+#
+# \author  Tobias Foehst
+#
+# \date    2010-04-14
+#
+# Reformats C++ files using astyle to assert a unified format of committed
+# code. This is for example helpful to generate meaningful diffs between
+# revisions
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+
+use Getopt::Long;
+use Data::Dumper;
+
+BEGIN{ push @INC, "$FINROC_HOME/scripts/perl"; }
+use FINROC::messages;
+
+
+ERRORMSG sprintf "\nWrong astyle version. Please use %s\n", `cat $FINROC_HOME/etc/astyle.version` if (`astyle --version 2>&1` ne `cat $FINROC_HOME/etc/astyle.version`);
+
+
+
+############################
+##  Command line options  ##
+############################
+
+# command line options
+my %command_line_options;
+GetOptions \%command_line_options, "verbose+", "help", "all", "force";
+
+EnableVerboseMessages if defined $command_line_options{"verbose"};
+
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
+
+
+
+#############
+##  Usage  ##
+#############
+
+# print help and terminate if requested
+if (defined $command_line_options{"help"})
+{
+    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+
+    INFOMSG sprintf "usage: %s [options] [<filenames>]\n", (reverse (split "/", $0))[0];
+    INFOMSG "options:\n";
+    PrintOption "-h, --help", "show this help";
+    PrintOption "-v, --verbose", "more output for debugging";
+    PrintOption "-a, --all", "process all files (not only modified)";
+    PrintOption "-f, --force", "do not ask before reformatting";
+    PrintOption "<filenames>", "list of files to reformat";
+    INFOMSG "\n";
+    exit 0;
+}
+
+
+
+###################
+#  Collect files  #
+###################
+
+my %files;
+my %valid_extensions = map { $_ => 1 } ( "h", "hpp", "c", "cc", "cpp" );
+
+sub FileRelevant($)
+{
+    my ($filename) = @_;
+    return 0 unless -f $filename;
+
+    my $extension = (reverse split '\.', $filename)[0];
+    return 0 unless exists $valid_extensions{lc $extension};
+    return 1;
+}
+
+sub CollectFilesFromCommandLine()
+{
+    DEBUGMSG "Collecting files from command line ...\n";
+
+    foreach my $filename (@ARGV)
+    {
+        $files{$filename} = 1 if FileRelevant $filename;
+    }
+}
+
+sub CollectModifiedFiles;
+sub CollectModifiedFiles()
+{
+    my ($directory, @rest) = split "\n", `pwd`;
+
+    DEBUGMSG sprintf "Collecting only modified files using SVN in '%s'...\n", $directory;
+
+    foreach my $svn_line (split "\n", `svn st --ignore-externals 2> /dev/null`)
+    {
+        my ($status, $filename) = split " ", $svn_line;
+        if ($status =~ /^[\?X]/ and -d $filename)
+        {
+            chdir $filename;
+            CollectModifiedFiles;
+            chdir "..";
+        }
+        next unless $status =~ /^[AMR]$/;
+        $files{"$directory/$filename"} = 1 if FileRelevant $filename;
+    }
+}
+
+sub CollectAllFiles()
+{
+    DEBUGMSG "Collecting all relevant files ...\n";
+
+    foreach my $filename (split "\0", `find . -type f -print0 2> /dev/null`)
+    {
+        $files{$filename} = 1 if FileRelevant $filename;
+    }
+}
+
+sub CollectFiles()
+{
+    CollectAllFiles if defined $command_line_options{"all"};
+    return CollectFilesFromCommandLine if scalar @ARGV;
+    return CollectModifiedFiles unless defined $command_line_options{"all"};
+}
+
+CollectFiles;
+
+DEBUGMSG sprintf "collected files:\n%s\n", Dumper \%files;
+
+
+
+if (scalar keys %files == 0)
+{
+    INFOMSG "Nothing to do.\n";
+    exit 0;
+}
+
+
+
+####################
+#  Reformat files  #
+####################
+
+unless (defined $command_line_options{"force"})
+{
+    INFOMSG "Found files:\n";
+    foreach my $filename (sort keys %files)
+    {
+        INFOMSG "\t$filename\n";
+    }
+
+    INFOMSG "\nPress ENTER to start auto-formatting files or CRTL-C to abort.\n";
+    <STDIN>;
+}
+
+my $changes = 0;
+foreach my $filename (sort keys %files)
+{
+    my $message = `astyle --style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren --suffix=.original --options=none $filename`;
+    $changes += INFOMSG $message if $message =~ /^formatted /;
+    unlink "$filename.original"
+}
+
+INFOMSG sprintf "%s\n", $changes ? "\nDone. Please recompile to check for errors." : "Done. No changes were made.";
+
+
+
+exit 0;
