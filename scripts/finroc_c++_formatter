@@ -34,7 +34,7 @@ use Env '$FINROC_HOME';
 use Getopt::Long;
 use Data::Dumper;
 
-BEGIN{ push @INC, "$FINROC_HOME/scripts/perl"; }
+use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 
 

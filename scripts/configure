@@ -28,7 +28,7 @@ use strict;
 use Getopt::Long;
 use Data::Dumper;
 
-BEGIN{ push @INC, "scripts/perl"; }
+use lib "scripts/perl";
 use FINROC::messages;
 
 
