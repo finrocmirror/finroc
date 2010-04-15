@@ -131,8 +131,9 @@ foreach my $option (keys %configuration)
 close CONFIG;
 
 # additional configuration
-use Config;
-$configuration{"target"} = sprintf "%s_%s", $Config{archname}, $configuration{"target"};
+#use Config;
+#$configuration{"target"} = sprintf "%s_%s", $Config{archname}, $configuration{"target"};
+$configuration{"target"} = sprintf "%s_%s", `python -c 'import sys\nimport platform\nsys.stdout.write(platform.machine()+"_"+platform.system())'`, $configuration{"target"};
 use Cwd;
 $configuration{"home"} = getcwd;
 $configuration{"project_home"} = sprintf "%s/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"};
