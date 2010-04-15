@@ -1,0 +1,118 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_preamble_survey
+#
+# \author  Max Reichardt
+#
+# \date    2010-04-15
+#
+# List preambles found in all source files in and below the current folder
+#----------------------------------------------------------------------
+
+use strict;
+
+use Cwd;
+use File::Find;
+
+sub ExtractPreamble($);
+
+# get all source files in current directory
+my @files = ();
+my $cwd = getcwd();
+find( sub {push @files, "$File::Find::name$/" if (/\.java$|\.h$|\.hpp$|\.cpp$|\.c$/)},$cwd);
+#foreach (@files) {
+#  print $_ . " ";
+#}
+
+# hash: preamble (string) => files (string)
+my %survey = ();
+foreach my $file (@files) {
+    my $preamble = ExtractPreamble($file);
+    if (exists $survey {$preamble}) {
+        $survey { $preamble } .= $file;
+    } else {
+        $survey { $preamble } = $file;
+    }
+}
+
+# print output
+my @noproper = ();
+foreach my $preamble (sort keys %survey) {
+    unless (keys %survey == 1) {
+        print "Files ", $survey { $preamble }, " have preamble:\n", $preamble, "\n";
+    } else {
+        print "All Files have preamble:\n", $preamble, "\n";
+    }
+    unless ($preamble =~ /\w\w\w/ && $preamble =~ /\n.*\n.*\n.*\n.*\n.*\n/) {
+        push @noproper, $survey { $preamble };
+    }
+}
+
+if (@noproper > 0) {
+    print "WARNING - the following files have no proper preamble:\n";
+    foreach (@noproper) {
+        print $_;
+    }
+}
+
+# Tries to extract a preamble from a source file
+# quick hack...
+# TODO: do this properly if you think it should be
+sub ExtractPreamble($) {
+    my $file = shift;
+    $file =~ s/^\s+|\s+$//g;     # remove both leading and trailing whitespace
+    #print "extracting preamble from: $file\n";
+    open(my $in,  "<",  $file) or die "Can't open $file: $!";;
+    my $preamble = "";
+    my $inComment = 0;
+    while (<$in>) {
+        my $line = $_;
+        #print "read line: $line";
+        if ($inComment != 0) {
+            if ($line =~ /\*\//) {
+                $inComment = 0;
+            }
+            $preamble .= $line;
+            next;
+        }
+        if ($line =~ /^\s*[\w#@]/) {
+            last; # ok, no comment here anymore
+        }
+        if ($line =~ /this is for emacs file handling/ || $line =~ /\/\/ this is a .* file/ || $line =~ /----------/) {
+            last; # ok, preamble doesn't continue beyond here
+        }
+        if ($line =~ /^\/\/Generated from / || $line =~ /\/\/This is a generated/) {
+            next;
+        }
+        if ($line =~ /^\s*\/\//) { # single-line comment
+            $preamble .= $line;
+        }
+        if ($line =~ /^\s*\/\*/) { # multi-line comment
+            $preamble .= $line;
+            $inComment = 1;
+            if ($line =~ /\*\//) {
+                $inComment = 0;
+            }
+        }
+    }
+    close $in or die "$in: $!";
+
+    return $preamble;
+}
+
+
