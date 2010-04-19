@@ -83,7 +83,7 @@ if (defined $command_line_options{"help"})
 ###################
 
 my %files;
-my %valid_extensions = map { $_ => 1 } ( "h", "hpp", "c", "cc", "cpp" );
+my %valid_extensions = map { $_ => 1 } ( "h", "hpp", "c", "cc", "cpp", "java" );
 
 sub FileRelevant($)
 {
@@ -176,7 +176,15 @@ unless (defined $command_line_options{"force"})
 my $changes = 0;
 foreach my $filename (sort keys %files)
 {
-    my $message = `astyle --style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren --suffix=.original --options=none $filename`;
+    my $message;
+    if ($filename =~ /.java$/)
+    {
+	$message = `astyle --style=java --convert-tabs --suffix=.original --options=none $filename`;
+    }
+    else
+    {
+	$message = `astyle --style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren --suffix=.original --options=none $filename`;
+    }
     $changes += INFOMSG $message if $message =~ /^formatted /;
     unlink "$filename.original"
 }
