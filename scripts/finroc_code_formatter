@@ -177,12 +177,14 @@ my $changes = 0;
 foreach my $filename (sort keys %files)
 {
     my $message;
-    if ($filename =~ /.java$/)
+    if ($filename =~ /\.java$/)
     {
-	$message = `astyle --style=java --convert-tabs --suffix=.original --options=none $filename`;
+	DEBUGMSG sprintf "Processing Java file '%s'\n", $filename;
+	$message = `astyle --mode=java --style=java --convert-tabs --pad=oper --unpad=paren --suffix=.original --options=none $filename`;
     }
     else
     {
+	DEBUGMSG sprintf "Processing file '%s'\n", $filename;
 	$message = `astyle --style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren --suffix=.original --options=none $filename`;
     }
     $changes += INFOMSG $message if $message =~ /^formatted /;
