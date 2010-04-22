@@ -247,7 +247,7 @@ sub Checkout($$)
     if (-e $directory)
     {
         DEBUGMSG sprintf "'%s' already exists\n", $directory;
-        return
+        return;
     }
     my $command = sprintf "svn co %s %s", $repository, $directory;
     INFOMSG sprintf "Executing '%s'\n", $command;
