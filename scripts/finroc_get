@@ -77,8 +77,7 @@ if (defined $command_line_options{"help"})
 
 
 # non-optional arguments
-ERRORMSG "<repository_list> not specified. Use finroc_get --help for more information.\n" unless defined $ARGV[0];
-#ERRORMSG "Invalid number of arguments. Use finroc_get --help for more information.\n" unless $#ARGV != 1;
+ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more information.\n" (reverse (split "/", $0))[0] unless defined $ARGV[0];
 
 
 

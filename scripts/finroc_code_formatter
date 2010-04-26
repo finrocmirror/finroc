@@ -42,6 +42,17 @@ ERRORMSG sprintf "\nWrong astyle version. Please use %s\n", `cat $FINROC_HOME/et
 
 
 
+my %format_flags;
+$format_flags{"cpp"}  = "--style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren";
+$format_flags{"c"}    = $format_flags{"cpp"};
+$format_flags{"cc"}   = $format_flags{"cpp"};
+$format_flags{"cu"}   = $format_flags{"cpp"};
+$format_flags{"h"}    = $format_flags{"cpp"};
+$format_flags{"hpp"}  = $format_flags{"cpp"};
+$format_flags{"java"} = "--mode=java --style=java --convert-tabs --pad=oper --unpad=paren";
+
+
+
 ############################
 ##  Command line options  ##
 ############################
@@ -83,7 +94,6 @@ if (defined $command_line_options{"help"})
 ###################
 
 my %files;
-my %valid_extensions = map { $_ => 1 } ( "h", "hpp", "c", "cc", "cpp", "java" );
 
 sub FileRelevant($)
 {
@@ -91,7 +101,7 @@ sub FileRelevant($)
     return 0 unless -f $filename;
 
     my $extension = (reverse split '\.', $filename)[0];
-    return 0 unless exists $valid_extensions{lc $extension};
+    return 0 unless exists $format_flags{lc $extension};
     return 1;
 }
 
@@ -176,17 +186,12 @@ unless (defined $command_line_options{"force"})
 my $changes = 0;
 foreach my $filename (sort keys %files)
 {
-    my $message;
-    if ($filename =~ /\.java$/)
-    {
-	DEBUGMSG sprintf "Processing Java file '%s'\n", $filename;
-	$message = `astyle --mode=java --style=java --convert-tabs --pad=oper --unpad=paren --suffix=.original --options=none $filename`;
-    }
-    else
-    {
-	DEBUGMSG sprintf "Processing file '%s'\n", $filename;
-	$message = `astyle --style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren --suffix=.original --options=none $filename`;
-    }
+    my $extension = (reverse split '\.', $filename)[0];
+    ERRORMSG "" unless defined $format_flags{lc $extension};
+    my $command = sprintf "astyle --suffix=.original --options=none %s %s", $format_flags{lc $extension}, $filename;
+
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $message = `$command`;
     $changes += INFOMSG $message if $message =~ /^formatted /;
     unlink "$filename.original"
 }
