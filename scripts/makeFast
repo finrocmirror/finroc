@@ -1,5 +1,5 @@
 #!/bin/bash
-source scripts/setenv ""
+[ -z $FINROC_HOME ] && source scripts/setenv ""
 make -C make_builder
 rm Makefile
 [ "x$FINROC_LOCAL" == "xno" ] && USE_SYSTEM_INSTALL=--usesysteminstall
