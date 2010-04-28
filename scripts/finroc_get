@@ -77,7 +77,7 @@ if (defined $command_line_options{"help"})
 
 
 # non-optional arguments
-ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more information.\n" (reverse (split "/", $0))[0] unless defined $ARGV[0];
+ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more information.\n", (reverse (split "/", $0))[0] unless defined $ARGV[0];
 
 
 
