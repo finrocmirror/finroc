@@ -34,6 +34,7 @@ use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 
 
+
 ############################
 ##  Command line options  ##
 ############################
@@ -90,7 +91,7 @@ $command_line_options{"optional"} = "ask" unless defined $command_line_options{"
 #  Component information  #
 ###########################
 
-sub ComponentInfo($$) { return ( shift, { "directory" => shift, "selected" => 0, "processed" => 0 } ); }
+sub ComponentInfo($$) { return ( shift, { "directory" => "$FINROC_HOME/".shift, "selected" => 0, "processed" => 0 } ); }
 
 sub FINROC($)
 {
@@ -241,13 +242,9 @@ sub Checkout($$)
     my ($repository, $directory) = @_;
     $repository = sprintf "https://agrosy.informatik.uni-kl.de/svn/%s/trunk", $repository;
     $repository =~ s/mca2\/trunk$/mca2\/branches\/mca3_experimental/; # FIXME: ONLY FOR MCA2 LEGACY
-    $directory = sprintf "%s/%s", $FINROC_HOME, $directory;
-    ERRORMSG sprintf "'%s' should be used for checkout but is a file\n", $directory if -f $directory;
-    if (-e $directory)
-    {
-        DEBUGMSG sprintf "'%s' already exists\n", $directory;
-        return;
-    }
+    ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $directory if -f $directory;
+    ERRORMSG sprintf "'%s' already exists\n", $directory if -e $directory;
+
     my $command = sprintf "svn co %s %s", $repository, $directory;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
@@ -267,6 +264,7 @@ while (!$complete)
         {
             next unless $components{$name}{"selected"};
             next if $components{$name}{"processed"};
+            next if -d $components{$name}{"directory"};
             $complete = 0;
 
             DEBUGMSG sprintf "Processing '%s'\n%s\n", $name, Dumper \$components{$name};
@@ -285,6 +283,7 @@ while (!$complete)
         {
             next if $components{$name}{"selected"};
             next if $components{$name}{"processed"};
+            next if -d $components{$name}{"directory"};
             $complete = 0;
             
             if ($command_line_options{"optional"} eq "yes" or AskForOptionalComponent $name)
