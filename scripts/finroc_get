@@ -264,12 +264,11 @@ while (!$complete)
         {
             next unless $components{$name}{"selected"};
             next if $components{$name}{"processed"};
-            next if -d $components{$name}{"directory"};
             $complete = 0;
 
             DEBUGMSG sprintf "Processing '%s'\n%s\n", $name, Dumper \$components{$name};
 
-            Checkout $name, $components{$name}{"directory"};
+            Checkout $name, $components{$name}{"directory"} unless -d $components{$name}{"directory"};
             AddDependencies $components{$name}{"directory"} if defined $command_line_options{"recurse"};
 
             $components{$name}{"processed"} = 1;
