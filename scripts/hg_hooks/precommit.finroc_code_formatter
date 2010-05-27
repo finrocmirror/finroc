@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    pretxncommit.finroc_code_formatter
+# 
+# \author  Tobias Foehst
+# 
+# \date    2010-04-27
+# 
+# This hook uses the finroc_code_formatter to enforce valid formatted
+# source code in changed committed to a hg repository.
+#----------------------------------------------------------------------
+
+# setup finroc environment
+if [ -z $FINROC_HOME ] ; then
+    if [ -z $1 ] ; then
+        echo 1>&2
+        echo "Could not determine \$FINROC_HOME." 1>&2
+    else
+        if [ -f $1/scripts/setenv ] ; then
+            cd $1
+            source scripts/setenv &> /dev/null
+            cd - &> /dev/null
+        fi
+        if [ -z $FINROC_HOME ] ; then
+            echo 1>&2
+            echo "'$1' is not valid as \$FINROC_HOME." 1>&2
+        fi
+    fi
+fi
+
+if [ -z $FINROC_HOME ] ; then
+    echo 1>&2
+    echo "Either source scripts/setenv from \$FINROC_HOME or specify" 1>&2
+    echo "\$FINROC_HOME as command line argument to this script." 1>&2
+    echo 1>&2
+    exit 1
+fi
+
+# check changed files
+for FILE in `hg status --added --modified --no-status`
+do
+    EXTENSION=`basename $FILE | sed -e 's/\([^\.]\+\.\)\+//'`
+    TEMP_FILE=`echo $FILE | sed -e "s/$EXTENSION/hg_hook_formatted.$EXTENSION/"`
+    cp $FILE $TEMP_FILE
+    finroc_code_formatter -f $TEMP_FILE &> /dev/null
+    diff --brief $FILE $TEMP_FILE &> /dev/null
+    if [ $? -ne 0 ] ; then
+        echo 1>&2
+        echo "Commits to the central repository are only allowed for source" 1>&2
+        echo "files meeting its standards on formatting and indentation." 1>&2
+        echo "Format checking has failed for at least one file modified in" 1>&2
+        echo "your changeset: ${FILE}." 1>&2
+        echo 1>&2
+        echo "Please run finroc_code_formatter and recompile." 1>&2
+        echo 1>&2
+        echo "Diff output:" 1>&2
+        diff $FILE $TEMP_FILE 1>&2
+        rm $TEMP_FILE
+        exit 1
+    fi
+    rm $TEMP_FILE
+done
+
+
+exit 0

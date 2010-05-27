@@ -122,7 +122,7 @@ sub CollectModifiedFiles()
 
     DEBUGMSG sprintf "Collecting only modified files using SVN in '%s'...\n", $directory;
 
-    foreach my $svn_line (split "\n", `svn st --ignore-externals 2> /dev/null`)
+    foreach my $svn_line (split "\n", `hg st . 2> /dev/null`)
     {
         my ($status, $filename) = split " ", $svn_line;
         if ($status =~ /^[\?X]/ and -d $filename)

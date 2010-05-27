@@ -1,0 +1,117 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    hgall
+#
+# \author  Tobias Foehst
+#
+# \date    2010-05-05
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+
+use Getopt::Long;
+use Data::Dumper;
+
+use lib "$FINROC_HOME/scripts/perl";
+use FINROC::messages;
+
+
+
+############################
+##  Command line options  ##
+############################
+
+# command line options
+my %command_line_options;
+GetOptions \%command_line_options, "verbose+", "help";
+
+EnableVerboseMessages if defined $command_line_options{"verbose"};
+
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
+
+
+
+#############
+##  Usage  ##
+#############
+
+# print help and terminate if requested
+if (defined $command_line_options{"help"})
+{
+    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+
+    INFOMSG sprintf "usage: %s [options] <hg_command>\n", (reverse (split "/", $0))[0];
+    INFOMSG "options:\n";
+    PrintOption "-h, --help", "show this help";
+    PrintOption "-v, --verbose", "more output for debugging";
+    INFOMSG "\n";
+    INFOMSG "To add options to hg commands terminate options processing using '--'\n";
+    INFOMSG "\n";
+    exit 0;
+}
+
+
+
+# non-optional arguments
+ERRORMSG sprintf "<hg_command> not specified. Use %s --help for more information.\n", (reverse (split "/", $0))[0] unless defined $ARGV[0];
+
+
+
+###########################
+##  Find hg directories  ##
+###########################
+
+my @hg_directories = split "\n", `find -name ".hg"`;
+
+DEBUGMSG Dumper \@hg_directories;
+
+
+
+#############################################
+##  Execute command in every hg directory  ##
+#############################################
+
+my $hg_command = join " ", @ARGV;
+
+my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
+DEBUGMSG sprintf "Stored working directory: '%s'\n", $working_directory;
+foreach my $hg_directory (@hg_directories)
+{
+    $hg_directory =~ s/\/[^\/]*$//;
+    DEBUGMSG sprintf "Processing '%s'\n", $hg_directory;
+
+    DEBUGMSG sprintf "cd %s\n", $hg_directory;
+    chdir $hg_directory;
+
+    INFOMSG sprintf "\nWorking copy of %s at %s\n", map { chomp; s/.*=\s*//; $_ } `hg paths | grep default`, `pwd`;
+
+    my $command = sprintf "hg %s", $hg_command;
+    INFOMSG sprintf "Executing '%s'\n\n", $command;
+    system $command;
+
+    DEBUGMSG sprintf "cd %s\n", $working_directory;
+    chdir $working_directory;
+}
+INFOMSG "\n";
+
+
+
+exit 0;

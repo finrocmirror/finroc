@@ -1,0 +1,135 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_update_hg_hooks
+#
+# \author  Tobias Foehst
+#
+# \date    2010-05-05
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+
+use Getopt::Long;
+use Data::Dumper;
+
+use lib "$FINROC_HOME/scripts/perl";
+use FINROC::messages;
+
+
+
+############################
+##  Command line options  ##
+############################
+
+# command line options
+my %command_line_options;
+GetOptions \%command_line_options, "verbose+", "help";
+
+EnableVerboseMessages if defined $command_line_options{"verbose"};
+
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
+
+
+
+#############
+##  Usage  ##
+#############
+
+# print help and terminate if requested
+if (defined $command_line_options{"help"})
+{
+    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+
+    INFOMSG sprintf "usage: %s [options]\n", (reverse (split "/", $0))[0];
+    INFOMSG "options:\n";
+    PrintOption "-h, --help", "show this help";
+    PrintOption "-v, --verbose", "more output for debugging";
+    INFOMSG "\n";
+    exit 0;
+}
+
+
+
+###########################
+##  Find hg directories  ##
+###########################
+
+my @hg_directory = split "\n", `find -name ".hg"`;
+
+DEBUGMSG Dumper \@hg_directory;
+
+
+
+#########################
+##  Update hgrc files  ##
+#########################
+
+foreach my $hg_directory (@hg_directory)
+{
+    my $hgrc = "$hg_directory/hgrc";
+
+    my $content = "";
+    my %hooks;
+    open HGRC, "<$hgrc" and eval {
+        my $in_section_hooks = 0;
+        while (<HGRC>)
+        {
+            $in_section_hooks = 0 if /^\s*\[(.+)\]/;
+            $in_section_hooks = 1 if /^\s*\[hooks\]/;
+            chomp;
+            if ($in_section_hooks)
+            {
+                if (/=/)
+                {
+                    my ($name, $value) = map { s/^\s*//; s/\s*$//; $_ } split "=";
+                    $hooks{$name} = $value;
+                }
+            }
+            else
+            {
+                $content .= "$_\n";
+            }
+        }
+        close HGRC;
+        1;
+    };
+
+    $hooks{"precommit.finroc_code_formatter"} = sprintf "%s/scripts/hg_hooks/precommit.finroc_code_formatter %s", $FINROC_HOME, $FINROC_HOME;
+
+    DEBUGMSG $content;
+    DEBUGMSG Dumper \%hooks;
+
+    open HGRC, ">$hgrc" or die "Could not open '$hgrc' for writing!";
+    print "Writing $hgrc ... ";
+    printf HGRC "$content";
+    printf HGRC "[hooks]\n";
+    foreach my $name (keys %hooks)
+    {
+        printf HGRC sprintf "%s = %s\n", $name, $hooks{$name};
+    }
+    print "Done.\n";
+    close HGRC;
+
+}
+
+
+
+exit 0;

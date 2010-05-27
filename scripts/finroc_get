@@ -32,7 +32,7 @@ use Data::Dumper;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
-
+use FINROC::rcs;
 
 
 ############################
@@ -218,8 +218,11 @@ sub FixImplicitDependencies()
 {
     foreach my $name (sort keys %components)
     {
+        AddMandatoryComponent ComponentInfo "mca2_make_builder", "make_builder"
+	                                                                        unless $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
         AddMandatoryComponent Component "finroc_tools_jgui" if $name =~ /^finroc_tools_jgui_/;
-        AddMandatoryComponent Component "mca2" if $name =~ /^mca/; # FIXME: ONLY FOR MCA2 LEGACY
+        AddMandatoryComponent Component "mca2" if $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
+        AddMandatoryComponent ComponentInfo "mca2_make_builder", "mca2-legacy/make_builder" if $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
     }
 }
 
@@ -236,21 +239,6 @@ sub AskForOptionalComponent($)
 ###########################
 #  Checkout repositories  #
 ###########################
-
-sub Checkout($$)
-{
-    my ($repository, $directory) = @_;
-    $repository = sprintf "https://agrosy.informatik.uni-kl.de/svn/%s/trunk", $repository;
-    $repository =~ s/mca2\/trunk$/mca2\/branches\/mca3_experimental/; # FIXME: ONLY FOR MCA2 LEGACY
-    ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $directory if -f $directory;
-    ERRORMSG sprintf "'%s' already exists\n", $directory if -e $directory;
-
-    my $command = sprintf "svn co %s %s", $repository, $directory;
-    INFOMSG sprintf "Executing '%s'\n", $command;
-    system $command;
-}
-
-
 
 my $complete = 0;
 while (!$complete)
