@@ -32,8 +32,10 @@ use XML::TreeBuilder;
 use XML::Element;
 use Cwd;
 use File::Copy::Recursive qw(dircopy);
+use File::Find;
 
 sub FindJavaSourceDirs($);
+sub FindJars($);
 
 # directory and file names
 my $cwd = getcwd();
@@ -41,6 +43,12 @@ my $projectDir = "$cwd/eclipse_project_java";
 my $projectFile = "$projectDir/.project";
 my $classpathFile = "$projectDir/.classpath";
 my $templateDir = "$cwd/etc/eclipse/java_project_template";
+
+# make sure we're in finroc root dir
+unless (-e $templateDir) {
+    print "Please call in finroc root directory\n";
+    exit 0;
+}
 
 # copy Eclipse project directory from etc, if we don't have one yet
 unless (-e $projectDir) {
@@ -59,8 +67,62 @@ FindJavaSourceDirs("rrlib");
 FindJavaSourceDirs("tools");
 my @jdirs = sort keys %javaSourceDirs;
 
+# Find all .jars and make.xml in local repositories
+my @localJars = ();
+my @makeXmls = ();
+FindJars("jcore");
+FindJars("libraries");
+FindJars("plugins");
+FindJars("projects");
+FindJars("rrlib");
+FindJars("tools");
+
+# load libdb.java
+my $libdbJava = "$cwd/make_builder/etc/libdb.java";
+unless (-e $libdbJava) {
+    my @output = `updatelibdb`;
+}
+my %systemJars = ();
+open(my $sjin, "<", $libdbJava) or die "Can't open $libdbJava: $!";
+while (<$sjin>) {
+    if ($_ =~ /^[\s]*(\S*)[\s]*:[\s]*(\S*)[\s]*$/) {
+        $systemJars { $1 } = $2;
+    }
+}
+close $sjin or die "$sjin: $!";
+
+# start list with full-path jars
+my @allJars = ();
+foreach (@localJars) {
+    $_ =~ s/^\s+|\s+$//g; # remove both leading and trailing whitespace
+    push @allJars, $_;
+}
+
+# scan make.xml for .jars not built here
+my $tree;
+foreach my $makeXml (@makeXmls) {
+    $tree = XML::TreeBuilder->new; # empty tree
+    print "parsing $makeXml";
+    $tree->parse_file($makeXml);
+    my @targets = $tree->find("targets")->descendants();
+    foreach my $target (@targets) {
+        #print "processing target $target\n";
+        my $libs = $target->attr("libs");
+        unless (defined($libs)) {
+            next;
+        }
+        my @libsList = split /\s+/, $libs;
+        foreach my $lib (@libsList) {
+            if (exists $systemJars { $lib }) {
+                push @allJars, $systemJars { $lib };
+            }
+        }
+    }
+    $tree = $tree->delete;
+}
+
 # insert java source directories in .project file
-my $tree = XML::TreeBuilder->new; # empty tree
+$tree = XML::TreeBuilder->new; # empty tree
 $tree->parse_file($projectFile);
 my $linkedRes = $tree->find("linkedResources");
 $linkedRes->delete_content();
@@ -92,6 +154,10 @@ foreach my $jdir (@jdirs) {
     my $n = $jdir;
     $n =~ s/\//_/g;  # replace slashes with underscores
     my $cpe = HTML::Element->new("classpathentry", "kind" => "src", "path" => $n);
+    $classpath->push_content("\n\t", $cpe);
+}
+foreach my $jar (@allJars) {
+    my $cpe = HTML::Element->new("classpathentry", "kind" => "lib", "path" => $jar);
     $classpath->push_content("\n\t", $cpe);
 }
 $classpath->push_content("\n\t", HTML::Element->new("classpathentry", "kind" => "con", "path" => "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"));
@@ -144,5 +210,15 @@ sub FindJavaSourceDirs($) {
             # search deeper...
             FindJavaSourceDirs($_);
         }
+    }
+}
+
+#Adds all .jar files in specified subdirectory of $cwd to @localJars
+sub FindJars($) {
+    my $curDir = shift;
+    my $curDirFull = "$cwd/$curDir";
+    if (-e $curDirFull) {
+        find( sub {push @localJars, "$File::Find::name$/" if (/\.jar$/)}, $curDirFull);
+        find( sub {push @makeXmls, "$File::Find::name$/" if (/make.xml$/)}, $curDirFull);
     }
 }
