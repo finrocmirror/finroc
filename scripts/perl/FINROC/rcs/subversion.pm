@@ -15,11 +15,11 @@ sub GetRepositoryPrefix()
     return sprintf "%s", map { chomp; s/\s*Repository Root:\s*//; s/\/[^\/]*$//; $_ } `svn info $FINROC_HOME | grep 'Repository Root: '`;
 }
 
-sub CheckoutSVN($$)
+sub Checkout($$)
 {
     my ($repository, $directory) = @_;
 
-    $repository = sprintf "%s/%s/trunk", $repository_prefix, $repository;
+    $repository = sprintf "%s/%s/trunk", GetRepositoryPrefix, $repository;
     $repository =~ s/mca2\/trunk$/mca2\/branches\/mca3_experimental/; # FIXME: ONLY FOR MCA2 LEGACY
     ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $directory if -f $directory;
     ERRORMSG sprintf "'%s' already exists\n", $directory if -e $directory;
