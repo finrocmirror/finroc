@@ -12,7 +12,10 @@ use FINROC::messages;
 
 sub GetRepositoryPrefix()
 {
-    return sprintf "%s", map { chomp; s/\s*Repository Root:\s*//; s/\/[^\/]*$//; $_ } `svn info $FINROC_HOME | grep 'Repository Root: '`;
+    use XML::Simple;
+    my $svn_info = `svn info --xml $FINROC_HOME`;
+    my %repository = %{${XMLin $svn_info}{"entry"}{"repository"}};
+    return sprintf "%s", map { chomp; s/\/[^\/]*$//; $_ } $repository{"root"};
 }
 
 sub Checkout($$)
