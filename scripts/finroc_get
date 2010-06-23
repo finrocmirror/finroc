@@ -86,6 +86,9 @@ ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more inform
 $command_line_options{"optional"} = "ask" unless defined $command_line_options{"optional"} and $command_line_options{"optional"} ne "";
 
 
+DEBUGMSG sprintf "Revision control system found to be used for this working copy: %s\n", GetRCSName;
+DEBUGMSG sprintf "Repository prefix: %s\n\n", GetRepositoryPrefix;
+
 
 ###########################
 #  Component information  #
