@@ -27,7 +27,7 @@ sub Checkout($$)
     ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $directory if -f $directory;
     ERRORMSG sprintf "'%s' already exists\n", $directory if -e $directory;
 
-    my $command = sprintf "svn co %s %s", $repository, $directory;
+    my $command = sprintf "svn co --ignore-externals %s %s", $repository, $directory;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $? != 0;
