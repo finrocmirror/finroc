@@ -3,3 +3,7 @@
 test -f ./scripts/setenv || echo "Please source this script in FINROC base directory"
 test -f ./scripts/setenv || return
 eval `./scripts/configure $@`
+
+export LC_CTYPE=POSIX
+export LC_ALL=POSIX
+export LANG=POSIX
