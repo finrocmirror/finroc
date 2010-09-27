@@ -49,10 +49,10 @@ EnableVerboseMessages if defined $command_line_options{"verbose"};
 DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
 
 # handle illegal values
-#if (defined $command_line_options{"target"})
-#{
-#    ERRORMSG sprintf "Target `%s' does not exist!\n", $command_line_options{"target"} unless -f sprintf "etc/targets/%s", $command_line_options{"target"};
-#}
+if (defined $command_line_options{"target"})
+{
+    ERRORMSG sprintf "Target `%s' does not exist!\n", $command_line_options{"target"} unless -f sprintf "etc/targets/%s", $command_line_options{"target"};
+}
 if (defined $command_line_options{"local"})
 {
     ERRORMSG "Possible values for --local: yes|no\n" unless $command_line_options{"local"} =~ /yes|no/;
