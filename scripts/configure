@@ -35,6 +35,12 @@ use FINROC::messages;
 # config file
 my $config_filename = ".finroc.conf";
 
+# platform
+#use Config;
+#my $platform = $Config{archname};
+my $platform = `python -c 'import sys\nimport platform\nsys.stdout.write(platform.machine()+"_"+platform.system())'`;
+
+
 ############################
 ##  Command line options  ##
 ############################
@@ -51,7 +57,8 @@ DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
 # handle illegal values
 if (defined $command_line_options{"target"})
 {
-    ERRORMSG sprintf "Target `%s' does not exist!\n", $command_line_options{"target"} unless -f sprintf "etc/targets/%s", $command_line_options{"target"};
+    my $target = sprintf "%s_%s", $platform, $command_line_options{"target"};
+    ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
 }
 if (defined $command_line_options{"local"})
 {
@@ -151,9 +158,7 @@ foreach my $option (keys %configuration)
 close CONFIG;
 
 # additional configuration
-#use Config;
-#$configuration{"target"} = sprintf "%s_%s", $Config{archname}, $configuration{"target"};
-$configuration{"target"} = sprintf "%s_%s", `python -c 'import sys\nimport platform\nsys.stdout.write(platform.machine()+"_"+platform.system())'`, $configuration{"target"};
+$configuration{"target"} = sprintf "%s_%s", $platform, $configuration{"target"};
 use Cwd;
 $configuration{"home"} = getcwd;
 $configuration{"project_home"} = sprintf "%s/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"};

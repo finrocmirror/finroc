@@ -55,32 +55,32 @@ foreach $svndir (@svndirs) {
 
     # parse svn info output
     foreach my $line (@svninfo) {
-	if ( $line =~ /<uuid>/ ) {
-	    $line =~ s/<uuid>//;
-	    $line =~ s/<\/uuid>//;
+        if ( $line =~ /<uuid>/ ) {
+            $line =~ s/<uuid>//;
+            $line =~ s/<\/uuid>//;
             $line =~ s/\s+$//;
-	    $root = $line;
-	}
-	if ( $line =~ /<url>/ ) {
-	    $line =~ s/<url>//;
-	    $line =~ s/<\/url>//;
+            $root = $line;
+        }
+        if ( $line =~ /<url>/ ) {
+            $line =~ s/<url>//;
+            $line =~ s/<\/url>//;
             $line =~ s/\s+$//;
-	    $url = $line;
-	}
+            $url = $line;
+        }
     }
     
     # save results in hashes
     if ( ( length($url) > 0 ) && ( length($root) > 0 ) ) { 
-	if ( exists($repos{$root}) ) {
-	    if ( length($url) < length($repos{$root}) ) {
-		$repos{$root} = $url;
-		$repos_dir{$root} = getcwd;
-	    }
-	}
-	else {
-	    $repos{$root} = $url;
-	    $repos_dir{$root} = getcwd;
-	}
+        if ( exists($repos{$root}) ) {
+            if ( length($url) < length($repos{$root}) ) {
+                $repos{$root} = $url;
+                $repos_dir{$root} = getcwd;
+            }
+        }
+        else {
+            $repos{$root} = $url;
+            $repos_dir{$root} = getcwd;
+        }
     }
     
     # cd back
@@ -104,8 +104,8 @@ while ( my ($key, $value) = each(%repos) )
     open SVNOUTPUT, "svn @globbed_args |";
     my $conflicts = 0;
     while (<SVNOUTPUT>) {
-	print;
-	$conflicts++ if /^\s*C\s+/;
+        print;
+        $conflicts++ if /^\s*C\s+/;
     }
     $conflicts{$repos_dir{$key}} = $conflicts if $conflicts > 0;
     chdir "$currentdir";
