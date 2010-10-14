@@ -65,13 +65,13 @@ unless (-e $projectDir) {
 
 # Find all java source trees in finroc directory...
 my %javaSourceDirs = (); #(ought to be a set - so key and value are always identical)
-FindJavaSourceDirs("source/java");
+FindJavaSourceDirs("sources/java");
 my @jdirs = sort keys %javaSourceDirs;
 
 # Find all .jars and make.xml in local repositories
 my @localJars = ();
 my @makeXmls = ();
-FindJars("source/java");
+FindJars("sources/java");
 
 # load libdb.java
 my $libdbJava = "$cwd/make_builder/etc/libdb.java";
