@@ -96,24 +96,33 @@ DEBUGMSG sprintf "Repository prefix: %s\n\n", GetRepositoryPrefix;
 
 sub ComponentInfo($$) { return ( shift, { "directory" => "$FINROC_HOME/".shift, "selected" => 0, "processed" => 0 } ); }
 
+sub SourceComponentInfo($$$)
+{
+    my ($name, $repository_prefix, $directory_prefix) = @_;
+    my @name_parts = split "-", $name;
+    ERRORMSG sprintf "Invalid number of '-' in source component '%s'\n", $name if scalar @name_parts > 2;
+    my $language = scalar @name_parts == 2 ? $name_parts[1] : "cpp";
+    return ComponentInfo $repository_prefix."_$name", "sources/$language/$directory_prefix/$name_parts[0]";
+}
+
 sub FINROC($)
 {
     my ($name) = @_;
-    return ComponentInfo "finroc_core", "core" if $name =~ /^core$/;
-    return ComponentInfo "finroc_jcore", "jcore" if $name =~ /^jcore$/;
-    return ComponentInfo "finroc_plugins_$1", "plugins/$1" if $name =~ /^plugins_(.*)/;
-    return ComponentInfo "finroc_libraries_$1", "libraries/$1" if $name =~ /^libraries_(.*)/;
-    return ComponentInfo "finroc_tools_jgui_plugins_$1", "tools/jgui/plugins/$1" if $name =~ /^tools_jgui_plugins_(.*)/;
-    return ComponentInfo "finroc_tools_$1", "tools/$1" if $name =~ /^tools_(.*)/;
-    return ComponentInfo "finroc_projects_$1", "projects/$1" if $name =~ /^projects_(.*)/;
+    return SourceComponentInfo "core", "finroc", "" if $name =~ /^core$/;
+    return SourceComponentInfo "core-java", "finroc", "" if $name =~ /^core-java$/;
+    return SourceComponentInfo $1, "finroc_plugins", "plugins" if $name =~ /^plugins_(.*)/;
+    return SourceComponentInfo $1, "finroc_libraries", "libraries" if $name =~ /^libraries_(.*)/;
+    return SourceComponentInfo $1, "finroc_tools_gui_plugins", "tools/gui/plugins" if $name =~ /^tools_gui_plugins_(.*)/;
+    return SourceComponentInfo $1, "finroc_tools", "tools" if $name =~ /^tools_(.*)/;
+    return SourceComponentInfo $1, "finroc_projects", "projects" if $name =~ /^projects_(.*)/;
     ERRORMSG sprintf "Could not identify FINROC component '%s'\n", $name;
 }
 
 sub RRLib($)
 {
     my ($name) = @_;
-    return ComponentInfo "rrlib_external_$1", "rrlib/external/$1" if $name =~ /^external_(.*)/;
-    return ComponentInfo "rrlib_$name", "rrlib/$name";
+    return SourceComponentInfo $1, "rrlib_external", "rrlib/external" if $name =~ /^external_(.*)/;
+    return SourceComponentInfo $name, "rrlib", "rrlib";
 }
 
 sub Local($)
@@ -138,10 +147,10 @@ sub Local($)
 sub MCA2($)
 {
     my ($name) = @_;
-    return ComponentInfo "mca2", "mca2-legacy" if $name =~ /^2$/;
-    return ComponentInfo "mcal_$1", "mca2-legacy/libraries/$1" if $name =~ /^l_(.*)/;
-    return ComponentInfo "mcap_$1", "mca2-legacy/projects/$1" if $name =~ /^p_(.*)/;
-    return ComponentInfo "mcar_$1", "mca2-legacy/resources/$1" if $name =~ /^r_(.*)/;
+    return ComponentInfo "mca2", "sources/cpp/mca2-legacy" if $name =~ /^2$/;
+    return ComponentInfo "mcal_$1", "sources/cpp/mca2-legacy/libraries/$1" if $name =~ /^l_(.*)/;
+    return ComponentInfo "mcap_$1", "sources/cpp/mca2-legacy/projects/$1" if $name =~ /^p_(.*)/;
+    return ComponentInfo "mcar_$1", "sources/cpp/mca2-legacy/resources/$1" if $name =~ /^r_(.*)/;
     ERRORMSG sprintf "Could not identify MCA2 legacy component '%s'\n", $name;
 }
 
@@ -158,7 +167,7 @@ sub Component($)
     my ($name) = @_;
     return FINROC $1 if $name =~ /^finroc_(.*)/;
     return RRLib $1 if $name =~ /^rrlib_(.*)/;
-    return MCA2 $1 if $name =~ /^mca(.*)/;
+    return MCA2 $1 if $name =~ /^mca(.*)/;   # FIXME: ONLY FOR MCA2 LEGACY
     return Local $name;
     ERRORMSG sprintf "Could not identify component '%s'\n", $name;
 }
@@ -224,7 +233,7 @@ sub FixImplicitDependencies()
     {
         AddMandatoryComponent ComponentInfo "mca2_make_builder", "make_builder"
                                                                                 unless $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
-        AddMandatoryComponent Component "finroc_tools_jgui" if $name =~ /^finroc_tools_jgui_/;
+        AddMandatoryComponent Component sprintf "finroc_tools_gui%s", defined $1 ? $1 : "" if $name =~ /^finroc_tools_gui_[^-]+(-\S+)?/;
         AddMandatoryComponent Component "mca2" if $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
         AddMandatoryComponent ComponentInfo "mca2_make_builder", "mca2-legacy/make_builder" if $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
     }
@@ -260,7 +269,7 @@ while (!$complete)
 
             DEBUGMSG sprintf "Processing '%s'\n%s\n", $name, Dumper \$components{$name};
 
-            Checkout $name, $components{$name}{"directory"} unless -d $components{$name}{"directory"};
+#            Checkout $name, $components{$name}{"directory"} unless -d $components{$name}{"directory"};
             AddDependencies $components{$name}{"directory"} if defined $command_line_options{"recurse"};
 
             $components{$name}{"processed"} = 1;
