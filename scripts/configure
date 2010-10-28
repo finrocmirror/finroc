@@ -161,8 +161,8 @@ close CONFIG;
 $configuration{"target"} = sprintf "%s_%s", $platform, $configuration{"target"};
 use Cwd;
 $configuration{"home"} = getcwd;
-$configuration{"project_home"} = sprintf "%s/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"};
-$configuration{"project_home"} = sprintf "%s/mca2-legacy/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"} and $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
+$configuration{"project_home"} = sprintf "%s/sources/cpp/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"};
+$configuration{"project_home"} = sprintf "%s/sources/cpp/mca2-legacy/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"} and $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper \%configuration;
 
 
