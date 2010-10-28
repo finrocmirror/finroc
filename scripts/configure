@@ -131,7 +131,7 @@ if (defined $configuration{"project"})
 {
     if ($configuration{"mca"} eq "yes")                                                                             # FIXME: ONLY FOR MCA2 LEGACY
     {                                                                                                               # FIXME: ONLY FOR MCA2 LEGACY
-        unless (-d sprintf "mca2-legacy/projects/%s", $configuration{"project"})                                    # FIXME: ONLY FOR MCA2 LEGACY
+        unless (-d sprintf "sources/cpp/mca2-legacy/projects/%s", $configuration{"project"})                        # FIXME: ONLY FOR MCA2 LEGACY
         {                                                                                                           # FIXME: ONLY FOR MCA2 LEGACY
             INFOMSG sprintf "\nWarning: MCA2 legacy project `%s' does not exist!\n\n", $configuration{"project"};   # FIXME: ONLY FOR MCA2 LEGACY
             $configuration{"project"} = undef;                                                                      # FIXME: ONLY FOR MCA2 LEGACY
@@ -139,7 +139,7 @@ if (defined $configuration{"project"})
     }                                                                                                               # FIXME: ONLY FOR MCA2 LEGACY
     else                                                                                                            # FIXME: ONLY FOR MCA2 LEGACY
     {                                                                                                               # FIXME: ONLY FOR MCA2 LEGACY
-        unless (-d sprintf "projects/%s", $configuration{"project"})
+        unless (-d sprintf "sources/cpp/projects/%s", $configuration{"project"})
         {
             INFOMSG sprintf "\nWarning: Project `%s' does not exist!\n\n", $configuration{"project"};
             $configuration{"project"} = undef;
