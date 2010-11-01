@@ -198,7 +198,7 @@ sub SetEnvironment($) {
 
 # FINROC_HOME
 SetEnvironment sprintf "export FINROC_HOME=%s", $configuration{"home"};
-SetEnvironment sprintf "export MCAHOME=%s/mca2-legacy", $configuration{"home"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
+SetEnvironment sprintf "export MCAHOME=%s/sources/cpp/mca2-legacy", $configuration{"home"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 # FINROC_PROJECT
 #SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if defined $configuration{"project"};
