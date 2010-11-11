@@ -17,102 +17,157 @@
 #----------------------------------------------------------------------
 # \file    svnall
 #
-# \author  Norbert Schmitz
-# \author  Tim Braun
 # \author  Tobias Foehst
 #
-# \date    2007-06-01
+# \date    2010-11-10
 #
 #----------------------------------------------------------------------
 
 use strict;
 
-use Cwd;
+use Env '$FINROC_HOME';
 
-if ($#ARGV < 0) {
-    print "usage: svnall <svn-arguments>\n";
-    print "\nthe command \"svn <svn-arguments>\" will be executed in all\n";
-    print "SVN-repositories present in any sub-directory of the current dir.\n";
-    exit;
-}
+use Getopt::Long;
+use Data::Dumper;
+use XML::Simple;
 
-my %repos = ();
-my %repos_dir = ();
+use lib "$FINROC_HOME/scripts/perl";
+use FINROC::messages;
 
-my @svndirs = `find . -type d -name .svn -print`;
-my $svndir = "";
 
-foreach $svndir (@svndirs) {
-    $svndir =~ s/\/.svn\s+$//;   # remove trailing '.svn' and newline 
-    # save dir and cd into new one
-    my $currentdir = getcwd;
-    chdir "$svndir";
-    my @svninfo = `svn info --xml`;
-    
-    # clear variables
-    my $url = "";
-    my $root = "";
 
-    # parse svn info output
-    foreach my $line (@svninfo) {
-        if ( $line =~ /<uuid>/ ) {
-            $line =~ s/<uuid>//;
-            $line =~ s/<\/uuid>//;
-            $line =~ s/\s+$//;
-            $root = $line;
-        }
-        if ( $line =~ /<url>/ ) {
-            $line =~ s/<url>//;
-            $line =~ s/<\/url>//;
-            $line =~ s/\s+$//;
-            $url = $line;
-        }
-    }
-    
-    # save results in hashes
-    if ( ( length($url) > 0 ) && ( length($root) > 0 ) ) { 
-        if ( exists($repos{$root}) ) {
-            if ( length($url) < length($repos{$root}) ) {
-                $repos{$root} = $url;
-                $repos_dir{$root} = getcwd;
-            }
-        }
-        else {
-            $repos{$root} = $url;
-            $repos_dir{$root} = getcwd;
-        }
-    }
-    
-    # cd back
-    chdir "$currentdir";
-}
-my @globbed_args;
-my %conflicts;
-# call svn ... in all important dirs
-while ( my ($key, $value) = each(%repos) )
+############################
+##  Command line options  ##
+############################
+
+# command line options
+my %command_line_options;
+GetOptions \%command_line_options, "verbose+", "help", "externals";
+
+EnableVerboseMessages if defined $command_line_options{"verbose"};
+
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
+
+
+
+#############
+##  Usage  ##
+#############
+
+# print help and terminate if requested
+if (defined $command_line_options{"help"})
 {
-    print "\nsub-repository: ".$value." at ".$repos_dir{$key}." \n" ;
-    
-    my $currentdir = getcwd;
-    chdir "$repos_dir{$key}";
-    @globbed_args = ();
-    foreach my $arg (@ARGV) {
-    @globbed_args = (@globbed_args, glob($arg));
-     #print " @globbed_args\n";
-    }
-    print "calling \"svn @globbed_args\"\n";
-    open SVNOUTPUT, "svn @globbed_args |";
-    my $conflicts = 0;
-    while (<SVNOUTPUT>) {
-        print;
-        $conflicts++ if /^\s*C\s+/;
-    }
-    $conflicts{$repos_dir{$key}} = $conflicts if $conflicts > 0;
-    chdir "$currentdir";
+    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+
+    INFOMSG sprintf "usage: %s [options] <svn_command>\n", (reverse (split "/", $0))[0];
+    INFOMSG "options:\n";
+    PrintOption "-h, --help", "show this help";
+    PrintOption "-v, --verbose", "more output for debugging";
+    PrintOption "-e, --externals", "Process svn:externals (by not adding --ignore-externals)";
+    INFOMSG "\n";
+    INFOMSG "To add options to svn commands terminate options processing using '--'\n";
+    INFOMSG "\n";
+    exit 0;
 }
 
-# tell about conflicts
-print "\n" if scalar keys %conflicts;
-foreach my $dir_name (keys %conflicts) {
-    printf "There %s %d conflict%s at %s\n", $conflicts{$dir_name} == 1 ? "is" : "are", $conflicts{$dir_name}, $conflicts{$dir_name} == 1 ? "" : "s", $dir_name;
+
+
+# non-optional arguments
+ERRORMSG sprintf "<svn_command> not specified. Use %s --help for more information.\n", (reverse (split "/", $0))[0] unless defined $ARGV[0];
+
+
+
+############################
+##  Find svn directories  ##
+############################
+
+sub GetRepositoryInfo($)
+{
+    my ($directory) = @_;
+    my $svn_info = `svn info --xml $directory`;
+    my %svn_info = %{${XMLin $svn_info}{"entry"}};
+    return { "directory" => $directory, "url" => $svn_info{"url"}, "root" => $svn_info{"repository"}{"root"}, "uuid" => $svn_info{"repository"}{"uuid"} };
 }
+
+my @directories = map { s/\/\.svn$//; GetRepositoryInfo $_ } sort split "\n", `find -name ".svn"`;
+
+DEBUGMSG Dumper \@directories;
+
+my @parents;
+my @svn_directories;
+foreach my $directory (@directories)
+{
+    unless (scalar @parents)
+    {
+        push @parents, { "directory" => ${$directory}{"directory"}, "uuid" => ${$directory}{"uuid"} };
+        push @svn_directories, $directory;
+        next;
+    }
+    if (${$directory}{"uuid"} ne $parents[-1]{"uuid"})
+    {
+        while (scalar @parents and $parents[-1]{"directory"} ne substr ${$directory}{"directory"}, 0, length $parents[-1]{"directory"})
+        {
+            pop @parents;
+        }
+    }
+    if (${$directory}{"uuid"} ne $parents[-1]{"uuid"})
+    {
+        push @parents, { "directory" => ${$directory}{"directory"}, "uuid" => ${$directory}{"uuid"} };
+        push @svn_directories, $directory;
+    }
+}
+
+DEBUGMSG Dumper \@svn_directories;
+
+
+
+
+##############################################
+##  Execute command in every svn directory  ##
+##############################################
+
+my $svn_command = join " ", @ARGV;
+#my %conflicts;
+
+my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
+DEBUGMSG sprintf "Stored working directory: '%s'\n", $working_directory;
+foreach my $svn_directory (@svn_directories)
+{
+    DEBUGMSG sprintf "Processing '%s'\n", ${$svn_directory}{"directory"};
+
+    DEBUGMSG sprintf "cd %s\n", ${$svn_directory}{"directory"};
+    chdir ${$svn_directory}{"directory"};
+
+    INFOMSG sprintf "\nWorking copy of %s at %s\n", ${$svn_directory}{"url"}, map { chomp; $_ } `pwd`;
+
+    my $command = sprintf "svn %s %s", defined $command_line_options{"externals"} ? "" : "--ignore-externals", $svn_command;
+    INFOMSG sprintf "Executing '%s'\n", $command;
+    system $command;
+#    my $conflicts = 0;
+#    foreach (split "\n", `$command`)
+#    {
+#        print;
+#        print "\n";
+#        $conflicts++ if /^\s*U\s+/;
+#    }
+#    $conflicts{${$svn_directory}{"directory"}} = $conflicts if $conflicts;
+
+    DEBUGMSG sprintf "cd %s\n", $working_directory;
+    chdir $working_directory;
+}
+INFOMSG "\n";
+
+
+
+############################
+##  Tell about conflicts  ##
+############################
+
+#foreach my $directory (keys %conflicts)
+#{
+#    printf "There %s %d conflict%s at %s\n", $conflicts{$directory} == 1 ? "is" : "are", $conflicts{$directory}, $conflicts{$directory} == 1 ? "" : "s", $directory;
+#}
+
+
+
+exit 0;

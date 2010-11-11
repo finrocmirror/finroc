@@ -79,7 +79,7 @@ ERRORMSG sprintf "<hg_command> not specified. Use %s --help for more information
 ##  Find hg directories  ##
 ###########################
 
-my @hg_directories = split "\n", `find -name ".hg"`;
+my @hg_directories = map { s/\/\.hg$//; $_ } split "\n", `find -name ".hg"`;
 
 DEBUGMSG Dumper \@hg_directories;
 
@@ -95,16 +95,15 @@ my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
 DEBUGMSG sprintf "Stored working directory: '%s'\n", $working_directory;
 foreach my $hg_directory (@hg_directories)
 {
-    $hg_directory =~ s/\/[^\/]*$//;
     DEBUGMSG sprintf "Processing '%s'\n", $hg_directory;
 
     DEBUGMSG sprintf "cd %s\n", $hg_directory;
     chdir $hg_directory;
 
-    INFOMSG sprintf "\nWorking copy of %s at %s\n", map { chomp; s/.*=\s*//; $_ } `hg paths | grep default`, `pwd`;
+    INFOMSG sprintf "\nWorking copy of %s at %s\n", map { chomp; s/.*=\s*//; $_ } `hg paths | grep default`, map { chomp; $_ } `pwd`;
 
     my $command = sprintf "hg %s", $hg_command;
-    INFOMSG sprintf "Executing '%s'\n\n", $command;
+    INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
 
     DEBUGMSG sprintf "cd %s\n", $working_directory;
