@@ -240,7 +240,6 @@ sub FixImplicitDependencies()
                                                                                 unless $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
         AddMandatoryComponent Component sprintf "finroc_tools_gui%s", defined $1 ? $1 : "" if $name =~ /^finroc_tools_gui_[^-]+(-\S+)?/;
         AddMandatoryComponent Component "mca2" if $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
-        AddMandatoryComponent ComponentInfo "mca2_make_builder", "mca2-legacy/make_builder" if $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
     }
 }
 
