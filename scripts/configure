@@ -222,8 +222,8 @@ SetEnvironment sprintf "export MCALOCAL=%s", $configuration{"local"} if $configu
 my (@path, @finroc_path, %finroc_path_elements);
 push @finroc_path, sprintf "%s/export/%s/bin", $configuration{"home"}, $configuration{"target"};
 push @finroc_path, sprintf "%s/%s", $configuration{"project_home"},
-                                                                    $configuration{"mca"} eq "yes" ? "script" : # FIXME: ONLY FOR MCA2 LEGACY
-                                                                    "scripts";
+                                                                    $configuration{"mca"} eq "yes" ? "script" :  # FIXME: ONLY FOR MCA2 LEGACY
+                                                                    "scripts" if defined $configuration{"project_home"};
 push @finroc_path, sprintf "%s/scripts", $configuration{"home"};
 push @finroc_path, sprintf "%s/sources/cpp/mca2-legacy/script", $configuration{"home"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 push @finroc_path, sprintf "%s/make_builder/scripts", $configuration{"home"};
