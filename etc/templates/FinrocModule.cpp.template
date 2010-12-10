@@ -59,13 +59,13 @@ using namespace finroc::<NAMESPACE>;
 // Implementation
 //----------------------------------------------------------------------
 
-finroc::core::tStandardCreateModuleAction<m<NAME>> TEST_MODULE_CREATE_ACTION("<NAME>");
+finroc::core::tStandardCreateModuleAction<m<NAME>> <SENTINEL>_CREATE_ACTION("<NAME>");
 
 //----------------------------------------------------------------------
 // m<NAME> constructors
 //----------------------------------------------------------------------
 m<NAME>::m<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name)
-  : tModule(parent, name),
+    : tModule(parent, name),
 
     ci_signal_1(this->RegisterControllerInput(this->ci_signal_1, "Signal 1")),
     ci_signal_2(this->RegisterControllerInput(this->ci_signal_2, "Signal 2")),
