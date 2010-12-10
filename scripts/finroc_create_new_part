@@ -15,18 +15,12 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    setenv
+# \file    finroc_create_new_part
 #
-# \author  Tobias Foehst
+# \author  unknown
 #
-# \date    2010-03-26
+# \date    unknown
 #
 #----------------------------------------------------------------------
 
-test -f ./scripts/setenv || echo "Please source this script in FINROC base directory"
-test -f ./scripts/setenv || return
-eval `./scripts/configure $@`
-
-export LC_CTYPE=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-export LANG=en_US.UTF-8
+finroc_create_new_code_frame etc/templates/FinrocPart $1 $2 p no_header
