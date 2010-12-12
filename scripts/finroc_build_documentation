@@ -32,7 +32,8 @@ if [ -z $FINROC_HOME ] ; then
 fi
 
 cd $FINROC_HOME
-doxygen documentation/Doxyfile
+doxygen documentation/cpp/Doxyfile
+doxygen documentation/java/Doxyfile
 cd -
 
 exit 0;
