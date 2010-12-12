@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    finroc_create_new_part
+# \file    finroc_create_new_group
 #
 # \author  unknown
 #
@@ -23,4 +23,4 @@
 #
 #----------------------------------------------------------------------
 
-finroc_create_new_code_frame finroc_create_new_part etc/templates/FinrocPart $1 $2 p no_header
+finroc_create_new_code_frame finroc_create_new_group etc/templates/FinrocGroup $1 $2 g

@@ -23,4 +23,4 @@
 #
 #----------------------------------------------------------------------
 
-finroc_create_new_code_frame newModule etc/templates/FinrocModule $1 $2 m
+finroc_create_new_code_frame finroc_create_new_module etc/templates/FinrocModule $1 $2 m
