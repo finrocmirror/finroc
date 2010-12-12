@@ -70,16 +70,17 @@ namespace <NAMESPACE>
  */
 class m<NAME> : public tModule
 {
+  static finroc::core::tStandardCreateModuleAction<m<NAME>> cCREATE_ACTION;
 
-  finroc::core::tNumberPort &ci_signal_1;
-  finroc::core::tNumberPort &ci_signal_2;
+  finroc::core::tNumberPort* ci_signal_1;
+  finroc::core::tNumberPort* ci_signal_2;
 
-  finroc::core::tNumberPort &co_signal_3;
+  finroc::core::tNumberPort* co_signal_3;
 
-  finroc::core::tNumberPort &si_signal_4;
-  finroc::core::tNumberPort &si_signal_5;
+  finroc::core::tNumberPort* si_signal_4;
+  finroc::core::tNumberPort* si_signal_5;
 
-  finroc::core::tNumberPort &so_signal_6;
+  finroc::core::tNumberPort* so_signal_6;
 
 //----------------------------------------------------------------------
 // Protected methods

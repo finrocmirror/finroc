@@ -59,7 +59,7 @@ using namespace finroc::<NAMESPACE>;
 // Implementation
 //----------------------------------------------------------------------
 
-finroc::core::tStandardCreateModuleAction<m<NAME>> <SENTINEL>_CREATE_ACTION("<NAME>");
+finroc::core::tStandardCreateModuleAction<m<NAME>> m<NAME>::CREATE_ACTION("<NAME>");
 
 //----------------------------------------------------------------------
 // m<NAME> constructors
