@@ -41,7 +41,7 @@ use FINROC::rcs;
 
 # command line options
 my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "recurse", "optional=s";
+GetOptions \%command_line_options, "verbose+", "help", "recurse", "optional=s", "username=s", "password=s";
 
 EnableVerboseMessages if defined $command_line_options{"verbose"};
 
@@ -71,6 +71,8 @@ if (defined $command_line_options{"help"})
     PrintOption "-v, --verbose", "more output for debugging";
     PrintOption "-r, --recursive", "get dependencies";
     PrintOption "-o [yes|no], --optional=[yes|no]", "get optional dependencies? - default: ask";
+    PrintOption "-u <username>, --username=<username>", "use <username> to get access to repositories";
+    PrintOption "-p <password, --password=<password>", "use <password> to get access to repositories";
     INFOMSG "\n";
     exit 0;
 }
@@ -273,7 +275,7 @@ while (!$complete)
 
             DEBUGMSG sprintf "Processing '%s'\n%s\n", $name, Dumper \$components{$name};
 
-            Checkout $name, $components{$name}{"directory"} unless -d $components{$name}{"directory"};
+            Checkout $name, $components{$name}{"directory"}, $command_line_options{'username'}, $command_line_options{'password'} unless -d $components{$name}{"directory"};
             AddDependencies $components{$name}{"directory"} if defined $command_line_options{"recurse"};
 
             $components{$name}{"processed"} = 1;
