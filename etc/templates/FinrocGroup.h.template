@@ -39,6 +39,8 @@
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")
 //----------------------------------------------------------------------
+#include "core/finstructable/tFinstructableGroup.h"
+#include "rrlib/util/patterns/final_class.h"
 
 //----------------------------------------------------------------------
 // Internal includes with ""
@@ -67,9 +69,11 @@ namespace <NAMESPACE>
  *  <AUTHOR> has not done yet!
  * 
  */
-class g<NAME> : public finroc::core::structure::tGroup
+class g<NAME>Impl : public finroc::core::structure::tGroup
 {
-  static finroc::core::tStandardCreateModuleAction<g<NAME>> cCREATE_ACTION;
+//----------------------------------------------------------------------
+// Private attributes
+//----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
 // Protected methods
@@ -80,7 +84,21 @@ class g<NAME> : public finroc::core::structure::tGroup
 //----------------------------------------------------------------------
 public:
 
-  g<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>");
+  g<NAME>Impl(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name);
+  
+  tCI<> ci_signal_1;
+
+};
+
+class g<NAME> : public finroc::core::tFinstructableGroup<g<NAME>Impl>, RRLIB_FINAL_CLASS
+{
+  static finroc::core::tStandardCreateModuleAction<g<NAME>> cCREATE_ACTION;
+
+public:
+
+  g<NAME>Impl(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>");
+    : finroc::core::tFinstructableGroup<g<NAME>Impl>(parent, name, __FILE__)
+  {};
 
 };
 

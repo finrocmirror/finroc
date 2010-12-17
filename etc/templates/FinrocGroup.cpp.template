@@ -66,13 +66,5 @@ finroc::core::tStandardCreateModuleAction<g<NAME>> g<NAME>::cCREATE_ACTION("<NAM
 g<NAME>::g<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name)
     : tGroup(parent, name),
 
-    ci_signal_1(this->RegisterControllerInput(this->ci_signal_1, "Signal 1")),
-    ci_signal_2(this->RegisterControllerInput(this->ci_signal_2, "Signal 2")),
-
-    co_signal_3(this->RegisterControllerOutput(this->co_signal_3, "Signal 3")),
-
-    si_signal_4(this->RegisterSensorInput(this->si_signal_4, "Signal 4")),
-    si_signal_5(this->RegisterSensorInput(this->si_signal_5, "Signal 5")),
-
-    so_signal_6(this->RegisterSensorOutput(this->so_signal_6, "Signal 6"))
+    ci_signal_1(this, "Signal 1")
 {}
