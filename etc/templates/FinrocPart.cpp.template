@@ -27,7 +27,7 @@
  *
  */
 //----------------------------------------------------------------------
-#include "projects/test/tDefaultMainWrapper.h"
+#include "core/default_main_wrapper.h"
 
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")

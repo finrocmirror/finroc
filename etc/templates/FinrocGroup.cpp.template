@@ -54,12 +54,11 @@ using namespace finroc::<NAMESPACE>;
 //----------------------------------------------------------------------
 // Const values
 //----------------------------------------------------------------------
+finroc::core::tStandardCreateModuleAction<g<NAME>> g<NAME>::cCREATE_ACTION("<NAME>");
 
 //----------------------------------------------------------------------
 // Implementation
 //----------------------------------------------------------------------
-
-finroc::core::tStandardCreateModuleAction<g<NAME>> g<NAME>::cCREATE_ACTION("<NAME>");
 
 //----------------------------------------------------------------------
 // g<NAME> constructors

@@ -34,7 +34,7 @@
 #ifndef <SENTINEL>
 #define <SENTINEL>
 
-#include "projects/test/tModule.h"
+#include "core/structure/tModule.h"
 
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")
@@ -43,7 +43,6 @@
 //----------------------------------------------------------------------
 // Internal includes with ""
 //----------------------------------------------------------------------
-#include "core/port/cc/tNumberPort.h"
 
 //----------------------------------------------------------------------
 // Debugging
@@ -68,19 +67,19 @@ namespace <NAMESPACE>
  *  <AUTHOR> has not done yet!
  * 
  */
-class m<NAME> : public tModule
+class m<NAME> : public finroc::core::structure::tModule
 {
   static finroc::core::tStandardCreateModuleAction<m<NAME>> cCREATE_ACTION;
 
-  finroc::core::tNumberPort* ci_signal_1;
-  finroc::core::tNumberPort* ci_signal_2;
+  tCI<finroc::core::tPortNumeric> ci_signal_1;
+  tCI<finroc::core::tPortNumeric> ci_signal_2;
 
-  finroc::core::tNumberPort* co_signal_3;
+  tCO<finroc::core::tPortNumeric> co_signal_3;
 
-  finroc::core::tNumberPort* si_signal_4;
-  finroc::core::tNumberPort* si_signal_5;
+  tSI<finroc::core::tPortNumeric> si_signal_4;
+  tSI<finroc::core::tPortNumeric> si_signal_5;
 
-  finroc::core::tNumberPort* so_signal_6;
+  tSO<finroc::core::tPortNumeric> so_signal_6;
 
 //----------------------------------------------------------------------
 // Protected methods
