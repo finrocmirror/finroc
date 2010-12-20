@@ -69,8 +69,10 @@ namespace <NAMESPACE>
  *  <AUTHOR> has not done yet!
  * 
  */
-class g<NAME>Impl : public finroc::core::structure::tGroup
+class g<NAME> : public finroc::core::structure::tGroup
 {
+  static finroc::core::tStandardCreateModuleAction<g<NAME>> cCREATE_ACTION;
+
 //----------------------------------------------------------------------
 // Private attributes
 //----------------------------------------------------------------------
@@ -84,21 +86,10 @@ class g<NAME>Impl : public finroc::core::structure::tGroup
 //----------------------------------------------------------------------
 public:
 
-  g<NAME>Impl(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name);
+  g<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>",
+          const finroc::util::tString &structure_config_file = __FILE__".xml");
   
   tCI<> ci_signal_1;
-
-};
-
-class g<NAME> : public finroc::core::tFinstructableGroup<g<NAME>Impl>, RRLIB_FINAL_CLASS
-{
-  static finroc::core::tStandardCreateModuleAction<g<NAME>> cCREATE_ACTION;
-
-public:
-
-  g<NAME>Impl(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>");
-    : finroc::core::tFinstructableGroup<g<NAME>Impl>(parent, name, __FILE__)
-  {};
 
 };
 
