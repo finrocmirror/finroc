@@ -19,15 +19,22 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 //----------------------------------------------------------------------
-/*!\file    m<NAME>.cpp
+/*!\file    mbb<NAME>.h
  *
  * \author  <AUTHOR>
  *
  * \date    <DATE>
  *
+ * \brief Contains mbb<NAME>
+ *
+ * \b mbb<NAME>
+ *
  */
 //----------------------------------------------------------------------
-#include "<INCLUDE_DIRECTORY>/m<NAME>.h"
+#ifndef <SENTINEL>
+#define <SENTINEL>
+
+#include "plugins/ibbc/tBehaviourBasedModule.h"
 
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")
@@ -40,42 +47,53 @@
 //----------------------------------------------------------------------
 // Debugging
 //----------------------------------------------------------------------
-#include <cassert>
 
 //----------------------------------------------------------------------
-// Namespace usage
+// Namespace declaration
 //----------------------------------------------------------------------
-using namespace finroc::<NAMESPACE>;
-
+namespace finroc
+{
+namespace <NAMESPACE>
+{
 //----------------------------------------------------------------------
 // Forward declarations / typedefs / enums
 //----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
-// Const values
+// Class declaration
 //----------------------------------------------------------------------
-finroc::core::tStandardCreateModuleAction<m<NAME>> m<NAME>::cCREATE_ACTION("<NAME>");
+//! Short description of mbb<NAME>
+/*! A more detailed description of mbb<NAME> which
+ *  <AUTHOR> has not done yet!
+ * 
+ */
+class mbb<NAME> : public finroc::ibbc::tBehaviourBasedModule
+{
 
 //----------------------------------------------------------------------
-// Implementation
+// Protected methods
 //----------------------------------------------------------------------
 
-//----------------------------------------------------------------------
-// m<NAME> constructors
-//----------------------------------------------------------------------
-m<NAME>::m<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name)
-    : tModule(parent, name),
+  virtual double CalculateActivity(std::vector <double>& derived_activities,
+                                   double iota);
 
-    input_signal_1(this, "Input Signal 1"),
-    input_signal_2(this, "Input Signal 2"),
+  virtual double CalculateTargetRating();
 
-    output_signal_1(this, "Output Signal 1"),
-    output_signal_2(this, "Output Signal 2")
-{}
+  virtual void CalculateTransferFunction(double iota);
 
 //----------------------------------------------------------------------
-// m<NAME> Update
+// Public methods
 //----------------------------------------------------------------------
-void m<NAME>::Update()
-{}
+public:
 
+  mbb<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>");
+
+};
+
+//----------------------------------------------------------------------
+// End of namespace declaration
+//----------------------------------------------------------------------
+}
+}
+
+#endif

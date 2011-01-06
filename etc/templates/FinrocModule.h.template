@@ -34,7 +34,7 @@
 #ifndef <SENTINEL>
 #define <SENTINEL>
 
-#include "core/structure/tSenseControlModule.h"
+#include "core/structure/tModule.h"
 
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")
@@ -67,27 +67,21 @@ namespace <NAMESPACE>
  *  <AUTHOR> has not done yet!
  * 
  */
-class m<NAME> : public finroc::core::structure::tSenseControlModule
+class m<NAME> : public finroc::core::structure::tModule
 {
   static finroc::core::tStandardCreateModuleAction<m<NAME>> cCREATE_ACTION;
 
-  tCI<finroc::core::tPortNumeric> ci_signal_1;
-  tCI<finroc::core::tPortNumeric> ci_signal_2;
+  tInput<finroc::core::tPortNumeric> input_signal_1;
+  tInput<finroc::core::tPortNumeric> input_signal_2;
 
-  tCO<finroc::core::tPortNumeric> co_signal_3;
-
-  tSI<finroc::core::tPortNumeric> si_signal_4;
-  tSI<finroc::core::tPortNumeric> si_signal_5;
-
-  tSO<finroc::core::tPortNumeric> so_signal_6;
+  tOutput<finroc::core::tPortNumeric> output_signal_1;
+  tOutput<finroc::core::tPortNumeric> output_signal_2;
 
 //----------------------------------------------------------------------
 // Protected methods
 //----------------------------------------------------------------------
 
-  virtual void Control();
-
-  virtual void Sense();
+  virtual void Update();
 
 //----------------------------------------------------------------------
 // Public methods
