@@ -39,6 +39,7 @@ DIR=$3
 DIR_NAME=$(echo $DIR | sed -e 's/\(.*\)\/$/\1/' -e 's/.*\/\(.*\)/\1/')
 INCLUDE_DIR=$(echo $DIR | sed -e 's/^[^/]*\///' -e 's/[^/]*\///' -e 's/\/$//' -e 's/\//\\\//g')
 PRE_SENTINEL=$(echo $DIR | cut -f 4 -d \/)
+NAMESPACE=$PRE_SENTINEL
 M_NAME=$4
 PRE_NAME=$5
 
@@ -58,6 +59,7 @@ echo s/\<NAME\>/$M_NAME/g > $SCRIPT_NAME.sed
 echo s/\<DIRECTORY\>/$DIR_NAME/g >> $SCRIPT_NAME.sed
 echo s/\<INCLUDE_DIRECTORY\>/$INCLUDE_DIR/g >> $SCRIPT_NAME.sed
 echo s/\<SENTINEL\>/_${PRE_SENTINEL}__${PRE_NAME}${M_NAME}_h_/g >> $SCRIPT_NAME.sed
+echo s/\<NAMESPACE\>/${NAMESPACE}/g >> $SCRIPT_NAME.sed
 echo s/\<AUTHOR\>/$AUTHOR/g >> $SCRIPT_NAME.sed 
 echo s/\<DATE\>/$DATE/g >> $SCRIPT_NAME.sed  
 
