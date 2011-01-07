@@ -26,7 +26,7 @@
 use strict;
 
 use Env '$FINROC_HOME';
-
+use Env '$MCAHOME';   # FIXME: ONLY FOR MCA2 LEGACY
 use Getopt::Long;
 use Data::Dumper;
 
@@ -150,6 +150,8 @@ sub Local($)
 #  MCA2 legacy support  #
 #########################
 
+my $checked_out_mca2_resources = 0;   # FIXME: ONLY FOR MCA2 LEGACY
+
 sub MCA2($)
 {
     my ($name) = @_;
@@ -157,8 +159,12 @@ sub MCA2($)
     return ComponentInfo "mca2", "sources/cpp/mca2-legacy" if $name =~ /^2$/;
     return ComponentInfo "mcal_$1", "sources/cpp/mca2-legacy/libraries/$1" if $name =~ /^l_(.*)/;
     return ComponentInfo "mcap_$1", "sources/cpp/mca2-legacy/projects/$1" if $name =~ /^p_(.*)/;
-    return ComponentInfo "mcar_$1", "sources/cpp/mca2-legacy/resources/$1" if $name =~ /^r_(.*)/;
-    ERRORMSG sprintf "Could not identify MCA2 legacy component '%s'\n", $name;
+    if ($name =~ /^r_(.*)/)
+    {
+	$checked_out_mca2_resources = 1;
+	return ComponentInfo "mcar_$1", "sources/cpp/mca2-legacy/resources/$1"
+    }
+    ERRORMSG sprintf "Could not identify MCA2 legacy component 'mca%s'\n", $name;
 }
 
 
@@ -303,6 +309,11 @@ while (!$complete)
     }
 }
 
+
+if ($checked_out_mca2_resources and not -e "$FINROC_HOME/resources")   # FIXME: ONLY FOR MCA2 LEGACY
+{
+    system "ln -s $MCAHOME/resources $FINROC_HOME/resources";
+}
 
 
 exit 0;

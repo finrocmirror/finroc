@@ -218,6 +218,9 @@ SetEnvironment sprintf "export MCATARGET=%s", $configuration{"target"} if $confi
 SetEnvironment sprintf "export FINROC_LOCAL=%s", $configuration{"local"};
 SetEnvironment sprintf "export MCALOCAL=%s", $configuration{"local"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
+#RRLIB_SIMVIS3D_RESOURCES
+SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources", $configuration{"home"};
+
 # PATH
 my (@path, @finroc_path, %finroc_path_elements);
 push @finroc_path, sprintf "%s/export/%s/bin", $configuration{"home"}, $configuration{"target"};
