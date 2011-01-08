@@ -1,0 +1,4 @@
+CFLAGS=-ggdb -std=gnu++0x -D _MCA_DEBUG_ -D _MCA_PROFILING_ -mcx16
+NVCC_FLAGS=-g -G
+LIBNAME_CUDART=cudart
+LIBNAME_CUFFT=cufft
