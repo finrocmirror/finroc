@@ -74,7 +74,7 @@ m<NAME>::m<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tS
     si_signal_4(this, "Signal 4"),
     si_signal_5(this, "Signal 5"),
 
-    so_signal_6(this, "Signal 6"),
+    so_signal_6(this, "Signal 6")
 {}
 
 //----------------------------------------------------------------------
