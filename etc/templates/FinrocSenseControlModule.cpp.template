@@ -54,7 +54,7 @@ using namespace finroc::<NAMESPACE>;
 //----------------------------------------------------------------------
 // Const values
 //----------------------------------------------------------------------
-finroc::core::tStandardCreateModuleAction<m<NAME>> m<NAME>::cCREATE_ACTION("<NAME>");
+finroc::core::tStandardCreateModuleAction<m<NAME>> cCREATE_ACTION("<NAME>");
 
 //----------------------------------------------------------------------
 // Implementation

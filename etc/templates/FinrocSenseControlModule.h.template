@@ -69,8 +69,15 @@ namespace <NAMESPACE>
  */
 class m<NAME> : public finroc::core::structure::tSenseControlModule
 {
-  static finroc::core::tStandardCreateModuleAction<m<NAME>> cCREATE_ACTION;
+public:
+//----------------------------------------------------------------------
+// Public methods
+//----------------------------------------------------------------------
+  m<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>");
 
+//----------------------------------------------------------------------
+// Public variables (should be only ports)
+//----------------------------------------------------------------------
   tCI<finroc::core::tPortNumeric> ci_signal_1;
   tCI<finroc::core::tPortNumeric> ci_signal_2;
 
@@ -81,21 +88,27 @@ class m<NAME> : public finroc::core::structure::tSenseControlModule
 
   tSO<finroc::core::tPortNumeric> so_signal_6;
 
+protected:
 //----------------------------------------------------------------------
 // Protected methods
 //----------------------------------------------------------------------
-protected:
-
   virtual void Control();
 
   virtual void Sense();
+  
+//----------------------------------------------------------------------
+// Protected variables
+//----------------------------------------------------------------------
+
+private:
+//----------------------------------------------------------------------
+// Private methods
+//----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
-// Public methods
+// Private variables
 //----------------------------------------------------------------------
-public:
 
-  m<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>");
 
 };
 
