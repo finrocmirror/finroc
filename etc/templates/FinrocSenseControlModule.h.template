@@ -84,6 +84,7 @@ class m<NAME> : public finroc::core::structure::tSenseControlModule
 //----------------------------------------------------------------------
 // Protected methods
 //----------------------------------------------------------------------
+protected:
 
   virtual void Control();
 
