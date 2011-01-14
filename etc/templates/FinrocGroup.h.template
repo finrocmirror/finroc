@@ -71,25 +71,35 @@ namespace <NAMESPACE>
  */
 class g<NAME> : public finroc::core::structure::tGroup
 {
-  static finroc::core::tStandardCreateModuleAction<g<NAME>> cCREATE_ACTION;
-
+public:
 //----------------------------------------------------------------------
-// Private attributes
+// Public methods
 //----------------------------------------------------------------------
+  g<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>",
+          const finroc::util::tString &structure_config_file = __FILE__".xml");
+  
+//----------------------------------------------------------------------
+// Public variables (should be only ports)
+//----------------------------------------------------------------------
+  tCI<> ci_signal_1;
 
+protected:
 //----------------------------------------------------------------------
 // Protected methods
 //----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
-// Public methods
+// Protected variables
 //----------------------------------------------------------------------
-public:
 
-  g<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>",
-          const finroc::util::tString &structure_config_file = __FILE__".xml");
-  
-  tCI<> ci_signal_1;
+private:
+//----------------------------------------------------------------------
+// Private methods
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Private variables
+//----------------------------------------------------------------------
 
 };
 
