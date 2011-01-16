@@ -65,7 +65,7 @@ namespace <NAMESPACE>
 //! Short description of m<NAME>
 /*! A more detailed description of m<NAME> which
  *  <AUTHOR> has not done yet!
- * 
+ *
  */
 class m<NAME> : public finroc::core::structure::tSenseControlModule
 {
@@ -95,7 +95,7 @@ protected:
   virtual void Control();
 
   virtual void Sense();
-  
+
 //----------------------------------------------------------------------
 // Protected variables
 //----------------------------------------------------------------------
