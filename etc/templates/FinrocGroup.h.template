@@ -67,7 +67,7 @@ namespace <NAMESPACE>
 //! Short description of g<NAME>
 /*! A more detailed description of g<NAME> which
  *  <AUTHOR> has not done yet!
- * 
+ *
  */
 class g<NAME> : public finroc::core::structure::tGroup
 {
@@ -77,7 +77,7 @@ public:
 //----------------------------------------------------------------------
   g<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>",
           const finroc::util::tString &structure_config_file = __FILE__".xml");
-  
+
 //----------------------------------------------------------------------
 // Public variables (should be only ports)
 //----------------------------------------------------------------------
