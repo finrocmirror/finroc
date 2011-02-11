@@ -197,25 +197,35 @@ sub SetEnvironment($) {
 }
 
 # FINROC_HOME
+SetEnvironment sprintf "unset FINROC_HOME";
 SetEnvironment sprintf "export FINROC_HOME=%s", $configuration{"home"};
+SetEnvironment sprintf "unset MCAHOME"; # FIXME: ONLY FOR MCA2 LEGACY
 SetEnvironment sprintf "export MCAHOME=%s/sources/cpp/mca2-legacy", $configuration{"home"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 # FINROC_PROJECT
+SetEnvironment sprintf "unset FINROC_PROJECT";
 #SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if defined $configuration{"project"};
 SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if defined $configuration{"project"} and $configuration{"mca"} ne "yes"; # FIXME: ONLY FOR MCA2 LEGACY
+SetEnvironment sprintf "unset MCAPROJECT"; # FIXME: ONLY FOR MCA2 LEGACY
 SetEnvironment sprintf "export MCAPROJECT=%s", $configuration{"project"} if defined $configuration{"project"} and $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 # FINROC_PROJECT_HOME
+SetEnvironment sprintf "unset FINROC_PROJECT_HOME";
 #SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"};
 SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"} and $configuration{"mca"} ne "yes"; # FIXME: ONLY FOR MCA2 LEGACY
+SetEnvironment sprintf "unset MCAPROJECTHOME"; # FIXME: ONLY FOR MCA2 LEGACY
 SetEnvironment sprintf "export MCAPROJECTHOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"} and $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 # FINROC_TARGET
+SetEnvironment sprintf "unset FINROC_TARGET";
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
+SetEnvironment sprintf "unset MCATARGET"; # FIXME: ONLY FOR MCA2 LEGACY
 SetEnvironment sprintf "export MCATARGET=%s", $configuration{"target"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 # FINROC_LOCAL
+SetEnvironment sprintf "unset FINROC_LOCAL";
 SetEnvironment sprintf "export FINROC_LOCAL=%s", $configuration{"local"};
+SetEnvironment sprintf "unset MCALOCAL"; # FIXME: ONLY FOR MCA2 LEGACY
 SetEnvironment sprintf "export MCALOCAL=%s", $configuration{"local"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 #RRLIB_SIMVIS3D_RESOURCES

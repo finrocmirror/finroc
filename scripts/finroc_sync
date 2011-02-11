@@ -1,0 +1,234 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_sync
+#
+# \author  Tobias Foehst
+#
+# \date    2011-02-09
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+use Env '$FINROC_PROJECT_HOME';
+use Getopt::Long;
+use Data::Dumper;
+use XML::Simple;
+
+use lib "$FINROC_HOME/scripts/perl";
+use FINROC::messages;
+use FINROC::rcs;
+
+
+############################
+##  Command line options  ##
+############################
+
+# command line options
+my %command_line_options;
+GetOptions \%command_line_options, "verbose+", "help", "target=s", "simulate";
+
+EnableVerboseMessages if defined $command_line_options{"verbose"};
+
+DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
+
+
+
+#############
+##  Usage  ##
+#############
+
+# print help and terminate if requested
+if (defined $command_line_options{"help"})
+{
+    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+
+    INFOMSG sprintf "usage: %s [options] <path_to_sync_config.xml>\n", (reverse (split "/", $0))[0];
+    INFOMSG "options:\n";
+    PrintOption "-h, --help", "show this help";
+    PrintOption "-v, --verbose", "more output for debugging";
+    PrintOption "-t, --target", "target to sync - default: sync all targets";
+    INFOMSG "\n";
+    exit 0;
+}
+
+
+
+# non-optional arguments
+my $sync_config_file;
+if (defined $FINROC_PROJECT_HOME)
+{
+    DEBUGMSG sprintf "FINROC_PROJECT_HOME is set to '%s'.\n", $FINROC_PROJECT_HOME;
+    $sync_config_file = sprintf "%s/etc/sync_config.xml", $FINROC_PROJECT_HOME;
+}
+else
+{
+    ERRORMSG sprintf "<path_to_sync_config.xml> not specified. Use %s --help for more information!\n", (reverse (split "/", $0))[0] unless defined $ARGV[0];
+    ERRORMSG sprintf "Illegal argument '%s'. Use %s --help for more information!\n", $ARGV[1], (reverse (split "/", $0))[0] if defined $ARGV[1];
+}
+
+$sync_config_file = $ARGV[0] if defined $ARGV[0];
+ERRORMSG sprintf "Config file not set. Use %s --help for more information!\n", (reverse (split "/", $0))[0] unless defined $sync_config_file;
+
+
+
+######################
+#  Read sync_config  #
+######################
+
+DEBUGMSG sprintf "Looking for config file '%s'.\n", $sync_config_file;
+
+ERRORMSG sprintf "Config file '%s' not found!\n", $sync_config_file unless -f $sync_config_file;
+
+my $sync_config = XMLin($sync_config_file,
+                        ForceContent => 1,
+                        ForceArray => [ "programs", "config", "misc" ],
+                        NormalizeSpace => 2);
+
+DEBUGMSG sprintf "sync_config:\n%s\n", Dumper \$sync_config;
+
+ERRORMSG sprintf "Target '%s' not found!\n", $command_line_options{'target'} if defined $command_line_options{'target'} and not exists ${$$sync_config{'target'}}{$command_line_options{'target'}};
+
+my $global_hostname = ${$$sync_config{'hostname'}}{'content'};
+my $global_username = ${$$sync_config{'username'}}{'content'};
+
+DEBUGMSG sprintf "Global hostname set to '%s'.\n", $global_hostname if defined $global_hostname;
+DEBUGMSG sprintf "Global username set to '%s'.\n", $global_username if defined $global_username;
+
+my $global_bin = ${$$sync_config{'directories'}}{'bin'}{'content'};
+my $global_lib = ${$$sync_config{'directories'}}{'lib'}{'content'};
+my $global_etc = ${$$sync_config{'directories'}}{'etc'}{'content'};
+
+DEBUGMSG sprintf "Global bin target directory set to '%s'.\n", $global_bin if defined $global_bin;
+DEBUGMSG sprintf "Global lib target directory set to '%s'.\n", $global_lib if defined $global_lib;
+DEBUGMSG sprintf "Global etc target directory set to '%s'.\n", $global_etc if defined $global_etc;
+
+
+
+#####################################
+#  Transferfunction for file lists  #
+#####################################
+
+sub Transfer($$$$$)
+{
+    my ($hostname, $username, $directory, $sub_directory, $files) = @_;
+
+    $directory .= sprintf "/%s", $sub_directory if defined $sub_directory;
+    $username .= "@" if defined $username;
+    $hostname .= ":" if defined $hostname;
+
+    my $rsync_options = "-avP";
+    $rsync_options .= "n" if defined $command_line_options{'simulate'};
+
+    my $command = sprintf "rsync %s %s %s%s%s/", $rsync_options, $files, $username, $hostname, $directory;
+    DEBUGMSG sprintf "command = '%s'\n", $command;
+    system $command;
+}
+
+
+
+#####################
+#  Process targets  #
+#####################
+
+foreach my $target_name (sort keys %{$$sync_config{'target'}})
+{
+    next if defined $command_line_options{'target'} and $target_name ne $command_line_options{'target'};
+
+    INFOMSG sprintf "Processing target '%s'...\n", $target_name;
+
+    my %target = %{${$$sync_config{'target'}}{$target_name}};
+
+    DEBUGMSG sprintf "target:\n%s\n", Dumper \%target;
+
+    my $hostname = $target{'hostname'}{'content'};
+    my $username = $target{'username'}{'content'};
+    $hostname = $global_hostname unless defined $hostname;
+    $username = $global_username unless defined $username;
+
+    DEBUGMSG sprintf "hostname = '%s'.\n", $hostname if defined $hostname;
+    DEBUGMSG sprintf "username = '%s'.\n", $username if defined $username;
+
+    my $bin = $target{'directories'}{'bin'}{'content'};
+    my $lib = $target{'directories'}{'lib'}{'content'};
+    my $etc = $target{'directories'}{'etc'}{'content'};
+    $bin = $global_bin unless defined $bin;
+    $lib = $global_lib unless defined $lib;
+    $etc = $global_etc unless defined $etc;
+
+    DEBUGMSG sprintf "bin target directory = '%s'.\n", $bin if defined $bin;
+    DEBUGMSG sprintf "lib target directory = '%s'.\n", $lib if defined $lib;
+    DEBUGMSG sprintf "etc target directory = '%s'.\n", $etc if defined $etc;
+
+    my @libraries;
+    foreach my $transfer_block (@{$target{'programs'}})
+    {
+        my @binaries;
+        DEBUGMSG Dumper \$transfer_block;
+        foreach my $source (split " ", $$transfer_block{'content'})
+        {
+#            my $binary = $source =~ /\// ? $source : sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
+            my $binary = sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
+            ERRORMSG sprintf "Can not find program '%s'!\n", $source if $binary eq "";
+            push @binaries, $binary;
+            foreach (split "\n", `ldd $binary`)
+            {
+                s/^\s*//;
+                ERRORMSG sprintf "Can not resolve all dependencies. Try a rebuild and check your environment.\n" if /=> not found/;
+                next unless /^lib(rrlib|finroc|mca2)/;
+                my $library = $1 if /=> (\S+)/;
+                push @libraries, $library if defined $library;
+            }
+        }
+
+        Transfer $hostname, $username, $bin, $$transfer_block{'subdir'}, join " ", @binaries if @binaries;
+    }
+
+    my %seen;
+    Transfer $hostname, $username, $lib, undef, join " ", grep { !$seen{$_}++ } @libraries if @libraries;
+
+    foreach my $transfer_block (@{$target{'config'}})
+    {
+        my @files;
+        DEBUGMSG Dumper \$transfer_block;
+        foreach my $source (split " ", $$transfer_block{'content'})
+        {
+            push @files, $source;
+        }
+
+        Transfer $hostname, $username, $etc, $$transfer_block{'subdir'}, join " ", @files if @files;
+    }
+
+    foreach my $transfer_block (@{$target{'misc'}})
+    {
+        my @files;
+        DEBUGMSG Dumper \$transfer_block;
+        foreach my $source (split " ", $$transfer_block{'content'})
+        {
+            push @files, $source;
+        }
+
+        Transfer $hostname, $username, "", $$transfer_block{'subdir'}, join " ", @files if @files;
+    }
+
+}
+
+
+
+exit 0;
