@@ -59,7 +59,7 @@ $format_flags{"java"} = "--mode=java --style=java --convert-tabs --pad=oper --un
 
 # command line options
 my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "all", "force";
+GetOptions \%command_line_options, "verbose+", "help", "all", "force" or ERRORMSG "Parsing command line failed!\n";
 
 EnableVerboseMessages if defined $command_line_options{"verbose"};
 

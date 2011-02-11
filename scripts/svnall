@@ -42,7 +42,7 @@ use FINROC::messages;
 
 # command line options
 my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "externals";
+GetOptions \%command_line_options, "verbose+", "help", "externals" or ERRORMSG "Parsing command line failed!\n";
 
 EnableVerboseMessages if defined $command_line_options{"verbose"};
 

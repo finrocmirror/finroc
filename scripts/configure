@@ -47,8 +47,9 @@ my $platform = `python -c 'import sys\nimport platform\nsys.stdout.write(platfor
 
 # command line options
 my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "project:s", "target:s", "local=s",
-                                                                                           "mca=s"; # FIXME: ONLY FOR MCA2 LEGACY
+GetOptions \%command_line_options, "verbose+", "help", "project:s", "target:s", "local=s"
+                                                                                         , "mca=s" # FIXME: ONLY FOR MCA2 LEGACY
+                                                                                          or ERRORMSG "Parsing command line failed!\n";
 
 EnableVerboseMessages if defined $command_line_options{"verbose"};
 

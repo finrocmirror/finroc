@@ -42,7 +42,7 @@ use FINROC::rcs;
 
 # command line options
 my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "target=s", "simulate";
+GetOptions \%command_line_options, "verbose+", "help", "target=s", "simulate" or ERRORMSG "Parsing command line failed!\n";
 
 EnableVerboseMessages if defined $command_line_options{"verbose"};
 
