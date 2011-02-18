@@ -36,6 +36,7 @@ use FINROC::messages;
 use FINROC::rcs;
 
 
+
 ############################
 ##  Command line options  ##
 ############################
@@ -98,12 +99,13 @@ ERRORMSG sprintf "Config file '%s' not found!\n", $sync_config_file unless -f $s
 
 my $sync_config = XMLin($sync_config_file,
                         ForceContent => 1,
+                        KeyAttr => [],
                         ForceArray => [ "programs", "config", "misc" ],
                         NormalizeSpace => 2);
 
 DEBUGMSG sprintf "sync_config:\n%s\n", Dumper \$sync_config;
 
-ERRORMSG sprintf "Target '%s' not found!\n", $command_line_options{'target'} if defined $command_line_options{'target'} and not exists ${$$sync_config{'target'}}{$command_line_options{'target'}};
+ERRORMSG sprintf "Target '%s' not found!\n", $command_line_options{'target'} if defined $command_line_options{'target'} and not grep { $$_{'name'} eq $command_line_options{'target'} } @{$$sync_config{'target'}};
 
 my $global_hostname = ${$$sync_config{'hostname'}}{'content'};
 my $global_username = ${$$sync_config{'username'}}{'content'};
@@ -147,13 +149,15 @@ sub Transfer($$$$$)
 #  Process targets  #
 #####################
 
-foreach my $target_name (sort keys %{$$sync_config{'target'}})
+foreach my $target (@{$$sync_config{'target'}})
 {
-    next if defined $command_line_options{'target'} and $target_name ne $command_line_options{'target'};
+    my %target = %{$target};
+    
+    DEBUGMSG Dumper \%target;
 
-    INFOMSG sprintf "Processing target '%s'...\n", $target_name;
+    next if defined $command_line_options{'target'} and $target{'name'} ne $command_line_options{'target'};
 
-    my %target = %{${$$sync_config{'target'}}{$target_name}};
+    INFOMSG sprintf "Processing target '%s' ...\n", $target{'name'};
 
     DEBUGMSG sprintf "target:\n%s\n", Dumper \%target;
 
@@ -205,28 +209,29 @@ foreach my $target_name (sort keys %{$$sync_config{'target'}})
 
     foreach my $transfer_block (@{$target{'config'}})
     {
-        my @files;
         DEBUGMSG Dumper \$transfer_block;
-        foreach my $source (split " ", $$transfer_block{'content'})
-        {
-            push @files, $source;
-        }
+        
+        my $prefix = "";
+        $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
 
-        Transfer $hostname, $username, $etc, $$transfer_block{'subdir'}, join " ", @files if @files;
+        my @files = split " ", $$transfer_block{'content'};
+
+        Transfer $hostname, $username, $etc, $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
     }
 
     foreach my $transfer_block (@{$target{'misc'}})
     {
-        my @files;
         DEBUGMSG Dumper \$transfer_block;
-        foreach my $source (split " ", $$transfer_block{'content'})
-        {
-            push @files, $source;
-        }
 
-        Transfer $hostname, $username, "", $$transfer_block{'subdir'}, join " ", @files if @files;
+        my $prefix = "";
+        $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
+
+        my @files = split " ", $$transfer_block{'content'};
+
+        Transfer $hostname, $username, "", $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
     }
 
+    INFOMSG "Done.\n";
 }
 
 

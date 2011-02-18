@@ -15,15 +15,15 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    finroc_c++_formatter
+# \file    finroc_code_formatter
 #
 # \author  Tobias Foehst
 #
 # \date    2010-04-14
 #
-# Reformats C++ files using astyle to assert a unified format of committed
-# code. This is for example helpful to generate meaningful diffs between
-# revisions
+# Reformats source code files using astyle to assert a unified format of
+# committed code. This is for example helpful to generate meaningful
+# diffs between revisions.
 #
 #----------------------------------------------------------------------
 
