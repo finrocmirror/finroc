@@ -132,14 +132,16 @@ sub Transfer($$$$$)
 {
     my ($hostname, $username, $directory, $sub_directory, $files) = @_;
 
-    $directory .= sprintf "/%s", $sub_directory if defined $sub_directory;
+    $directory = "" unless defined $directory;    
+    $directory .= "/" if $directory ne "";
+    $directory .= $sub_directory if defined $sub_directory;
     $username .= "@" if defined $username;
     $hostname .= ":" if defined $hostname;
 
     my $rsync_options = "-avP";
     $rsync_options .= "n" if defined $command_line_options{'simulate'};
 
-    my $command = sprintf "rsync %s %s %s%s%s/", $rsync_options, $files, $username, $hostname, $directory;
+    my $command = sprintf "rsync %s --rsync-path='mkdir -p %s && rsync' %s %s%s%s/", $rsync_options, $directory, $files, $username, $hostname, $directory;
     DEBUGMSG sprintf "command = '%s'\n", $command;
     system $command;
 }
