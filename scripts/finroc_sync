@@ -100,7 +100,7 @@ ERRORMSG sprintf "Config file '%s' not found!\n", $sync_config_file unless -f $s
 my $sync_config = XMLin($sync_config_file,
                         ForceContent => 1,
                         KeyAttr => [],
-                        ForceArray => [ "programs", "config", "misc" ],
+                        ForceArray => [ "programs", "config", "misc", "target" ],
                         NormalizeSpace => 2);
 
 DEBUGMSG sprintf "sync_config:\n%s\n", Dumper \$sync_config;
