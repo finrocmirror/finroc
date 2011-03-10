@@ -64,6 +64,7 @@ if (defined $command_line_options{"help"})
     INFOMSG "options:\n";
     PrintOption "-h, --help", "show this help";
     PrintOption "-v, --verbose", "more output for debugging";
+    PrintOption "-s, --simulate", "no changes on target system will be made";
     PrintOption "-t, --target", "target to sync - default: sync all targets";
     INFOMSG "\n";
     exit 0;
