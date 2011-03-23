@@ -125,6 +125,8 @@ sub CollectModifiedFiles()
 #    foreach my $svn_line (split "\n", `hg st . 2> /dev/null`)
     foreach my $svn_line (split "\n", `svn st --ignore-externals 2> /dev/null`)
     {
+        chomp $svn_line;
+        $svn_line =~ s/\s+(\+\s+)?/ /;
         my ($status, $filename) = split " ", $svn_line;
         if ($status =~ /^[\?X]/ and -d $filename)
         {
