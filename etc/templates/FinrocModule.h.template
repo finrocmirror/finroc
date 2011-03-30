@@ -71,11 +71,11 @@ class m<NAME> : public finroc::core::structure::tModule
 {
   static finroc::core::tStandardCreateModuleAction<m<NAME>> cCREATE_ACTION;
 
-  tInput<finroc::core::tPortNumeric> input_signal_1;
-  tInput<finroc::core::tPortNumeric> input_signal_2;
+  tInput<double> input_signal_1;
+  tInput<double> input_signal_2;
 
-  tOutput<finroc::core::tPortNumeric> output_signal_1;
-  tOutput<finroc::core::tPortNumeric> output_signal_2;
+  tOutput<double> output_signal_1;
+  tOutput<double> output_signal_2;
 
 //----------------------------------------------------------------------
 // Protected methods

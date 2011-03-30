@@ -78,15 +78,15 @@ public:
 //----------------------------------------------------------------------
 // Public variables (should be only ports)
 //----------------------------------------------------------------------
-  tCI<finroc::core::tPortNumeric> ci_signal_1;
-  tCI<finroc::core::tPortNumeric> ci_signal_2;
+  tCI<double> ci_signal_1;
+  tCI<double> ci_signal_2;
 
-  tCO<finroc::core::tPortNumeric> co_signal_3;
+  tCO<double> co_signal_3;
 
-  tSI<finroc::core::tPortNumeric> si_signal_4;
-  tSI<finroc::core::tPortNumeric> si_signal_5;
+  tSI<double> si_signal_4;
+  tSI<double> si_signal_5;
 
-  tSO<finroc::core::tPortNumeric> so_signal_6;
+  tSO<double> so_signal_6;
 
 protected:
 //----------------------------------------------------------------------
