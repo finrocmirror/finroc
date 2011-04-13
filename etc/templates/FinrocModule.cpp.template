@@ -66,11 +66,11 @@ finroc::core::tStandardCreateModuleAction<m<NAME>> m<NAME>::cCREATE_ACTION("<NAM
 m<NAME>::m<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name)
     : tModule(parent, name),
 
-    input_signal_1(this, "Input Signal 1"),
-    input_signal_2(this, "Input Signal 2"),
+    input_signal_1("Input Signal 1"),
+    input_signal_2("Input Signal 2"),
 
-    output_signal_1(this, "Output Signal 1"),
-    output_signal_2(this, "Output Signal 2")
+    output_signal_1("Output Signal 1"),
+    output_signal_2("Output Signal 2")
 {}
 
 //----------------------------------------------------------------------

@@ -66,15 +66,15 @@ static finroc::core::tStandardCreateModuleAction<m<NAME>> cCREATE_ACTION("<NAME>
 m<NAME>::m<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name)
     : tSenseControlModule(parent, name),
 
-    ci_signal_1(this, "Signal 1"),
-    ci_signal_2(this, "Signal 2"),
+    ci_signal_1("Signal 1"),
+    ci_signal_2("Signal 2"),
 
-    co_signal_3(this, "Signal 3"),
+    co_signal_3("Signal 3"),
 
-    si_signal_4(this, "Signal 4"),
-    si_signal_5(this, "Signal 5"),
+    si_signal_4("Signal 4"),
+    si_signal_5("Signal 5"),
 
-    so_signal_6(this, "Signal 6")
+    so_signal_6("Signal 6")
 {}
 
 //----------------------------------------------------------------------

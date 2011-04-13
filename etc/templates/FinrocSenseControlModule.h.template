@@ -78,15 +78,15 @@ public:
 //----------------------------------------------------------------------
 // Public variables (should be only ports)
 //----------------------------------------------------------------------
-  tCI<double> ci_signal_1;
-  tCI<double> ci_signal_2;
+  tControllerInput<double> ci_signal_1;
+  tControllerInput<double> ci_signal_2;
 
-  tCO<double> co_signal_3;
+  tControllerOutput<double> co_signal_3;
 
-  tSI<double> si_signal_4;
-  tSI<double> si_signal_5;
+  tSensorInput<double> si_signal_4;
+  tSensorInput<double> si_signal_5;
 
-  tSO<double> so_signal_6;
+  tSensorOutput<double> so_signal_6;
 
 protected:
 //----------------------------------------------------------------------
