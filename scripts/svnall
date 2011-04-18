@@ -89,7 +89,7 @@ sub GetRepositoryInfo($)
     return { "directory" => $directory, "url" => $svn_info{"url"}, "root" => $svn_info{"repository"}{"root"}, "uuid" => $svn_info{"repository"}{"uuid"} };
 }
 
-my @directories = map { s/\/\.svn$//; GetRepositoryInfo $_ } sort split "\n", `find -name ".svn"`;
+my @directories = map { GetRepositoryInfo $_ } sort map { s/\/\.svn$//; $_ } split "\n", `find -name ".svn"`;
 
 DEBUGMSG Dumper \@directories;
 
