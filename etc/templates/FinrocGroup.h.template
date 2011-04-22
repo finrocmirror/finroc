@@ -40,7 +40,6 @@
 // External includes (system with <>, local with "")
 //----------------------------------------------------------------------
 #include "core/finstructable/tFinstructableGroup.h"
-#include "rrlib/util/patterns/final_class.h"
 
 //----------------------------------------------------------------------
 // Internal includes with ""
@@ -57,6 +56,7 @@ namespace finroc
 {
 namespace <NAMESPACE>
 {
+
 //----------------------------------------------------------------------
 // Forward declarations / typedefs / enums
 //----------------------------------------------------------------------
@@ -71,35 +71,33 @@ namespace <NAMESPACE>
  */
 class g<NAME> : public finroc::core::structure::tGroup
 {
+  static finroc::core::tStandardCreateModuleAction<g<NAME>> cCREATE_ACTION;
+
+//----------------------------------------------------------------------
+// Ports (These are the only variables that may be declared public)
+//----------------------------------------------------------------------
 public:
+
+  tControllerInput<> ci_signal_1;
+
 //----------------------------------------------------------------------
-// Public methods
+// Public methods and typedefs (no fields/variables)
 //----------------------------------------------------------------------
+public:
+
   g<NAME>(finroc::core::tFrameworkElement *parent, const finroc::util::tString &name = "<NAME>",
           const finroc::util::tString &structure_config_file = __FILE__".xml");
 
-//----------------------------------------------------------------------
-// Public variables (should be only ports)
-//----------------------------------------------------------------------
-  tControllerInput<> ci_signal_1;
 
+//----------------------------------------------------------------------
+// Protected methods (no fields/variables)
+//----------------------------------------------------------------------
 protected:
-//----------------------------------------------------------------------
-// Protected methods
-//----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
-// Protected variables
+// Private fields and methods
 //----------------------------------------------------------------------
-
 private:
-//----------------------------------------------------------------------
-// Private methods
-//----------------------------------------------------------------------
-
-//----------------------------------------------------------------------
-// Private variables
-//----------------------------------------------------------------------
 
 };
 
