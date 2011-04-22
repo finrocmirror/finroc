@@ -49,7 +49,7 @@ print "using finroc::core::structure::tStructureElementRegister;\n\n";
 print "namespace finroc\n{\nnamespace generated\n{\n\n";
 
 # generate code for names
-print "int Init()\n{\n";
+print "static int InitDescriptions()\n{\n";
 print "  std::vector<util::tString> names;\n";
 foreach my $class (@$classes) {
 	print "\n  // class $class->{name}\n";
@@ -80,6 +80,6 @@ foreach my $class (@$classes) {
 }
 print "\n  return 0;\n";
 print "}\n\n";
-print "int cINIT = Init();\n\n";
+print "int cINIT = InitDescriptions();\n\n";
 print "}\n}\n";
 
