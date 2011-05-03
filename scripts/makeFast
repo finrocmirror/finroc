@@ -1,10 +1,4 @@
 #!/bin/bash
 [ -z $FINROC_HOME ] && source scripts/setenv ""
-cd $FINROC_HOME
-make -C make_builder
-rm Makefile
-[ "x$FINROC_LOCAL" == "xno" ] && USE_SYSTEM_INSTALL=--usesysteminstall
-java -Xmx256M -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$FINROC_TARGET --combine $USE_SYSTEM_INSTALL
+makeFastMakefile
 makeCall "$@"
-
-
