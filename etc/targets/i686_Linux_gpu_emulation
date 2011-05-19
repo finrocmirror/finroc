@@ -1,4 +1,5 @@
-CFLAGS=-ggdb -std=gnu++0x -D _MCA_DEBUG_ -D _MCA_PROFILING_
+CFLAGS=-ggdb -D _MCA_DEBUG_ -D _MCA_PROFILING_
+CXXFLAGS=$(CFLAGS) -std=gnu++0x
 NVCC_FLAGS=--device-emulation --debug --device-debug 0 --profile -arch=sm_11
 #LIBNAME_CUDART=cudartemu
 LIBNAME_CUDART=cudart
