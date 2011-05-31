@@ -1,4 +1,5 @@
 #!/bin/bash
 [ -z $FINROC_HOME ] && source scripts/setenv ""
+cd $FINROC_HOME
 makeSafeMakefile
 makeCall "$@"
