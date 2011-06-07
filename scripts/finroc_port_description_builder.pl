@@ -60,6 +60,7 @@ foreach my $class (@$classes) {
 			my $type = $member->{type};
 			my @typesplit = split(/</, $type);
 			$type = $typesplit[0]; # remove any template arguments
+			$type =~ s/.*::template\s//g; # remove any ...::template
 			if ($type eq 'tInput' || $type eq 'tOutput' || $type eq 'tSensorInput' || $type eq 'tSensorOutput' || $type eq 'tControllerInput' || $type eq 'tControllerOutput' || $type eq 'tParameter') {
 				
 				# copied from MCA2-KL description builder
