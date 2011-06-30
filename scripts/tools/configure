@@ -124,8 +124,8 @@ if (defined $configuration{"project"})
 {
     unless (-d sprintf "sources/cpp/projects/%s", $configuration{"project"})
     {
-	INFOMSG sprintf "\nWarning: Project `%s' does not exist!\n\n", $configuration{"project"};
-	$configuration{"project"} = undef;
+        INFOMSG sprintf "\nWarning: Project `%s' does not exist!\n\n", $configuration{"project"};
+        $configuration{"project"} = undef;
     }
 }
 

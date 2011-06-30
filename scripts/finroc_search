@@ -76,8 +76,8 @@ foreach my $name (keys %components)
     my $match = 0;
     if (!GetCommandLineOption "files")
     {
-	$match ||= $name =~ $search_pattern;
-	$match ||= ${$components{$name}}{'description'} =~ $search_pattern if defined ${$components{$name}}{'description'};
+        $match ||= $name =~ $search_pattern;
+        $match ||= ${$components{$name}}{'description'} =~ $search_pattern if defined ${$components{$name}}{'description'};
     }
     $match ||= ${$components{$name}}{'manifest'} =~ $search_pattern if defined ${$components{$name}}{'manifest'};
     $results{$name} = $components{$name} if $match;
@@ -95,13 +95,13 @@ foreach my $key (sort keys %results)
 {
     if (GetCommandLineOption "xml")
     {
-	printf "  <component>\n";
-	printf "    <name>%s</name>\n", $key;
-	printf "    <description>%s</description>\n", defined $results{$key}{'description'} ? $results{$key}{'description'} : "";
-	printf "    <url>%s</url>\n", $results{$key}{'url'};
-	printf "    <source>%s</source>\n", $results{$key}{'source'};
-	printf "  </component>\n";
-	next;
+        printf "  <component>\n";
+        printf "    <name>%s</name>\n", $key;
+        printf "    <description>%s</description>\n", defined $results{$key}{'description'} ? $results{$key}{'description'} : "";
+        printf "    <url>%s</url>\n", $results{$key}{'url'};
+        printf "    <source>%s</source>\n", $results{$key}{'source'};
+        printf "  </component>\n";
+        next;
     }
     printf $format_string, $key, $results{$key}{'source'}, defined $results{$key}{'description'} ? $results{$key}{'description'} : "<description not given>";
 }

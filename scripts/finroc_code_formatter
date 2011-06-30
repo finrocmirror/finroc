@@ -31,12 +31,11 @@ use strict;
 
 use Env '$FINROC_HOME';
 
-use Getopt::Long;
 use Data::Dumper;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
-
+use FINROC::getopt;
 
 ERRORMSG sprintf "\nWrong astyle version. Please use %s\n", `cat $FINROC_HOME/etc/astyle.version` if (`astyle --version 2>&1` ne `cat $FINROC_HOME/etc/astyle.version`);
 
@@ -57,35 +56,13 @@ $format_flags{"java"} = "--mode=java --style=java --convert-tabs --pad=oper --un
 ##  Command line options  ##
 ############################
 
-# command line options
-my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "all", "force" or ERRORMSG "Parsing command line failed!\n";
-
-EnableVerboseMessages if defined $command_line_options{"verbose"};
-
-DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
-
-
-
-#############
-##  Usage  ##
-#############
-
-# print help and terminate if requested
-if (defined $command_line_options{"help"})
+SetHelp "[<filenames>]",
 {
-    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+    "-a, --all" => "process all files (not only modified)",
+    "-f, --force" => "do not ask before reformatting"
+}, "<filenames> can be an explicit list of files to reformat";
 
-    INFOMSG sprintf "usage: %s [options] [<filenames>]\n", (reverse (split "/", $0))[0];
-    INFOMSG "options:\n";
-    PrintOption "-h, --help", "show this help";
-    PrintOption "-v, --verbose", "more output for debugging";
-    PrintOption "-a, --all", "process all files (not only modified)";
-    PrintOption "-f, --force", "do not ask before reformatting";
-    PrintOption "<filenames>", "list of files to reformat";
-    INFOMSG "\n";
-    exit 0;
-}
+ParseCommandLine [ "all", "force" ], undef;
 
 
 
@@ -120,20 +97,13 @@ sub CollectModifiedFiles()
 {
     my ($directory, @rest) = split "\n", `pwd`;
 
-    DEBUGMSG sprintf "Collecting only modified files using SVN in '%s'...\n", $directory;
+    DEBUGMSG sprintf "Collecting only modified files using HG in '%s'...\n", $directory;
 
-#    foreach my $svn_line (split "\n", `hg st . 2> /dev/null`)
-    foreach my $svn_line (split "\n", `svn st --ignore-externals 2> /dev/null`)
+    foreach my $line (split "\n", `hg st . 2> /dev/null`)
     {
-        chomp $svn_line;
-        $svn_line =~ s/\s+(\+\s+)?/ /;
-        my ($status, $filename) = split " ", $svn_line;
-        if ($status =~ /^[\?X]/ and -d $filename)
-        {
-            chdir $filename;
-            CollectModifiedFiles;
-            chdir "..";
-        }
+        chomp $line;
+        $line =~ s/\s+(\+\s+)?/ /;
+        my ($status, $filename) = split " ", $line;
         next unless $status =~ /^[AMR]$/;
         $files{"$directory/$filename"} = 1 if FileRelevant $filename;
     }
@@ -151,9 +121,9 @@ sub CollectAllFiles()
 
 sub CollectFiles()
 {
-    CollectAllFiles if defined $command_line_options{"all"};
+    CollectAllFiles if defined GetCommandLineOption "all";
     return CollectFilesFromCommandLine if scalar @ARGV;
-    return CollectModifiedFiles unless defined $command_line_options{"all"};
+    return CollectModifiedFiles unless defined GetCommandLineOption "all";
 }
 
 CollectFiles;
@@ -174,7 +144,7 @@ if (scalar keys %files == 0)
 #  Reformat files  #
 ####################
 
-unless (defined $command_line_options{"force"})
+unless (defined GetCommandLineOption "force")
 {
     INFOMSG "Found files:\n";
     foreach my $filename (sort keys %files)

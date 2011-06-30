@@ -99,13 +99,13 @@ sub GetComponentDirectory($)
 
     if ($language eq "java")
     {
-	$directory =~ s/^rrlib_/org\/rrlib\//;
-	$directory =~ s/^finroc_plugins_/org\/finroc\/plugins\//;
-	$directory =~ s/^finroc_libraries_/org\/finroc\/libraries\//;
-	$directory =~ s/^finroc_tools_gui_plugins_/org\/finroc\/tools\/gui\/plugins\//;
-	$directory =~ s/^finroc_tools_/org\/finroc\/tools\//;
-	$directory =~ s/^finroc_projects_/org\/finroc\/projects\//;
-	$directory =~ s/^finroc_/org\/finroc\//;
+        $directory =~ s/^rrlib_/org\/rrlib\//;
+        $directory =~ s/^finroc_plugins_/org\/finroc\/plugins\//;
+        $directory =~ s/^finroc_libraries_/org\/finroc\/libraries\//;
+        $directory =~ s/^finroc_tools_gui_plugins_/org\/finroc\/tools\/gui\/plugins\//;
+        $directory =~ s/^finroc_tools_/org\/finroc\/tools\//;
+        $directory =~ s/^finroc_projects_/org\/finroc\/projects\//;
+        $directory =~ s/^finroc_/org\/finroc\//;
     }
 
     $directory =~ s/^rrlib_/rrlib\//;
@@ -132,8 +132,8 @@ sub AddComponent($$)
     
     my %component = GetComponent $component_name;
 
-    $$list{$component_name} = { 'url' => $component{'url'}, 'target' => GetComponentDirectory $component_name };
-    ${$$list{$component_name}}{'installed'} = -d ${$$list{$component_name}}{'target'};
+    $$list{$component_name} = { 'url' => $component{'url'}, 'target' => GetComponentDirectory $component_name, 'disk_usage' => $component{'disk_usage'} };
+    ${$$list{$component_name}}{'installed'} = -d "$FINROC_HOME/${$$list{$component_name}}{'target'}";
 
     if (defined $component{'dependencies'})
     {
@@ -210,11 +210,38 @@ ERRORMSG sprintf "Could not resolve mandatory dependencies:\n  %s\n", join " ", 
 
 
 
+if (!keys %mandatory_components)
+{
+    INFOMSG sprintf "Nothing new to install.\n";
+    exit 0;
+}
+
+
+
 my %extra_components;
 map { $extra_components{$_} = 1 unless $requested_components{$_} } keys %mandatory_components;
 
 INFOMSG sprintf "The following extra components will be installed:\n  %s\n", join " ", sort keys %extra_components if keys %extra_components;
-INFOMSG sprintf "The following NEW components will be installed:\n  %s\n", join " ", sort keys %mandatory_components;
+
+INFOMSG sprintf "The following new components will be installed:\n  %s\n", join " ", sort keys %mandatory_components;
+
+sub FormatSummarizedDiskUsage($)
+{
+    my ($used_amounts) = @_;
+    my $usage = 0;
+    my $undef_seen = 0;
+    map { $usage += $_ if defined; $undef_seen = 1 unless defined; } @$used_amounts;
+    my @suffices = ( "KiB", "MiB", "GiB", "TiB" );
+    my $suffix = 0;
+    while ($usage > 1024)
+    {
+        $usage /= 1024.0;
+        $suffix++;
+    }
+    return sprintf "%s%.1f %s", $undef_seen ? "at least " : "", int($usage * 10.0 + 0.5) / 10.0, $suffices[$suffix];
+}
+
+INFOMSG sprintf "After this operation, %s of additional disk space will be used.\n", FormatSummarizedDiskUsage [ map { $mandatory_components{$_}{'disk_usage'}; } keys %mandatory_components ];
 
 if (keys %extra_components)
 {
