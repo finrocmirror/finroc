@@ -57,7 +57,7 @@ sub CheckStatus($)
 
     DEBUGMSG sprintf "%s\n", $directory;
 
-    my $result = Status $directory, defined GetCommandLineOption "local-modifications-only";
+    my $result = Status $directory, defined GetCommandLineOption "local-modifications-only" ? 1 : 0;
 
     $directory =~ s/$FINROC_HOME/./;
 
