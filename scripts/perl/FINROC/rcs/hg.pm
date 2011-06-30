@@ -24,7 +24,7 @@ package FINROC::rcs::hg;
 use Exporter;
 @ISA = qw/Exporter/;
 @EXPORT = qw//;
-@EXPORT_OK = qw/Checkout/;
+@EXPORT_OK = qw/Checkout Update/;
 
 
 use strict;
@@ -53,12 +53,74 @@ sub Checkout($$$$)
     $target_base =~ s/\/[^\/]*$//;
     DEBUGMSG sprintf "Creating directory '%s'\n", $target_base;
     system "mkdir -p $target_base";
-    ERRORMSG "Command failed!\n" if $? != 0;
+    ERRORMSG "Command failed!\n" if $?;
 
     my $command = sprintf "hg clone %s %s", $url, $target;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    ERRORMSG "Command failed!\n" if $? != 0;
+    ERRORMSG "Command failed!\n" if $?;
+}
+
+sub Update($$$)
+{
+    my ($directory, $username, $password) = @_;
+
+    my $command = sprintf "hg --cwd %s in", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $output = join "", `$command`;
+    DEBUGMSG $output;
+    return "." if $?;
+
+    $command = sprintf "hg --cwd %s pull", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    $output = join "", `$command`;
+    DEBUGMSG $output;
+    ERRORMSG "Command failed!\n" if $?;
+
+    $command = sprintf "hg --cwd %s st -q", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    $output = join "", `$command`;
+    DEBUGMSG $output;
+    return "M" unless $output eq "";
+
+    $command = sprintf "hg --cwd %s out", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    $output = join "", `$command`;
+    DEBUGMSG $output;
+    return "O" unless $?;
+
+    $command = sprintf "hg --cwd %s update", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    $output = join "", `$command`;
+    DEBUGMSG $output;
+    return "C" if $?;
+
+    return ".";
+}
+
+sub Status($$)
+{
+    my ($directory, $local_modifications_only) = @_;
+
+    my $result = "";
+
+    unless ($local_modifications_only)
+    {
+	my $command = sprintf "hg --cwd %s out", $directory;
+	DEBUGMSG sprintf "Executing '%s'\n", $command;
+	my $output = join "", `$command`;
+	DEBUGMSG $output;
+	$result = sprintf "Outgoing changesets:\n\n%s\n", join "\n", grep { /^(changeset|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
+    }
+
+    my $command = sprintf "hg --cwd %s st", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $output = join "", `$command`;
+    DEBUGMSG $output;
+    ERRORMSG "Command failed!\n" if $?;
+    $result .= sprintf "%sLocal modifications:\n%s", ($result ne "" ? "\n" : ""), $output unless $output eq "";
+
+    return $result;
 }
 
 

@@ -264,9 +264,6 @@ foreach my $component_name (sort keys %mandatory_components)
     my %component = %{$mandatory_components{$component_name}};
 
     DEBUGMSG sprintf "About to checkout component '%s' from '%s'\n", $component_name, $component{'url'};
-
-    my $rcs_name = @{[ reverse split "/", $component{'url'} ]}[1];
-    require "FINROC/rcs/$rcs_name.pm";
     
     Checkout $component{'url'}, "$FINROC_HOME/$component{'target'}", GetCommandLineOption "username", GetCommandLineOption "password";
 }

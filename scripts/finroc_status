@@ -1,0 +1,91 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_status
+#
+# \author  Tobias Foehst
+#
+# \date    2011-06-30
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+use Data::Dumper;
+
+use lib "$FINROC_HOME/scripts/perl";
+use FINROC::messages;
+use FINROC::getopt;
+use FINROC::sources;
+use FINROC::rcs;
+
+############################
+##  Command line options  ##
+############################
+
+SetHelp undef,
+{
+    "-l, --local-modifications-only" => "do not check for outgoing changesets (much faster)"
+}, undef;
+
+ParseCommandLine [ "local-modifications-only" ], undef;
+
+
+
+######################
+##  Perform update  ##
+######################
+
+sub CheckStatus($)
+{
+    my ($directory) = @_;
+
+    DEBUGMSG sprintf "%s\n", $directory;
+
+    my $result = Status $directory, defined GetCommandLineOption "local-modifications-only";
+
+    $directory =~ s/$FINROC_HOME/./;
+
+    INFOMSG sprintf "Status of %s:\n%s\n", $directory, $result if $result ne "";
+}
+
+
+#########################
+##  Search components  ##
+#########################
+
+
+CheckStatus "$FINROC_HOME/make_builder";
+
+map { chomp; CheckStatus $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core"`;
+
+my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
+
+foreach my $class (@classes)
+{
+    foreach my $base (map { chomp; $_ } `find $FINROC_HOME/sources -name "$class"`)
+    {
+	map { chomp; CheckStatus sprintf "%s/%s", $base, $_ } `ls $base`;
+    }
+}
+
+CheckStatus "$FINROC_HOME";
+
+
+
+exit 0;

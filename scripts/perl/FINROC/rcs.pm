@@ -23,7 +23,7 @@
 package FINROC::rcs;
 use Exporter;
 @ISA = qw/Exporter/;
-@EXPORT = qw/Checkout/;
+@EXPORT = qw/Checkout Update Status/;
 
 
 use strict;
@@ -33,6 +33,24 @@ use Data::Dumper;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
+
+use FINROC::rcs::hg;
+use FINROC::rcs::svn;
+
+sub GetRCSNameOfWorkingCopy($)
+{
+    my ($directory) = @_;
+
+    my $rcs_name;
+    $rcs_name = "svn" if -d "$directory/.svn";
+    $rcs_name = "hg" if -d "$directory/.hg";
+
+    ERRORMSG sprintf "Could not determine revision control system used in '%s'!", $directory unless defined $rcs_name;
+
+    DEBUGMSG sprintf "Revision control system: %s\n", $rcs_name;
+
+    return $rcs_name;
+}
 
 sub Checkout($$$$)
 {
@@ -52,6 +70,38 @@ sub Checkout($$$$)
 
     eval sprintf "FINROC::rcs::%s::Checkout(%s, %s, %s, %s)", $rcs_name, $url, $target, $username, $password;
     ERRORMSG $@ if $@;
+}
+
+sub Update($$$)
+{
+    my ($directory, $username, $password) = @_;
+
+    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+
+    $directory = sprintf "'%s'", $directory;
+    $username = defined $username ? sprintf "'%s'", $username : "undef";
+    $password = defined $password ? sprintf "'%s'", $password : "undef";
+
+    my $result;
+    eval sprintf "\$result = FINROC::rcs::%s::Update(%s, %s, %s)", $rcs_name, $directory, $username, $password;
+    ERRORMSG $@ if $@;
+
+    return $result;
+}
+
+sub Status($$)
+{
+    my ($directory, $local_modifications_only) = @_;
+
+    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+
+    $directory = sprintf "'%s'", $directory;
+
+    my $result;
+    eval sprintf "\$result = FINROC::rcs::%s::Status(%s, %s)", $rcs_name, $directory, $local_modifications_only;
+    ERRORMSG $@ if $@;
+
+    return $result;
 }
 
 

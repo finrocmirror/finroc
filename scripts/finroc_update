@@ -1,0 +1,129 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_update
+#
+# \author  Tobias Foehst
+#
+# \date    2011-06-30
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+use Data::Dumper;
+
+use lib "$FINROC_HOME/scripts/perl";
+use FINROC::messages;
+use FINROC::getopt;
+use FINROC::sources;
+use FINROC::rcs;
+
+############################
+##  Command line options  ##
+############################
+
+SetHelp undef,
+{
+    "-o [yes|no], --optional=[yes|no]" => "get new optional dependencies? - default: ask",
+    "-u <username>, --username=<username>" => "use <username> to get access to repositories",
+    "-p <password, --password=<password>" => "use <password> to get access to repositories"
+}, undef;
+
+ParseCommandLine [ "optional=s", "username=s", "password=s" ], sub
+{
+    if (defined GetCommandLineOption "optional")
+    {
+        ERRORMSG "Possible values for --optional: yes|no\n" unless (GetCommandLineOption "optional") =~ /yes|no/;
+    }
+};
+
+# default values if not set
+AssignCommandLineOptionDefaultValue "optional", "ask" unless defined GetCommandLineOption "optional" and GetCommandLineOption "optional" ne "";
+
+
+
+
+######################
+##  Perform update  ##
+######################
+
+my @conflicts;
+my @modified;
+my @outgoing;
+
+sub UpdateWorkingCopy($)
+{
+    my ($directory) = @_;
+
+    DEBUGMSG sprintf "%s\n", $directory;
+
+    my $result = Update $directory, GetCommandLineOption "username", GetCommandLineOption "password";
+
+    $directory =~ s/$FINROC_HOME/./;
+
+    push @conflicts, $directory if $result eq "C";
+    push @modified, $directory if $result eq "M";
+    push @outgoing, $directory if $result eq "O";
+
+    INFOMSG $result;
+    DEBUGMSG "\n";
+}
+
+
+#########################
+##  Search components  ##
+#########################
+
+INFOMSG sprintf "Updating make_builder ...";
+DEBUGMSG "\n";
+UpdateWorkingCopy "$FINROC_HOME/make_builder";
+INFOMSG " Done\n";
+
+INFOMSG sprintf "Updating core ...";
+DEBUGMSG "\n";
+map { chomp; UpdateWorkingCopy $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core"`;
+INFOMSG " Done\n";
+
+my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
+
+foreach my $class (@classes)
+{
+    INFOMSG sprintf "Updating %s ...", $class;
+    DEBUGMSG "\n";
+    foreach my $base (map { chomp; $_ } `find $FINROC_HOME/sources -name "$class"`)
+    {
+	map { chomp; UpdateWorkingCopy sprintf "%s/%s", $base, $_ } `ls $base`;
+    }
+    INFOMSG " Done\n";
+}
+
+INFOMSG sprintf "Updating finroc ...";
+DEBUGMSG "\n";
+UpdateWorkingCopy "$FINROC_HOME";
+INFOMSG " Done\n";
+
+
+
+WARNMSG sprintf "The following directories have incoming changesets but need manual processing due to local modifications:\n  %s\n", join " ", @modified if @modified;
+WARNMSG sprintf "The following directories have incoming changesets but need manual processing due to outgoing changesets (e.g. rebase or merge):\n  %s\n", join " ", @outgoing if @outgoing;
+WARNMSG sprintf "The following directories have conflicts that must be manually resolved:\n  %s\n", join " ", @conflicts if @conflicts;
+
+
+
+exit 0;

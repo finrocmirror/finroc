@@ -39,7 +39,7 @@ sub Checkout($$$$)
     my ($url, $target, $username, $password) = @_;
 
     $url .= "/trunk";
-    
+
     my $credentials = "";
     $credentials = sprintf " --username=%s", $username if defined $username;
     $credentials .= sprintf " --password=%s", $password if defined $password;
@@ -47,7 +47,39 @@ sub Checkout($$$$)
     my $command = sprintf "svn co --ignore-externals %s %s %s", $credentials, $url, $target;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    ERRORMSG "Command failed!\n" if $? != 0;
+    ERRORMSG "Command failed!\n" if $?;
+}
+
+sub Update($$$)
+{
+    my ($directory, $username, $password) = @_;
+
+    my $credentials = "";
+    $credentials = sprintf " --username=%s", $username if defined $username;
+    $credentials .= sprintf " --password=%s", $password if defined $password;
+
+    my $command = sprintf "svn up --ignore-externals --accept postpone %s %s", $credentials, $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $output = join "", `$command`;
+    DEBUGMSG $output;
+    ERRORMSG "Command failed!\n" if $?;
+
+    return "C" if grep { /^C/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
+    return ".";
+}
+
+sub Status($$)
+{
+    my ($directory, $local_modifications_only) = @_;
+
+    my $command = sprintf "svn st --ignore-externals %s", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $output = join "", `$command`;
+    DEBUGMSG $output;
+    ERRORMSG "Command failed!\n" if $?;
+
+    return sprintf "Local modifications:\n%s\n", $output unless $output eq "";
+    return "";
 }
 
 
