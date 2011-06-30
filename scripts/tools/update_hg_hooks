@@ -45,9 +45,9 @@ ParseCommandLine undef, undef;
 ##  Find hg directories  ##
 ###########################
 
-my @hg_directory = split "\n", `find -name ".hg"`;
+my @hg_directories = split "\n", `find $FINROC_HOME -name ".hg"`;
 
-DEBUGMSG Dumper \@hg_directory;
+DEBUGMSG Dumper \@hg_directories;
 
 
 
@@ -55,7 +55,7 @@ DEBUGMSG Dumper \@hg_directory;
 ##  Update hgrc files  ##
 #########################
 
-foreach my $hg_directory (@hg_directory)
+foreach my $hg_directory (@hg_directories)
 {
     my $hgrc = "$hg_directory/hgrc";
     
@@ -91,17 +91,16 @@ foreach my $hg_directory (@hg_directory)
     DEBUGMSG $content;
     DEBUGMSG Dumper \%hooks;
 
-    open HGRC, ">$hgrc" or die "Could not open '$hgrc' for writing!";
-    print "Writing $hgrc ... ";
+    open HGRC, ">$hgrc" or ERRORMSG "Could not open '$hgrc' for writing!";
+    INFOMSG "Writing $hgrc ... ";
     printf HGRC "$content";
     printf HGRC "[hooks]\n";
     foreach my $name (keys %hooks)
     {
         printf HGRC sprintf "%s = %s\n", $name, $hooks{$name};
     }
-    print "Done.\n";
+    INFOMSG "Done.\n";
     close HGRC;
-
 }
 
 

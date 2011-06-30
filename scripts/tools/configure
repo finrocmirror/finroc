@@ -47,9 +47,7 @@ my $platform = `python -c 'import sys\nimport platform\nsys.stdout.write(platfor
 
 # command line options
 my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "project:s", "target:s", "local=s"
-                                                                                         , "mca=s" # FIXME: ONLY FOR MCA2 LEGACY
-                                                                                          or ERRORMSG "Parsing command line failed!\n";
+GetOptions \%command_line_options, "verbose+", "help", "project:s", "target:s", "local=s" or ERRORMSG "Parsing command line failed!\n";
 
 EnableVerboseMessages if defined $command_line_options{"verbose"};
 
@@ -64,10 +62,6 @@ if (defined $command_line_options{"target"})
 if (defined $command_line_options{"local"})
 {
     ERRORMSG "Possible values for --local: yes|no\n" unless $command_line_options{"local"} =~ /yes|no/;
-}
-if (defined $command_line_options{"mca"})
-{
-    ERRORMSG "Possible values for --mca: yes|no\n" unless $command_line_options{"mca"} =~ /yes|no/;
 }
 
 
@@ -88,7 +82,6 @@ if (defined $command_line_options{"help"})
     PrintOption "-p PROJECT, --project=PROJECT", "override project name";
     PrintOption "-t TARGET, --target=TARGET", "target name - default: debug";
     PrintOption "-l [yes|no], --local=[yes|no]", "use only local source files? - default: yes";
-    PrintOption "-m [yes|no], --mca=[yes|no]", "use MCA2 legacy mode? - default: no"; # FIXME: ONLY FOR MCA2 LEGACY
     INFOMSG "\n";
     exit 0;
 }
@@ -125,27 +118,15 @@ foreach my $option (keys %command_line_options)
 $configuration{"project"} = undef unless defined $configuration{"project"} and $configuration{"project"} ne "";
 $configuration{"target"} = "debug" unless defined $configuration{"target"} and $configuration{"target"} ne "";
 $configuration{"local"} = "yes" unless defined $configuration{"local"};
-$configuration{"mca"} = "no" unless defined $configuration{"mca"}; # FIXME: ONLY FOR MCA2 LEGACY
 
 # check existence of project
 if (defined $configuration{"project"})
 {
-    if ($configuration{"mca"} eq "yes")                                                                             # FIXME: ONLY FOR MCA2 LEGACY
-    {                                                                                                               # FIXME: ONLY FOR MCA2 LEGACY
-        unless (-d sprintf "sources/cpp/mca2-legacy/projects/%s", $configuration{"project"})                        # FIXME: ONLY FOR MCA2 LEGACY
-        {                                                                                                           # FIXME: ONLY FOR MCA2 LEGACY
-            INFOMSG sprintf "\nWarning: MCA2 legacy project `%s' does not exist!\n\n", $configuration{"project"};   # FIXME: ONLY FOR MCA2 LEGACY
-            $configuration{"project"} = undef;                                                                      # FIXME: ONLY FOR MCA2 LEGACY
-        }                                                                                                           # FIXME: ONLY FOR MCA2 LEGACY
-    }                                                                                                               # FIXME: ONLY FOR MCA2 LEGACY
-    else                                                                                                            # FIXME: ONLY FOR MCA2 LEGACY
-    {                                                                                                               # FIXME: ONLY FOR MCA2 LEGACY
-        unless (-d sprintf "sources/cpp/projects/%s", $configuration{"project"})
-        {
-            INFOMSG sprintf "\nWarning: Project `%s' does not exist!\n\n", $configuration{"project"};
-            $configuration{"project"} = undef;
-        }
-    }                                                                                                               # FIXME: ONLY FOR MCA2 LEGACY
+    unless (-d sprintf "sources/cpp/projects/%s", $configuration{"project"})
+    {
+	INFOMSG sprintf "\nWarning: Project `%s' does not exist!\n\n", $configuration{"project"};
+	$configuration{"project"} = undef;
+    }
 }
 
 DEBUGMSG sprintf "resulting configuration:\n%s\n", Dumper \%configuration;
@@ -163,7 +144,6 @@ $configuration{"target"} = sprintf "%s_%s", $platform, $configuration{"target"};
 use Cwd;
 $configuration{"home"} = getcwd;
 $configuration{"project_home"} = sprintf "%s/sources/cpp/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"};
-$configuration{"project_home"} = sprintf "%s/sources/cpp/mca2-legacy/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"} and $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper \%configuration;
 
 
@@ -182,7 +162,6 @@ PrintSetting "Project", defined $configuration{"project"} ? $configuration{"proj
 PrintSetting "Project Home", defined $configuration{"project_home"} ? $configuration{"project_home"} : "<unknown>";
 PrintSetting "Target", $configuration{"target"};
 PrintSetting "Local Build", $configuration{"local"};
-PrintSetting "MCA2 legacy", $configuration{"mca"};
 INFOMSG "----------------------------------\n";
 
 
@@ -200,34 +179,22 @@ sub SetEnvironment($) {
 # FINROC_HOME
 SetEnvironment sprintf "unset FINROC_HOME";
 SetEnvironment sprintf "export FINROC_HOME=%s", $configuration{"home"};
-SetEnvironment sprintf "unset MCAHOME"; # FIXME: ONLY FOR MCA2 LEGACY
-SetEnvironment sprintf "export MCAHOME=%s/sources/cpp/mca2-legacy", $configuration{"home"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 # FINROC_PROJECT
 SetEnvironment sprintf "unset FINROC_PROJECT";
-#SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if defined $configuration{"project"};
-SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if defined $configuration{"project"} and $configuration{"mca"} ne "yes"; # FIXME: ONLY FOR MCA2 LEGACY
-SetEnvironment sprintf "unset MCAPROJECT"; # FIXME: ONLY FOR MCA2 LEGACY
-SetEnvironment sprintf "export MCAPROJECT=%s", $configuration{"project"} if defined $configuration{"project"} and $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
+SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if defined $configuration{"project"};
 
 # FINROC_PROJECT_HOME
 SetEnvironment sprintf "unset FINROC_PROJECT_HOME";
-#SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"};
-SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"} and $configuration{"mca"} ne "yes"; # FIXME: ONLY FOR MCA2 LEGACY
-SetEnvironment sprintf "unset MCAPROJECTHOME"; # FIXME: ONLY FOR MCA2 LEGACY
-SetEnvironment sprintf "export MCAPROJECTHOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"} and $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
+SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"};
 
 # FINROC_TARGET
 SetEnvironment sprintf "unset FINROC_TARGET";
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
-SetEnvironment sprintf "unset MCATARGET"; # FIXME: ONLY FOR MCA2 LEGACY
-SetEnvironment sprintf "export MCATARGET=%s", $configuration{"target"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 # FINROC_LOCAL
 SetEnvironment sprintf "unset FINROC_LOCAL";
 SetEnvironment sprintf "export FINROC_LOCAL=%s", $configuration{"local"};
-SetEnvironment sprintf "unset MCALOCAL"; # FIXME: ONLY FOR MCA2 LEGACY
-SetEnvironment sprintf "export MCALOCAL=%s", $configuration{"local"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 
 #RRLIB_SIMVIS3D_RESOURCES
 SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources", $configuration{"home"};
@@ -235,11 +202,8 @@ SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources", $configur
 # PATH
 my (@path, @finroc_path, %finroc_path_elements);
 push @finroc_path, sprintf "%s/export/%s/bin", $configuration{"home"}, $configuration{"target"};
-push @finroc_path, sprintf "%s/%s", $configuration{"project_home"},
-                                                                    $configuration{"mca"} eq "yes" ? "script" :  # FIXME: ONLY FOR MCA2 LEGACY
-                                                                    "scripts" if defined $configuration{"project_home"};
+push @finroc_path, sprintf "%s/%s", $configuration{"project_home"}, "scripts" if defined $configuration{"project_home"};
 push @finroc_path, sprintf "%s/scripts", $configuration{"home"};
-push @finroc_path, sprintf "%s/sources/cpp/mca2-legacy/script", $configuration{"home"} if $configuration{"mca"} eq "yes"; # FIXME: ONLY FOR MCA2 LEGACY
 push @finroc_path, sprintf "%s/make_builder/scripts", $configuration{"home"};
 push @finroc_path, "/usr/local/share/finroc/bin" if $configuration{"local"} eq "no";
 

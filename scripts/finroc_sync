@@ -198,7 +198,7 @@ foreach my $target (@{$$sync_config{'target'}})
             {
                 s/^\s*//;
                 ERRORMSG sprintf "Can not resolve all dependencies. Try a rebuild and check your environment.\n" if /=> not found/;
-                next unless /^lib(rrlib|finroc|mca2)/;
+                next unless /^lib(rrlib|finroc)/;
                 my $library = $1 if /=> (\S+)/;
                 push @libraries, $library if defined $library;
             }

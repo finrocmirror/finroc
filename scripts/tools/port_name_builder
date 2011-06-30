@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_port_name_builder
+#
+# \author  Max Reichardt
+#
+# \date    2011-04-21
+#
+# Script to auto-generate port names for finroc modules in the build process.
+# It operates on doxygen perlmod output.
+#
+# It creates a .cpp file with port names for all modules and groups that contain ports.
+#----------------------------------------------------------------------
+
+use strict;
+use DoxyDocs;
+
+my $classes = $::doxydocs->{classes};
+my $files = $::doxydocs->{files};
+
+# generate header comment
+printf "/*\n * This file was automatically generated from the source file%s", scalar @$files > 1 ? "s" : "";
+printf "\n * %s", join "\n * ", (map { $_->{'name'} } @$files);
+print "\n * using finroc_port_name_builder.";
+print "\n * This code is released under the same license as the source files.\n */\n\n";
+
+# includes, namespace
+print "#include \"core/structure/tStructureElementRegister.h\"\n\n";
+print "using finroc::core::structure::tStructureElementRegister;\n\n";
+print "namespace finroc\n{\nnamespace generated\n{\n\n";
+
+# generate code for names
+print "static int InitializePortNames()\n{\n";
+print "  std::vector<util::tString> names;\n";
+foreach my $class (@$classes)
+{
+    printf "\n  // class %s\n", $class->{name};
+    printf "  names.clear();\n";
+    my $members = $class->{public_members}->{members};
+    foreach my $member (@$members)
+    {
+        if ($member->{kind} eq 'variable' && $member->{static} eq 'no')
+        {
+            my $type = $member->{type};
+            my @typesplit = split(/</, $type);
+            $type = $typesplit[0]; # remove any template arguments
+            $type =~ s/.*::template\s//g; # remove any ...::template
+            if ($type eq 'tInput' || $type eq 'tOutput' || $type eq 'tSensorInput' || $type eq 'tSensorOutput' || $type eq 'tControllerInput' || $type eq 'tControllerOutput' || $type eq 'tParameter')
+            {
+                my @words = split ("_", $member->{name});
+                my $w0 = $words[0];
+                if (($w0 eq 'si' && $type eq 'tSensorInput') || ($w0 eq 'so' && $type eq 'tSensorOutput') || ($w0 eq 'ci' && $type eq 'tControllerInput') || ($w0 eq 'co' && $type eq 'tControllerOutput') || ($w0 eq 'par' && $type eq 'tParameter'))
+                {
+                    shift(@words);
+                }
+                my $name = join " ", map ucfirst, map lc, @words;
+                printf "  names.push_back(\"%s\");\n", $name;
+            }
+        }
+    }
+
+    printf "  tStructureElementRegister::AddPortNamesForModuleType(\"%s\", names);\n", $class->{name};
+}
+print "\n  return 0;\n";
+print "}\n\n";
+print "int cINIT = InitializePortNames();\n\n";
+print "}\n}\n";

@@ -115,8 +115,9 @@ sub AddComponent($$)
     return if exists $$list{$component_name} or exists $mandatory_components{$component_name};
 
     DEBUGMSG sprintf "Adding component %s\n", $component_name;
-
+    
     my %component = GetComponent $component_name;
+
     $$list{$component_name} = { 'url' => $component{'url'}, 'target' => GetComponentDirectory $component_name };
     ${$$list{$component_name}}{'installed'} = -d ${$$list{$component_name}}{'target'};
 
@@ -188,6 +189,13 @@ map { delete $mandatory_components{$_} if ${$mandatory_components{$_}}{'installe
 
 INFOMSG "Done.\n";
 
+
+
+my @missing_mandatory_dependencies = grep { !defined ${$mandatory_components{$_}}{'url'} } keys %mandatory_components;
+ERRORMSG sprintf "Could not resolve mandatory dependencies:\n  %s\n", join " ", @missing_mandatory_dependencies if @missing_mandatory_dependencies;
+
+
+
 my %extra_components;
 map { $extra_components{$_} = 1 unless $requested_components{$_} } keys %mandatory_components;
 
@@ -213,6 +221,8 @@ if (keys %extra_components)
 foreach my $component_name (sort keys %mandatory_components)
 {
     my %component = %{$mandatory_components{$component_name}};
+
+    DEBUGMSG sprintf "About to checkout component '%s' from '%s'\n", $component_name, $component{'url'};
 
     my $rcs_name = @{[ reverse split "/", $component{'url'} ]}[1];
     require "FINROC/rcs/$rcs_name.pm";
