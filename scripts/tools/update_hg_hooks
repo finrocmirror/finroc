@@ -58,7 +58,7 @@ DEBUGMSG Dumper \@hg_directories;
 foreach my $hg_directory (@hg_directories)
 {
     my $hgrc = "$hg_directory/hgrc";
-    
+
     my $content = "";
     my %hooks;
     open HGRC, "<$hgrc" and eval {

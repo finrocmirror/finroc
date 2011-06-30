@@ -27,13 +27,12 @@ use strict;
 
 use Env '$FINROC_HOME';
 use Env '$FINROC_PROJECT_HOME';
-use Getopt::Long;
 use Data::Dumper;
 use XML::Simple;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
-use FINROC::rcs;
+use FINROC::getopt;
 
 
 
@@ -41,52 +40,25 @@ use FINROC::rcs;
 ##  Command line options  ##
 ############################
 
-# command line options
-my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "target=s", "simulate" or ERRORMSG "Parsing command line failed!\n";
-
-EnableVerboseMessages if defined $command_line_options{"verbose"};
-
-DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
-
-
-
-#############
-##  Usage  ##
-#############
-
-# print help and terminate if requested
-if (defined $command_line_options{"help"})
+SetHelp "[<targets>]",
 {
-    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+    "-s, --simulate" => "no changes on target system will be made",
+    "-c, --config" => "configuration file - default: \$FINROC_PROJECT_HOME/etc/sync_config.xml",
+    "-l, --list" => "list targets available in current configfile"
+}, undef;
 
-    INFOMSG sprintf "usage: %s [options] <path_to_sync_config.xml>\n", (reverse (split "/", $0))[0];
-    INFOMSG "options:\n";
-    PrintOption "-h, --help", "show this help";
-    PrintOption "-v, --verbose", "more output for debugging";
-    PrintOption "-s, --simulate", "no changes on target system will be made";
-    PrintOption "-t, --target", "target to sync - default: sync all targets";
-    INFOMSG "\n";
-    exit 0;
-}
+ParseCommandLine [ "simulate", "config=s", "list" ], undef;
+
+# default values if not set
+AssignCommandLineOptionDefaultValue "config", "$FINROC_PROJECT_HOME/etc/sync_config.xml" if defined $FINROC_PROJECT_HOME;
 
 
 
-# non-optional arguments
-my $sync_config_file;
-if (defined $FINROC_PROJECT_HOME)
-{
-    DEBUGMSG sprintf "FINROC_PROJECT_HOME is set to '%s'.\n", $FINROC_PROJECT_HOME;
-    $sync_config_file = sprintf "%s/etc/sync_config.xml", $FINROC_PROJECT_HOME;
-}
-else
-{
-    ERRORMSG sprintf "<path_to_sync_config.xml> not specified. Use %s --help for more information!\n", (reverse (split "/", $0))[0] unless defined $ARGV[0];
-    ERRORMSG sprintf "Illegal argument '%s'. Use %s --help for more information!\n", $ARGV[1], (reverse (split "/", $0))[0] if defined $ARGV[1];
-}
+ERRORMSG sprintf "Configuration file not specified and \$FINROC_PROJECT_HOME not set!. Use %s --help for more information!\n", ScriptName unless defined GetCommandLineOption "config";
 
-$sync_config_file = $ARGV[0] if defined $ARGV[0];
-ERRORMSG sprintf "Config file not set. Use %s --help for more information!\n", (reverse (split "/", $0))[0] unless defined $sync_config_file;
+
+
+my @targets = @ARGV;
 
 
 
@@ -94,19 +66,34 @@ ERRORMSG sprintf "Config file not set. Use %s --help for more information!\n", (
 #  Read sync_config  #
 ######################
 
-DEBUGMSG sprintf "Looking for config file '%s'.\n", $sync_config_file;
+DEBUGMSG sprintf "Looking for config file '%s'.\n", GetCommandLineOption "config";
 
-ERRORMSG sprintf "Config file '%s' not found!\n", $sync_config_file unless -f $sync_config_file;
+ERRORMSG "Configuration file '%s' not found!\n", GetCommandLineOption "config" unless -f GetCommandLineOption "config";
 
-my $sync_config = XMLin($sync_config_file,
+my $sync_config = XMLin(GetCommandLineOption "config",
                         ForceContent => 1,
                         KeyAttr => [],
                         ForceArray => [ "programs", "config", "misc", "target" ],
                         NormalizeSpace => 2);
 
 DEBUGMSG sprintf "sync_config:\n%s\n", Dumper \$sync_config;
+DEBUGMSG sprintf "targets:\n%s\n", Dumper \@targets;
 
-ERRORMSG sprintf "Target '%s' not found!\n", $command_line_options{'target'} if defined $command_line_options{'target'} and not grep { $$_{'name'} eq $command_line_options{'target'} } @{$$sync_config{'target'}};
+if (defined GetCommandLineOption "list")
+{
+    my $max_target_length = 0;
+    sub max($$) { my ($a, $b) = @_; return $a > $b ? $a : $b; }
+    map { $max_target_length = max $max_target_length, length $$_{'name'}; } @{$$sync_config{'target'}};
+    my $format_string = sprintf "%%-%ds   %%s\n", $max_target_length;
+
+    map { printf "$format_string", $$_{'name'}, $$_{'hostname'}{'content'} } @{$$sync_config{'target'}};
+    exit 0;
+}
+
+foreach my $target (@targets)
+{
+    ERRORMSG sprintf "Target '%s' not found!\n", $target unless grep { $$_{'name'} eq $target } @{$$sync_config{'target'}};
+}
 
 my $global_hostname = ${$$sync_config{'hostname'}}{'content'};
 my $global_username = ${$$sync_config{'username'}}{'content'};
@@ -139,7 +126,7 @@ sub Transfer($$$$$)
     $hostname .= ":" if defined $hostname;
 
     my $rsync_options = "-avP";
-    $rsync_options .= "n" if defined $command_line_options{'simulate'};
+    $rsync_options .= "n" if defined GetCommandLineOption "simulate";
 
     my $command = sprintf "rsync %s --rsync-path='mkdir -p %s && rsync' %s %s%s%s/", $rsync_options, $directory, $files, $username, $hostname, $directory;
     DEBUGMSG sprintf "command = '%s'\n", $command;
@@ -155,10 +142,10 @@ sub Transfer($$$$$)
 foreach my $target (@{$$sync_config{'target'}})
 {
     my %target = %{$target};
-    
+
     DEBUGMSG Dumper \%target;
 
-    next if defined $command_line_options{'target'} and $target{'name'} ne $command_line_options{'target'};
+    next if @targets and not grep { $target{'name'} eq $_ } @targets;
 
     INFOMSG sprintf "Processing target '%s' ...\n", $target{'name'};
 
@@ -213,7 +200,7 @@ foreach my $target (@{$$sync_config{'target'}})
     foreach my $transfer_block (@{$target{'config'}})
     {
         DEBUGMSG Dumper \$transfer_block;
-        
+
         my $prefix = "";
         $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
 

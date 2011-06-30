@@ -42,7 +42,7 @@ my %components;
 sub GetAllComponents()
 {
     return %components if %components;
-    
+
     INFOMSG "Reading component lists... ";
     DEBUGMSG "\n";
 
@@ -57,19 +57,19 @@ sub GetAllComponents()
 
         my $xml_content = join "", `$command`;
 
-	my $offline_source = $source;
-	$offline_source =~ s/[\:\/]/./g;
-	if ($? == 0)
-	{
-	    mkdir "$FINROC_HOME/.offline" unless -d "$FINROC_HOME/.offline";
-	    open OFFLINE, ">$FINROC_HOME/.offline/$offline_source.xml" or ERRORMSG "Could not open offline file to write: $!\n";
-	    print OFFLINE $xml_content;
-	    close OFFLINE;
-	}
-	else
-	{
-	    $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null`;
-	}
+        my $offline_source = $source;
+        $offline_source =~ s/[\:\/]/./g;
+        if ($? == 0)
+        {
+            mkdir "$FINROC_HOME/.offline" unless -d "$FINROC_HOME/.offline";
+            open OFFLINE, ">$FINROC_HOME/.offline/$offline_source.xml" or ERRORMSG "Could not open offline file to write: $!\n";
+            print OFFLINE $xml_content;
+            close OFFLINE;
+        }
+        else
+        {
+            $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null`;
+        }
 
         if ($xml_content eq "")
         {

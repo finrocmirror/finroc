@@ -57,7 +57,7 @@ ParseCommandLine [ "optional=s", "username=s", "password=s" ], sub
 ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more information.\n", ScriptName unless defined $ARGV[0];
 
 # default values if not set
-AssignCommandLineOptionDefaultValue "optional", "ask" unless defined GetCommandLineOption "optional" and GetCommandLineOption "optional" ne "";
+AssignCommandLineOptionDefaultValue "optional", "ask";
 
 
 
@@ -89,7 +89,7 @@ my %optional_components;
 sub GetComponentDirectory($)
 {
     my ($component_name) = @_;
-    
+
     return "make_builder" if $component_name eq "make_builder";
 
     my @name_parts = split "-", $component_name;
@@ -129,7 +129,7 @@ sub AddComponent($$)
     return if exists $$list{$component_name} or exists $mandatory_components{$component_name};
 
     DEBUGMSG sprintf "Adding component %s\n", $component_name;
-    
+
     my %component = GetComponent $component_name;
 
     $$list{$component_name} = { 'url' => $component{'url'}, 'target' => GetComponentDirectory $component_name, 'disk_usage' => $component{'disk_usage'} };
@@ -264,7 +264,7 @@ foreach my $component_name (sort keys %mandatory_components)
     my %component = %{$mandatory_components{$component_name}};
 
     DEBUGMSG sprintf "About to checkout component '%s' from '%s'\n", $component_name, $component{'url'};
-    
+
     Checkout $component{'url'}, "$FINROC_HOME/$component{'target'}", GetCommandLineOption "username", GetCommandLineOption "password";
 }
 

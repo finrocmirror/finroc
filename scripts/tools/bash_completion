@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    bash_completion
+#
+# \author  Tobias Foehst
+#
+# \date    2011-06-30
+#
+#----------------------------------------------------------------------
+
+_options()
+{
+    COMPREPLY=()
+    local current="${COMP_WORDS[COMP_CWORD]}"
+
+    if [[ ${current} == -* ]] ; then
+        local options=$(${COMP_WORDS[0]} -h 2>&1 | grep '  -' | sed -r -e 's%^\s+(-.).+(--.*)%\1 \2 %' -e 's%=% %' | cut -d ' ' -f "1 2")
+        COMPREPLY=( $(compgen -W "${options}" -- ${current}) )
+        return 0
+    fi
+}
+
+
+
+_finroc_get()
+{
+    _options
+
+    local current="${COMP_WORDS[COMP_CWORD]}"
+
+    if [[ ${current} == -* ]] ; then
+        return 0
+    fi
+
+    local components=$(finroc_search . 2> /dev/null | cut -d ' ' -f 1);
+    COMPREPLY=( $(compgen -W "${components}" -- ${current}) )
+    return 0
+}
+complete -F _finroc_get finroc_get
+
+
+
+_finroc_search()
+{
+    _options
+}
+complete -F _finroc_search finroc_search
+
+
+
+_finroc_status()
+{
+    _options
+}
+complete -F _finroc_status finroc_status
+
+
+
+_finroc_update()
+{
+    _options
+}
+complete -F _finroc_update finroc_update
+
+
+
+_finroc_sync()
+{
+    _options
+
+    local current="${COMP_WORDS[COMP_CWORD]}"
+    local previous="${COMP_WORDS[COMP_CWORD - 1]}"
+
+    if [[ ${current} == -* ]] ; then
+        return 0
+    fi
+
+    if [[ ${previous} == -c ]] ; then
+        compopt -o plusdirs
+        COMPREPLY=( $(compgen -f -X '!*.xml' -- ${current}) )
+        return 0
+    fi
+
+    for i in `seq 0 ${COMP_CWORD}` ; do
+        [[ ${COMP_WORDS[$i]} == -l ]] && return 0
+        [[ ${COMP_WORDS[$i]} == --list ]] && return 0
+    done
+    local current_command=$(for i in `seq 0 ${COMP_CWORD}` ; do echo -n "${COMP_WORDS[$i]} " ; done)
+    local targets=$(${current_command} -l 2> /dev/null | cut -d ' ' -f 1);
+    COMPREPLY=( $(compgen -W "${targets}" -- ${current}) )
+    return 0
+}
+complete -F _finroc_sync finroc_sync

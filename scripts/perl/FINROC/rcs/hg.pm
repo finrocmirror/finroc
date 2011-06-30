@@ -95,22 +95,31 @@ sub Update($$$)
     DEBUGMSG $output;
     return "C" if $?;
 
-    return ".";
+    return "U";
 }
 
-sub Status($$)
+sub Status($$$)
 {
-    my ($directory, $local_modifications_only) = @_;
+    my ($directory, $local_modifications_only, $incoming) = @_;
 
     my $result = "";
 
+    if ($incoming)
+    {
+        my $command = sprintf "hg --cwd %s in", $directory;
+        DEBUGMSG sprintf "Executing '%s'\n", $command;
+        my $output = join "", `$command`;
+        DEBUGMSG $output;
+        $result .= sprintf "%sIncoming changesets:\n\n%s\n", ($result ne "" ? "\n" : ""), join "\n", grep { /^(changeset|user|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
+    }
+
     unless ($local_modifications_only)
     {
-	my $command = sprintf "hg --cwd %s out", $directory;
-	DEBUGMSG sprintf "Executing '%s'\n", $command;
-	my $output = join "", `$command`;
-	DEBUGMSG $output;
-	$result = sprintf "Outgoing changesets:\n\n%s\n", join "\n", grep { /^(changeset|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
+        my $command = sprintf "hg --cwd %s out", $directory;
+        DEBUGMSG sprintf "Executing '%s'\n", $command;
+        my $output = join "", `$command`;
+        DEBUGMSG $output;
+        $result .= sprintf "%sOutgoing changesets:\n\n%s\n", ($result ne "" ? "\n" : ""), join "\n", grep { /^(changeset|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
     }
 
     my $command = sprintf "hg --cwd %s st", $directory;

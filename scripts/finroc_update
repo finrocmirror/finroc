@@ -40,22 +40,11 @@ use FINROC::rcs;
 
 SetHelp undef,
 {
-    "-o [yes|no], --optional=[yes|no]" => "get new optional dependencies? - default: ask",
     "-u <username>, --username=<username>" => "use <username> to get access to repositories",
     "-p <password, --password=<password>" => "use <password> to get access to repositories"
 }, undef;
 
-ParseCommandLine [ "optional=s", "username=s", "password=s" ], sub
-{
-    if (defined GetCommandLineOption "optional")
-    {
-        ERRORMSG "Possible values for --optional: yes|no\n" unless (GetCommandLineOption "optional") =~ /yes|no/;
-    }
-};
-
-# default values if not set
-AssignCommandLineOptionDefaultValue "optional", "ask" unless defined GetCommandLineOption "optional" and GetCommandLineOption "optional" ne "";
-
+ParseCommandLine [ "optional=s", "username=s", "password=s" ], undef;
 
 
 
@@ -63,6 +52,7 @@ AssignCommandLineOptionDefaultValue "optional", "ask" unless defined GetCommandL
 ##  Perform update  ##
 ######################
 
+my @updated;
 my @conflicts;
 my @modified;
 my @outgoing;
@@ -75,8 +65,9 @@ sub UpdateWorkingCopy($)
 
     my $result = Update $directory, GetCommandLineOption "username", GetCommandLineOption "password";
 
-    $directory =~ s/$FINROC_HOME/./;
+    $directory =~ s/$FINROC_HOME/\$FINROC_HOME/;
 
+    push @updated, $directory if $result eq "U";
     push @conflicts, $directory if $result eq "C";
     push @modified, $directory if $result eq "M";
     push @outgoing, $directory if $result eq "O";
@@ -90,12 +81,12 @@ sub UpdateWorkingCopy($)
 ##  Search components  ##
 #########################
 
-INFOMSG sprintf "Updating make_builder ...";
+INFOMSG sprintf "Updating make_builder: ";
 DEBUGMSG "\n";
 UpdateWorkingCopy "$FINROC_HOME/make_builder";
 INFOMSG " Done\n";
 
-INFOMSG sprintf "Updating core ...";
+INFOMSG sprintf "Updating core: ";
 DEBUGMSG "\n";
 map { chomp; UpdateWorkingCopy $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core"`;
 INFOMSG " Done\n";
@@ -104,22 +95,23 @@ my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
 
 foreach my $class (@classes)
 {
-    INFOMSG sprintf "Updating %s ...", $class;
+    INFOMSG sprintf "Updating %s: ", $class;
     DEBUGMSG "\n";
     foreach my $base (map { chomp; $_ } `find $FINROC_HOME/sources -name "$class"`)
     {
-	map { chomp; UpdateWorkingCopy sprintf "%s/%s", $base, $_ } `ls $base`;
+        map { chomp; UpdateWorkingCopy sprintf "%s/%s", $base, $_ } `ls $base`;
     }
     INFOMSG " Done\n";
 }
 
-INFOMSG sprintf "Updating finroc ...";
+INFOMSG sprintf "Updating finroc: ";
 DEBUGMSG "\n";
 UpdateWorkingCopy "$FINROC_HOME";
 INFOMSG " Done\n";
 
 
 
+INFOMSG sprintf "The following directories were successfully updated:\n  %s\n", join " ", @updated if @updated;
 WARNMSG sprintf "The following directories have incoming changesets but need manual processing due to local modifications:\n  %s\n", join " ", @modified if @modified;
 WARNMSG sprintf "The following directories have incoming changesets but need manual processing due to outgoing changesets (e.g. rebase or merge):\n  %s\n", join " ", @outgoing if @outgoing;
 WARNMSG sprintf "The following directories have conflicts that must be manually resolved:\n  %s\n", join " ", @conflicts if @conflicts;

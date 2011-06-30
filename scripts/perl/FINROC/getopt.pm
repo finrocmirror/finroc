@@ -45,18 +45,22 @@ sub ScriptName()
 sub SetHelp($$$)
 {
     my ($command_line_args, $options, $additional_text) = @_;
-    
-    $command_line_args = "" unless defined $command_line_args;
 
-    sub FormatOption($$) { return sprintf "  %-34s %s\n", @_; }
+    $command_line_args = "" unless defined $command_line_args;
 
     $help = sprintf "usage: %s [options] %s\n", ScriptName, $command_line_args;
     $help .= "options:\n";
-    $help .= FormatOption "-h, --help", "show this help";
-    $help .= FormatOption "-v, --verbose", "more output for debugging";
+
+    my $max_key_length = length "-v, --verbose";
+    sub max($$) { my ($a, $b) = @_; return $a > $b ? $a : $b; }
+    map { $max_key_length = max $max_key_length, length $_; } keys %$options;
+    my $format_string = sprintf "  %%-%ds   %%s\n", $max_key_length;
+
+    $help .= sprintf $format_string, "-h, --help", "show this help";
+    $help .= sprintf $format_string, "-v, --verbose", "more output for debugging";
     foreach my $key (keys %$options)
     {
-        $help .= FormatOption $key, $$options{$key};
+        $help .= sprintf $format_string, $key, $$options{$key};
     }
     $help .= "\n";
     $help .= sprintf "%s\n", $additional_text if defined $additional_text;
@@ -71,7 +75,7 @@ sub PrintHelp()
 sub ParseCommandLine($$)
 {
     my ($options, $check_optional_arguments) = @_;
-    
+
     GetOptions \%command_line_options, "verbose+", "help", @$options or ERRORMSG "Parsing command line failed!\n";
 
     EnableVerboseMessages if defined $command_line_options{"verbose"};
@@ -90,14 +94,14 @@ sub GetCommandLineOptions()
 sub GetCommandLineOption($)
 {
     my ($option_name) = @_;
-    
+
     return $command_line_options{$option_name};
 }
 
 sub AssignCommandLineOptionDefaultValue($$)
 {
     my ($option_name, $default_value) = @_;
-    
+
     $command_line_options{$option_name} = $default_value unless defined GetCommandLineOption $option_name and GetCommandLineOption "optional" ne "";
 }
 

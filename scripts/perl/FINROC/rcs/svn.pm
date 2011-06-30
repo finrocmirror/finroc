@@ -65,12 +65,13 @@ sub Update($$$)
     ERRORMSG "Command failed!\n" if $?;
 
     return "C" if grep { /^C/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
+    return "U" if grep { /^[ADUG]/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
     return ".";
 }
 
-sub Status($$)
+sub Status($$$)
 {
-    my ($directory, $local_modifications_only) = @_;
+    my ($directory, $local_modifications_only, $incoming) = @_;
 
     my $command = sprintf "svn st --ignore-externals %s", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;

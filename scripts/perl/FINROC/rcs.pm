@@ -62,7 +62,7 @@ sub Checkout($$$$)
     my $rcs_name = @{[ reverse split "/", $url ]}[1];
 
     ERRORMSG sprintf "Could not determine revision control system for URL '%s'!\n", $url unless defined $rcs_name and $rcs_name ne "";;
-    
+
     $url = sprintf "'%s'", $url;
     $target = sprintf "'%s'", $target;
     $username = defined $username ? sprintf "'%s'", $username : "undef";
@@ -89,16 +89,16 @@ sub Update($$$)
     return $result;
 }
 
-sub Status($$)
+sub Status($$$)
 {
-    my ($directory, $local_modifications_only) = @_;
+    my ($directory, $local_modifications_only, $incoming) = @_;
 
     my $rcs_name = GetRCSNameOfWorkingCopy $directory;
 
     $directory = sprintf "'%s'", $directory;
 
     my $result;
-    eval sprintf "\$result = FINROC::rcs::%s::Status(%s, %s)", $rcs_name, $directory, $local_modifications_only;
+    eval sprintf "\$result = FINROC::rcs::%s::Status(%s, %s, %s)", $rcs_name, $directory, $local_modifications_only, $incoming;
     ERRORMSG $@ if $@;
 
     return $result;

@@ -40,16 +40,19 @@ use FINROC::rcs;
 
 SetHelp undef,
 {
-    "-l, --local-modifications-only" => "do not check for outgoing changesets (much faster)"
+    "-l, --local-modifications-only" => "do not check for outgoing changesets (much faster)",
+    "-i, --incoming" => "show also working copies with incoming changesets"
 }, undef;
 
-ParseCommandLine [ "local-modifications-only" ], undef;
+ParseCommandLine [ "local-modifications-only", "incoming" ], undef;
 
 
 
-######################
-##  Perform update  ##
-######################
+####################
+##  Check status  ##
+####################
+
+my $status = "";
 
 sub CheckStatus($)
 {
@@ -57,11 +60,14 @@ sub CheckStatus($)
 
     DEBUGMSG sprintf "%s\n", $directory;
 
-    my $result = Status $directory, defined GetCommandLineOption "local-modifications-only" ? 1 : 0;
+    my $result = Status $directory, defined GetCommandLineOption "local-modifications-only" ? 1 : 0, defined GetCommandLineOption "incoming" ? 1 : 0;
 
-    $directory =~ s/$FINROC_HOME/./;
+    $directory =~ s/$FINROC_HOME/\$FINROC_HOME/;
 
-    INFOMSG sprintf "Status of %s:\n%s\n", $directory, $result if $result ne "";
+    $status .= sprintf "Status of %s:\n%s\n", $directory, $result if $result ne "";
+
+    INFOMSG ".";
+    DEBUGMSG "\n";
 }
 
 
@@ -69,6 +75,9 @@ sub CheckStatus($)
 ##  Search components  ##
 #########################
 
+
+INFOMSG sprintf "Checking status of working copies%s: ", defined GetCommandLineOption "local-modifications-only" ? "" : " and repositories";
+DEBUGMSG "\n";
 
 CheckStatus "$FINROC_HOME/make_builder";
 
@@ -80,11 +89,15 @@ foreach my $class (@classes)
 {
     foreach my $base (map { chomp; $_ } `find $FINROC_HOME/sources -name "$class"`)
     {
-	map { chomp; CheckStatus sprintf "%s/%s", $base, $_ } `ls $base`;
+        map { chomp; CheckStatus sprintf "%s/%s", $base, $_ } `ls $base`;
     }
 }
 
 CheckStatus "$FINROC_HOME";
+
+INFOMSG " Done\n";
+
+INFOMSG "\n$status" if $status ne "";
 
 
 
