@@ -33,6 +33,7 @@ use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
 use FINROC::rcs;
+use FINROC::terminal;
 
 ############################
 ##  Command line options  ##
@@ -57,11 +58,16 @@ my @conflicts;
 my @modified;
 my @outgoing;
 
-sub UpdateWorkingCopy($)
+sub UpdateWorkingCopy($$)
 {
-    my ($directory) = @_;
+    my ($directory, $remaining) = @_;
 
     DEBUGMSG sprintf "%s\n", $directory;
+
+    my $current_output = $directory;
+    $current_output =~ s/$FINROC_HOME/\$FINROC_HOME/;
+    
+    INFOMSG $current_output;
 
     my $result = Update $directory, GetCommandLineOption "username", GetCommandLineOption "password";
 
@@ -72,42 +78,44 @@ sub UpdateWorkingCopy($)
     push @modified, $directory if $result eq "M";
     push @outgoing, $directory if $result eq "O";
 
+    INFOMSG MoveCursorInRowSequence -($remaining + 3 + length $current_output);
     INFOMSG $result;
+    INFOMSG MoveCursorInRowSequence $remaining + 2;
+    INFOMSG ClearEndOfLineSequence;
     DEBUGMSG "\n";
 }
+
 
 
 #########################
 ##  Search components  ##
 #########################
 
-INFOMSG sprintf "Updating make_builder: ";
-DEBUGMSG "\n";
-UpdateWorkingCopy "$FINROC_HOME/make_builder";
-INFOMSG " Done\n";
-
-INFOMSG sprintf "Updating core: ";
-DEBUGMSG "\n";
-map { chomp; UpdateWorkingCopy $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core"`;
-INFOMSG " Done\n";
-
-my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
-
-foreach my $class (@classes)
+sub UpdateList($$)
 {
-    INFOMSG sprintf "Updating %s: ", $class;
+    my ($name, $list) = @_;
+
+    my @existing = grep { -d $_ } @$list;
+
+    return unless @existing;
+
+    INFOMSG sprintf "Updating %s: [%s] ", $name, ' ' x scalar @existing;
     DEBUGMSG "\n";
-    foreach my $base (map { chomp; $_ } `find $FINROC_HOME/sources -name "$class"`)
-    {
-        map { chomp; UpdateWorkingCopy sprintf "%s/%s", $base, $_ } `ls $base`;
-    }
-    INFOMSG " Done\n";
+    my $i = 0;
+    map { UpdateWorkingCopy $_, scalar @existing - ++$i; } @existing;
+    INFOMSG "Done\n";
 }
 
-INFOMSG sprintf "Updating finroc: ";
-DEBUGMSG "\n";
-UpdateWorkingCopy "$FINROC_HOME";
-INFOMSG " Done\n";
+UpdateList "make_builder", [ "$FINROC_HOME/make_builder" ];
+
+UpdateList "core", [ map { chomp; $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core" 2> /dev/null` ];
+
+foreach my $class ( "rrlib", "libraries", "tools", "plugins", "projects" )
+{
+    UpdateList $class, [ map { chomp; my $base = $_; map { chomp; sprintf "%s/%s", $base, $_ } `ls $_` } `find $FINROC_HOME/sources -name "$class" 2> /dev/null` ];
+}
+
+UpdateList "finroc", [ "$FINROC_HOME" ];
 
 
 

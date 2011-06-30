@@ -33,6 +33,7 @@ use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
 use FINROC::rcs;
+use FINROC::terminal;
 
 ############################
 ##  Command line options  ##
@@ -58,6 +59,8 @@ sub CheckStatus($)
 {
     my ($directory) = @_;
 
+    return unless -d $directory;
+
     DEBUGMSG sprintf "%s\n", $directory;
 
     my $result = Status $directory, defined GetCommandLineOption "local-modifications-only" ? 1 : 0, defined GetCommandLineOption "incoming" ? 1 : 0;
@@ -65,37 +68,55 @@ sub CheckStatus($)
     $directory =~ s/$FINROC_HOME/\$FINROC_HOME/;
 
     $status .= sprintf "Status of %s:\n%s\n", $directory, $result if $result ne "";
-
-    INFOMSG ".";
-    DEBUGMSG "\n";
 }
+
 
 
 #########################
 ##  Search components  ##
 #########################
 
+my @directories;
+sub AddDirectory($)
+{
+    my ($directory) = @_;
+    push @directories, $directory if -d $directory;
+}
 
-INFOMSG sprintf "Checking status of working copies%s: ", defined GetCommandLineOption "local-modifications-only" ? "" : " and repositories";
-DEBUGMSG "\n";
+AddDirectory "$FINROC_HOME/make_builder";
 
-CheckStatus "$FINROC_HOME/make_builder";
-
-map { chomp; CheckStatus $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core"`;
+map { chomp; AddDirectory $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core" 2> /dev/null`;
 
 my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
 
 foreach my $class (@classes)
 {
-    foreach my $base (map { chomp; $_ } `find $FINROC_HOME/sources -name "$class"`)
+    foreach my $base (map { chomp; $_ } `find $FINROC_HOME/sources -name "$class" 2> /dev/null`)
     {
-        map { chomp; CheckStatus sprintf "%s/%s", $base, $_ } `ls $base`;
+        map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls $base`;
     }
 }
 
-CheckStatus "$FINROC_HOME";
+AddDirectory "$FINROC_HOME";
 
-INFOMSG " Done\n";
+my $prompt = sprintf "Checking status of working copies%s: [", defined GetCommandLineOption "local-modifications-only" ? "" : " and repositories";
+INFOMSG $prompt;
+DEBUGMSG "\n";
+
+my $i = 0;
+my $format_string = sprintf "%%%dd/%d", length "".scalar @directories, scalar @directories;
+foreach my $directory (@directories)
+{
+    my $progress = sprintf $format_string, ++$i, scalar @directories;
+
+    INFOMSG sprintf "%s] %s", $progress, ClearEndOfLineSequence;
+    my $current_output = $directory;
+    $current_output =~ s/$FINROC_HOME/\$FINROC_HOME/;
+    INFOMSG $current_output;
+    CheckStatus $directory;
+    INFOMSG MoveCursorInRowSequence -(2 + length($current_output) + length($progress));
+}
+INFOMSG sprintf "$format_string] Done%s\n", scalar @directories, ClearEndOfLineSequence;
 
 INFOMSG "\n$status" if $status ne "";
 
