@@ -92,14 +92,14 @@ foreach my $hg_directory (@hg_directories)
     DEBUGMSG Dumper \%hooks;
 
     open HGRC, ">$hgrc" or ERRORMSG "Could not open '$hgrc' for writing!";
-    DEBUGMSG "Writing $hgrc ... ";
+    INFOMSG "Writing $hgrc ... ";
     printf HGRC "$content";
     printf HGRC "[hooks]\n";
     foreach my $name (keys %hooks)
     {
         printf HGRC sprintf "%s = %s\n", $name, $hooks{$name};
     }
-    DEBUGMSG "Done.\n";
+    INFOMSG "Done.\n";
     close HGRC;
 }
 
