@@ -8,10 +8,11 @@ syntax: glob
 # checkout targets (for other RCS)
 make_builder
 sources
+resources
 
 # build directories
-export/*
-build/*
+export
+build
 
 # make_builder
 .makeBuilderCache

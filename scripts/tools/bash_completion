@@ -25,7 +25,6 @@
 
 _options()
 {
-    COMPREPLY=()
     local current="${COMP_WORDS[COMP_CWORD]}"
 
     if [[ ${current} == -* ]] ; then
@@ -33,19 +32,16 @@ _options()
         COMPREPLY=( $(compgen -W "${options}" -- ${current}) )
         return 0
     fi
+    return 1
 }
 
 
 
 _finroc_get()
 {
-    _options
+    _options && return 0
 
     local current="${COMP_WORDS[COMP_CWORD]}"
-
-    if [[ ${current} == -* ]] ; then
-        return 0
-    fi
 
     local components=$(finroc_search . 2> /dev/null | cut -d ' ' -f 1);
     COMPREPLY=( $(compgen -W "${components}" -- ${current}) )
@@ -57,7 +53,7 @@ complete -F _finroc_get finroc_get
 
 _finroc_search()
 {
-    _options
+    _options && return 0
 }
 complete -F _finroc_search finroc_search
 
@@ -65,7 +61,7 @@ complete -F _finroc_search finroc_search
 
 _finroc_status()
 {
-    _options
+    _options && return 0
 }
 complete -F _finroc_status finroc_status
 
@@ -73,7 +69,7 @@ complete -F _finroc_status finroc_status
 
 _finroc_update()
 {
-    _options
+    _options && return 0
 }
 complete -F _finroc_update finroc_update
 
@@ -81,14 +77,10 @@ complete -F _finroc_update finroc_update
 
 _finroc_sync()
 {
-    _options
+    _options && return 0
 
     local current="${COMP_WORDS[COMP_CWORD]}"
     local previous="${COMP_WORDS[COMP_CWORD - 1]}"
-
-    if [[ ${current} == -* ]] ; then
-        return 0
-    fi
 
     if [[ ${previous} == -c ]] ; then
         compopt -o plusdirs

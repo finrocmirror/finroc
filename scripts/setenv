@@ -34,4 +34,4 @@ export LANG=en_US.UTF-8
 
 source ./scripts/tools/bash_completion
 # enable tab completion for makeSafe and makeFast if system provides bash completion for GNU make
-[ -f /etc/bash_completion.d/make ] && complete -F _make makeSafe makeFast
+[ -f /etc/bash_completion.d/make ] && complete -F _make -o filenames makeSafe makeFast
