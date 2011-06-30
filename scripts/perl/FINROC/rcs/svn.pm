@@ -64,8 +64,8 @@ sub Update($$$)
     DEBUGMSG $output;
     ERRORMSG "Command failed!\n" if $?;
 
-    return "C" if grep { /^C/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
-    return "U" if grep { /^[ADUG]/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
+    return "C" if grep { /^C\s/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
+    return "U" if grep { /^[ADUG]\s/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
     return ".";
 }
 
