@@ -1,0 +1,19 @@
+syntax: glob
+
+.finroc.conf
+
+# checkout targets (for other RCS)
+make_builder
+sources
+
+# build directories
+export/*
+build/*
+
+# make_builder
+.makeBuilderCache
+libinfo.h
+Makefile
+
+# emacs
+*~

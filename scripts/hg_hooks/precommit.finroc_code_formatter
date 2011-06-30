@@ -15,15 +15,16 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    pretxncommit.finroc_code_formatter
+# \file    precommit.finroc_code_formatter
 # 
 # \author  Tobias Foehst
 # 
 # \date    2010-04-27
 # 
 # This hook uses the finroc_code_formatter to enforce valid formatted
-# source code in changed committed to a hg repository.
+# source code in changes committed to a hg repository.
 #----------------------------------------------------------------------
+
 
 # setup finroc environment
 if [ -z $FINROC_HOME ] ; then
@@ -75,6 +76,5 @@ do
     fi
     rm $TEMP_FILE
 done
-
 
 exit 0

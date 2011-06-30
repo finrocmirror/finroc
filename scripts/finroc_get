@@ -26,294 +26,200 @@
 use strict;
 
 use Env '$FINROC_HOME';
-use Env '$MCAHOME';   # FIXME: ONLY FOR MCA2 LEGACY
-use Getopt::Long;
 use Data::Dumper;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
+use FINROC::getopt;
+use FINROC::sources;
 use FINROC::rcs;
-
 
 ############################
 ##  Command line options  ##
 ############################
 
-# command line options
-my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "recurse", "optional=s", "username=s", "password=s" or ERRORMSG "Parsing command line failed!\n";
-
-EnableVerboseMessages if defined $command_line_options{"verbose"};
-
-DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
-
-# handle illegal values
-if (defined $command_line_options{"optional"})
+SetHelp "<repository_list>",
 {
-    ERRORMSG "Possible values for --optional: yes|no|ask\n" unless $command_line_options{"optional"} =~ /yes|no|ask/;
-    ERRORMSG "Option optional has no effect without --recurse\n" unless defined $command_line_options{"recurse"};
-}
+    "-o [yes|no], --optional=[yes|no]" => "get optional dependencies? - default: ask",
+    "-u <username>, --username=<username>" => "use <username> to get access to repositories",
+    "-p <password, --password=<password>" => "use <password> to get access to repositories"
+}, undef;
 
-
-
-#############
-##  Usage  ##
-#############
-
-# print help and terminate if requested
-if (defined $command_line_options{"help"})
+ParseCommandLine [ "optional=s", "username=s", "password=s" ], sub
 {
-    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
-
-    INFOMSG sprintf "usage: %s [options] <repository_list>\n", (reverse (split "/", $0))[0];
-    INFOMSG "options:\n";
-    PrintOption "-h, --help", "show this help";
-    PrintOption "-v, --verbose", "more output for debugging";
-    PrintOption "-r, --recursive", "get dependencies";
-    PrintOption "-o [yes|no], --optional=[yes|no]", "get optional dependencies? - default: ask";
-    PrintOption "-u <username>, --username=<username>", "use <username> to get access to repositories";
-    PrintOption "-p <password, --password=<password>", "use <password> to get access to repositories";
-    INFOMSG "\n";
-    exit 0;
-}
-
-
+    if (defined GetCommandLineOption "optional")
+    {
+        ERRORMSG "Possible values for --optional: yes|no\n" unless (GetCommandLineOption "optional") =~ /yes|no/;
+    }
+};
 
 # non-optional arguments
-ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more information.\n", (reverse (split "/", $0))[0] unless defined $ARGV[0];
-
-
+ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more information.\n", ScriptName unless defined $ARGV[0];
 
 # default values if not set
-$command_line_options{"optional"} = "ask" unless defined $command_line_options{"optional"} and $command_line_options{"optional"} ne "";
+AssignCommandLineOptionDefaultValue "optional", "ask" unless defined GetCommandLineOption "optional" and GetCommandLineOption "optional" ne "";
 
 
-DEBUGMSG sprintf "Revision control system found to be used for this working copy: %s\n", GetRCSName;
-DEBUGMSG sprintf "Repository prefix: %s\n\n", GetRepositoryPrefix;
 
+####################################
+##  Process requested components  ##
+####################################
 
-###########################
-#  Component information  #
-###########################
+my %requested_components;
+my %not_found_components;
 
-sub ComponentInfo($$) { return ( shift, { "directory" => "$FINROC_HOME/".shift, "selected" => 0, "processed" => 0 } ); }
-
-sub SourceComponentInfo($$$)
+my %seen;
+foreach my $component_name (grep { !$seen{$_}++ } @ARGV)
 {
-    my ($name, $repository_prefix, $directory_prefix) = @_;
-    DEBUGMSG sprintf "name = '%s'\n", $name;
-    my @name_parts = split "-", $name;
-    ERRORMSG sprintf "Invalid number of '-' in source component '%s'\n", $name if scalar @name_parts > 2;
+    my %component = GetComponent $component_name;
+    ${%component ? \%requested_components : \%not_found_components}{$component_name} = 1;
+}
+
+ERRORMSG sprintf "Could not find requested component%s: %s!\n", keys %not_found_components == 1 ? "" : "s", join ", ", keys %not_found_components if keys %not_found_components;
+
+
+
+##############################
+##  Determine dependencies  ##
+##############################
+
+my %mandatory_components;
+my %optional_components;
+
+sub GetComponentDirectory($)
+{
+    my ($component_name) = @_;
+    
+    return "make_builder" if $component_name eq "make_builder";
+
+    my @name_parts = split "-", $component_name;
+    ERRORMSG sprintf "Invalid number of '-' in source component '%s'\n", $component_name if scalar @name_parts > 2;
     my $language = scalar @name_parts == 2 ? $name_parts[1] : "cpp";
-    return ComponentInfo $repository_prefix."_$name", "sources/$language/$directory_prefix/$name_parts[0]";
+    my $directory = $name_parts[0];
+
+    $directory =~ s/^rrlib_/rrlib\//;
+    $directory =~ s/^finroc_plugins_/finroc\/plugins\//;
+    $directory =~ s/^finroc_libraries_/finroc\/libraries\//;
+    $directory =~ s/^finroc_tools_gui_plugins_/finroc\/tools\/gui\/plugins\//;
+    $directory =~ s/^finroc_tools_/finroc\/tools\//;
+    $directory =~ s/^finroc_projects_/finroc\/projects\//;
+
+    return sprintf "sources/%s/%s", $language, $directory;
 }
 
-sub FINROC($)
+sub AddComponent($$);
+sub AddComponent($$)
 {
-    my ($name) = @_;
-    DEBUGMSG sprintf "FINROC: name = '%s'\n", $name;
-    return SourceComponentInfo "core", "finroc", "" if $name =~ /^core$/;
-    return SourceComponentInfo "core-java", "finroc", "" if $name =~ /^core-java$/;
-    return SourceComponentInfo $1, "finroc_plugins", "plugins" if $name =~ /^plugins_(.*)/;
-    return SourceComponentInfo $1, "finroc_libraries", "libraries" if $name =~ /^libraries_(.*)/;
-    return SourceComponentInfo $1, "finroc_tools_gui_plugins", "tools/gui/plugins" if $name =~ /^tools_gui_plugins_(.*)/;
-    return SourceComponentInfo $1, "finroc_tools", "tools" if $name =~ /^tools_(.*)/;
-    return SourceComponentInfo $1, "finroc_projects", "projects" if $name =~ /^projects_(.*)/;
-    ERRORMSG sprintf "Could not identify FINROC component '%s'\n", $name;
-}
+    my ($component_name, $list) = @_;
 
-sub RRLib($)
-{
-    my ($name) = @_;
-    DEBUGMSG sprintf "RRLib: name = '%s'\n", $name;
-    return SourceComponentInfo $1, "rrlib_external", "rrlib/external" if $name =~ /^external_(.*)/;
-    return SourceComponentInfo $name, "rrlib", "rrlib";
-}
+    return if exists $$list{$component_name} or exists $mandatory_components{$component_name};
 
-sub Local($)
-{
-    my ($name) = @_;
-    my $directory = `pwd`;
-    DEBUGMSG sprintf "Local: name = '%s', directory = '%s'\n", $name, $directory;
-    ERRORMSG "Processing of local component within mca2-legacy directory is not supported!\n" if $directory =~ /\/mca2-legacy\//;   # FIXME: ONLY FOR MCA2 LEGACY
-    return FINROC "plugins_$name" if $directory =~ /\/plugins$/;
-    return FINROC "libraries_$name" if $directory =~ /\/libraries$/;
-    return FINROC "tools_$name" if $directory =~ /\/tools$/;
-    return FINROC "projects_$name" if $directory =~ /\/projects$/;
-    return RRLib $name if $directory =~ /\/rrlib$/;
-    ERRORMSG sprintf "Could not identify component '%s'\n", $name;
-}
+    DEBUGMSG sprintf "Adding component %s\n", $component_name;
 
+    my %component = GetComponent $component_name;
+    $$list{$component_name} = { 'url' => $component{'url'}, 'target' => GetComponentDirectory $component_name };
+    ${$$list{$component_name}}{'installed'} = -d ${$$list{$component_name}}{'target'};
 
-
-#########################
-#  MCA2 legacy support  #
-#########################
-
-my $checked_out_mca2_resources = 0;   # FIXME: ONLY FOR MCA2 LEGACY
-
-sub MCA2($)
-{
-    my ($name) = @_;
-    DEBUGMSG sprintf "MCA2: name = '%s'\n", $name;
-    return ComponentInfo "mca2", "sources/cpp/mca2-legacy" if $name =~ /^2$/;
-    return ComponentInfo "mcal_$1", "sources/cpp/mca2-legacy/libraries/$1" if $name =~ /^l_(.*)/;
-    return ComponentInfo "mcap_$1", "sources/cpp/mca2-legacy/projects/$1" if $name =~ /^p_(.*)/;
-    if ($name =~ /^r_(.*)/)
+    if (defined $component{'dependencies'})
     {
-	$checked_out_mca2_resources = 1;
-	return ComponentInfo "mcar_$1", "sources/cpp/mca2-legacy/resources/$1"
+        foreach my $dependency_name (split " ", join " ", @{$component{'dependencies'}})
+        {
+            AddComponent $dependency_name, $list;
+        }
     }
-    ERRORMSG sprintf "Could not identify MCA2 legacy component 'mca%s'\n", $name;
-}
 
-
-
-#######################################
-#  Process components (repositories)  #
-#######################################
-
-my %components;
-
-sub Component($)
-{
-    my ($name) = @_;
-    return FINROC $1 if $name =~ /^finroc_(.*)/;
-    return RRLib $1 if $name =~ /^rrlib_(.*)/;
-    return MCA2 $1 if $name =~ /^mca(.*)/;   # FIXME: ONLY FOR MCA2 LEGACY
-    return Local $name;
-    ERRORMSG sprintf "Could not identify component '%s'\n", $name;
-}
-
-sub AddMandatoryComponent
-{
-    my ($name, $data) = @_;
-    $components{$name} = $data unless exists $components{$name};
-    $components{$name}{"selected"} = 1;
-}
-
-sub AddOptionalComponent
-{
-    my ($name, $data) = @_;
-    $components{$name} = $data unless exists $components{$name};
-}
-
-
-
-foreach my $component (@ARGV)
-{
-    AddMandatoryComponent Component $component;
-}
-
-DEBUGMSG sprintf "components:\n%s\n", Dumper \%components;
-
-
-
-#########################
-#  Handle dependencies  #
-#########################
-
-sub AddDependencies($)
-{
-    my ($directory) = @_;
-
-    my $dependencies_filename = sprintf "%s/.dependencies", $directory;
-    open DEPENDENCIES, "<$dependencies_filename" and eval {
-        while (<DEPENDENCIES>)
+    if (defined $component{'optional_dependencies'})
+    {
+        foreach my $dependency_name (split " ", join " ", @{$component{'optional_dependencies'}})
         {
-            chomp;
-            AddMandatoryComponent Component $_ if $_ ne "";
+            AddComponent $dependency_name, \%optional_components;
         }
-        close DEPENDENCIES;
-        1;
-    } or DEBUGMSG sprintf "Could not read '%s'\n", $dependencies_filename;
-
-    my $optional_dependencies_filename = sprintf "%s/.optional_dependencies", $directory;
-    open DEPENDENCIES, "<$optional_dependencies_filename" and eval {
-        while (<DEPENDENCIES>)
-        {
-            chomp;
-            AddOptionalComponent Component $_ if $_ ne "";
-        }
-        close DEPENDENCIES;
-        1;
-    } or DEBUGMSG sprintf "Could not read '%s'\n", $optional_dependencies_filename;
+    }
 }
 
 sub FixImplicitDependencies()
 {
-    foreach my $name (sort keys %components)
+    foreach my $component_name (keys %mandatory_components)
     {
-        AddMandatoryComponent ComponentInfo "mca2_make_builder", "make_builder"
-                                                                                unless $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
-        AddMandatoryComponent Component sprintf "finroc_tools_gui%s", defined $1 ? $1 : "" if $name =~ /^finroc_tools_gui_[^-]+(-\S+)?/;
-        AddMandatoryComponent Component "mca2" if $name =~ /^mca[^2]/; # FIXME: ONLY FOR MCA2 LEGACY
+        AddComponent "make_builder", \%mandatory_components;
+        AddComponent "finroc_tools_gui%s", defined $1 ? $1 : "" if $component_name =~ /^finroc_tools_gui_[^-]+(-\S+)?/;
     }
 }
+
+INFOMSG "Building dependency tree... ";
+DEBUGMSG "\n";
+
+my $pad_first_question = "\n";
+
+map { AddComponent $_, \%mandatory_components } keys %requested_components;
+
+FixImplicitDependencies;
+map { delete $optional_components{$_} } keys %mandatory_components;
 
 sub AskForOptionalComponent($)
 {
-    my ($dependency) = @_;
+    my ($component_name) = @_;
 
-    INFOMSG sprintf "Get optional component '%s'? [yes/No] ", $dependency;
+    INFOMSG sprintf "%sGet optional component '%s'? [y/N] ", $pad_first_question, $component_name;
+    $pad_first_question = "";
     return <STDIN> =~ /^y/;
 }
 
-
-
-###########################
-#  Checkout repositories  #
-###########################
-
-my $complete = 0;
-while (!$complete)
+while (keys %optional_components)
 {
-    # mandatory (or selected optional)
-    while (!$complete)
+    if (keys %optional_components)
     {
-        FixImplicitDependencies;
-        $complete = 1;
-        foreach my $name (sort keys %components)
+        my $candidate_name = @{[ sort keys %optional_components ]}[0];
+
+        if (   ${$optional_components{$candidate_name}}{'installed'}
+            or GetCommandLineOption "optional" eq "yes"
+            or (GetCommandLineOption "optional" eq "ask" and AskForOptionalComponent $candidate_name))
         {
-            next unless $components{$name}{"selected"};
-            next if $components{$name}{"processed"};
-            $complete = 0;
-
-            DEBUGMSG sprintf "Processing '%s'\n%s\n", $name, Dumper \$components{$name};
-
-            Checkout $name, $components{$name}{"directory"}, $command_line_options{'username'}, $command_line_options{'password'} unless -d $components{$name}{"directory"};
-            AddDependencies $components{$name}{"directory"} if defined $command_line_options{"recurse"};
-
-            $components{$name}{"processed"} = 1;
+            AddComponent $candidate_name, \%mandatory_components
         }
+        delete $optional_components{$candidate_name};
     }
 
-    # optional
-    unless ($command_line_options{"optional"} eq "no")
-    {
-        foreach my $name (sort keys %components)
-        {
-            next if $components{$name}{"selected"};
-            next if $components{$name}{"processed"};
-            next if -d $components{$name}{"directory"};
-            $complete = 0;
-            
-            if ($command_line_options{"optional"} eq "yes" or AskForOptionalComponent $name)
-            {
-                $components{$name}{"selected"} = 1;
-                next;
-            }
+    FixImplicitDependencies;
+    map { delete $optional_components{$_} } keys %mandatory_components;
+}
 
-            $components{$name}{"processed"} = 1;
-        }
+map { delete $mandatory_components{$_} if ${$mandatory_components{$_}}{'installed'} } keys %mandatory_components;
+
+INFOMSG "Done.\n";
+
+my %extra_components;
+map { $extra_components{$_} = 1 unless $requested_components{$_} } keys %mandatory_components;
+
+INFOMSG sprintf "The following extra components will be installed:\n  %s\n", join " ", sort keys %extra_components if keys %extra_components;
+INFOMSG sprintf "The following NEW components will be installed:\n  %s\n", join " ", sort keys %mandatory_components;
+
+if (keys %extra_components)
+{
+    INFOMSG "Do you want to continue? [Y/n] ";
+    if (<STDIN> =~ /^n/)
+    {
+        INFOMSG "Abort.\n";
+        exit 0;
     }
 }
 
 
-if ($checked_out_mca2_resources and not -e "$FINROC_HOME/resources")   # FIXME: ONLY FOR MCA2 LEGACY
+
+###########################
+##  Checkout components  ##
+###########################
+
+foreach my $component_name (sort keys %mandatory_components)
 {
-    system "ln -s $MCAHOME/resources $FINROC_HOME/resources";
+    my %component = %{$mandatory_components{$component_name}};
+
+    my $rcs_name = @{[ reverse split "/", $component{'url'} ]}[1];
+    require "FINROC/rcs/$rcs_name.pm";
+    
+    Checkout $component{'url'}, "$FINROC_HOME/$component{'target'}", GetCommandLineOption "username", GetCommandLineOption "password";
 }
+
 
 
 exit 0;

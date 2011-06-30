@@ -27,12 +27,12 @@ use strict;
 
 use Env '$FINROC_HOME';
 
-use Getopt::Long;
 use Data::Dumper;
 use XML::Simple;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
+use FINROC::getopt;
 
 
 
@@ -40,40 +40,15 @@ use FINROC::messages;
 ##  Command line options  ##
 ############################
 
-# command line options
-my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "externals" or ERRORMSG "Parsing command line failed!\n";
-
-EnableVerboseMessages if defined $command_line_options{"verbose"};
-
-DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
-
-
-
-#############
-##  Usage  ##
-#############
-
-# print help and terminate if requested
-if (defined $command_line_options{"help"})
+SetHelp undef,
 {
-    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
+    "-e, --externals" => "Process svn:externals (by not adding --ignore-externals)"    
+}, "To add options to svn commands terminate options processing using '--'\n";
 
-    INFOMSG sprintf "usage: %s [options] <svn_command>\n", (reverse (split "/", $0))[0];
-    INFOMSG "options:\n";
-    PrintOption "-h, --help", "show this help";
-    PrintOption "-v, --verbose", "more output for debugging";
-    PrintOption "-e, --externals", "Process svn:externals (by not adding --ignore-externals)";
-    INFOMSG "\n";
-    INFOMSG "To add options to svn commands terminate options processing using '--'\n";
-    INFOMSG "\n";
-    exit 0;
-}
-
-
+ParseCommandLine [ "externals" ], undef;
 
 # non-optional arguments
-ERRORMSG sprintf "<svn_command> not specified. Use %s --help for more information.\n", (reverse (split "/", $0))[0] unless defined $ARGV[0];
+ERRORMSG sprintf "<svn_command> not specified. Use %s --help for more information.\n", ScriptName unless defined $ARGV[0];
 
 
 
@@ -139,7 +114,7 @@ foreach my $svn_directory (@svn_directories)
 
     INFOMSG sprintf "\nWorking copy of %s at %s\n", ${$svn_directory}{"url"}, map { chomp; $_ } `pwd`;
 
-    my $command = sprintf "svn %s %s", defined $command_line_options{"externals"} ? "" : "--ignore-externals", $svn_command;
+    my $command = sprintf "svn %s %s", defined GetCommandLineOption "externals" ? "" : "--ignore-externals", $svn_command;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
 #    my $conflicts = 0;

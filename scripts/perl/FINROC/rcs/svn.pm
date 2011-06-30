@@ -13,18 +13,18 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    rcs.pm
+# \file    svn.pm
 #
 # \author  Tobias Foehst
 #
 # \date    2010-05-27
 #
 #----------------------------------------------------------------------
-package FINROC::rcs;
+package FINROC::rcs::svn;
 use Exporter;
 @ISA = qw/Exporter/;
-@EXPORT = qw/Checkout/;
-
+@EXPORT = qw//;
+@EXPORT_OK = qw/Checkout/;
 
 use strict;
 
@@ -38,17 +38,16 @@ sub Checkout($$$$)
 {
     my ($url, $target, $username, $password) = @_;
 
-    ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $target if -f $target;
-    ERRORMSG sprintf "'%s' already exists\n", $target if -e $target;
+    $url .= "/trunk";
+    
+    my $credentials = "";
+    $credentials = sprintf " --username=%s", $username if defined $username;
+    $credentials .= sprintf " --password=%s", $password if defined $password;
 
-    my $rcs_name = @{[ reverse split "/", $url ]}[1];
-    $url = sprintf "'%s'", $url;
-    $target = sprintf "'%s'", $target;
-    $username = defined $username ? sprintf "'%s'", $username : "undef";
-    $password = defined $password ? sprintf "'%s'", $password : "undef";
-
-    eval sprintf "FINROC::rcs::%s::Checkout(%s, %s, %s, %s)", $rcs_name, $url, $target, $username, $password;
-    ERRORMSG $@ if $@;
+    my $command = sprintf "svn co --ignore-externals %s %s %s", $credentials, $url, $target;
+    INFOMSG sprintf "Executing '%s'\n", $command;
+    system $command;
+    ERRORMSG "Command failed!\n" if $? != 0;
 }
 
 

@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -13,30 +15,29 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    messages.pm
-#
+# \file    pretxncommit.author
+# 
 # \author  Tobias Foehst
-#
-# \date    2010-04-13
-#
+# 
+# \date    2010-04-27
+# 
+# This hook ensures full author information in every changeset.
 #----------------------------------------------------------------------
-package FINROC::messages;
-use Exporter;
-@ISA = qw/Exporter/;
-@EXPORT = qw/EnableVerboseMessages INFOMSG WARNMSG ERRORMSG DEBUGMSG/;
 
+use Env 'HG_NODE';
 
-use strict;
+my $author = sprintf "%s", map { chomp; $_ } `hg log -r $HG_NODE --template '{author}'`;
 
+exit 0 if $author =~ /^\S+( \S+)+ <\S+@\S+(\.\S+)+>$/;
 
-my $verbose = 0;
-sub EnableVerboseMessages { $verbose = 1; }
+printf STDERR "\n";
+printf STDERR "Invalid author given: $author\n";
+printf STDERR "\n";
+printf STDERR "Consider setting your username in ~/.hgrc along with a valid\n";
+printf STDERR "email address, e.g.:\n";
+printf STDERR "\n";
+printf STDERR "[ui]\n";
+printf STDERR "username = John Doe <john\@example.com>\n";
+printf STDERR "\n";
 
-sub INFOMSG($) { print STDERR @_; }
-sub WARNMSG($) { printf STDERR "\033[33m%s\033[0m", @_; }
-sub ERRORMSG($) { printf STDERR "\033[31m%s\033[0m", @_; exit 1; }
-sub DEBUGMSG($) { printf STDERR "\033[36m%s\033[0m", @_ if $verbose; }
-
-
-
-1;
+exit 1;
