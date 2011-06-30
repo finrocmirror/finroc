@@ -30,7 +30,7 @@ use Data::Dumper;
 
 use lib "scripts/perl";
 use FINROC::messages;
-
+use FINROC::getopt;
 
 # config file
 my $config_filename = ".finroc.conf";
@@ -45,46 +45,25 @@ my $platform = `python -c 'import sys\nimport platform\nsys.stdout.write(platfor
 ##  Command line options  ##
 ############################
 
-# command line options
-my %command_line_options;
-GetOptions \%command_line_options, "verbose+", "help", "project:s", "target:s", "local=s" or ERRORMSG "Parsing command line failed!\n";
-
-EnableVerboseMessages if defined $command_line_options{"verbose"};
-
-DEBUGMSG sprintf "command line options:\n%s\n", Dumper \%command_line_options;
-
-# handle illegal values
-if (defined $command_line_options{"target"})
+SetHelp undef,
 {
-    my $target = sprintf "%s_%s", $platform, $command_line_options{"target"};
-    ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
-}
-if (defined $command_line_options{"local"})
+    "-p PROJECT, --project=PROJECT" => "override project name",
+    "-t TARGET, --target=TARGET" => "target name - default: debug",
+    "-l [yes|no], --local=[yes|no]" => "use only local source files? - default: yes"
+}, undef;
+
+ParseCommandLine [ "project:s", "target:s", "local=s" ], sub
 {
-    ERRORMSG "Possible values for --local: yes|no\n" unless $command_line_options{"local"} =~ /yes|no/;
-}
-
-
-
-#############
-##  Usage  ##
-#############
-
-# print help and terminate if requested
-if (defined $command_line_options{"help"})
-{
-    sub PrintOption($$) { INFOMSG sprintf "  %-34s %s\n", @_; }
-
-    INFOMSG sprintf "usage: scripts/setenv [options]\n";
-    INFOMSG "options:\n";
-    PrintOption "-h, --help", "show this help";
-    PrintOption "-v, --verbose", "more output for debugging";
-    PrintOption "-p PROJECT, --project=PROJECT", "override project name";
-    PrintOption "-t TARGET, --target=TARGET", "target name - default: debug";
-    PrintOption "-l [yes|no], --local=[yes|no]", "use only local source files? - default: yes";
-    INFOMSG "\n";
-    exit 0;
-}
+    if (defined GetCommandLineOption "target")
+    {
+        my $target = sprintf "%s_%s", $platform, GetCommandLineOption "target";
+        ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
+    }
+    if (defined GetCommandLineOption "local")
+    {
+        ERRORMSG "Possible values for --local: yes|no\n" unless GetCommandLineOption("local") =~ /yes|no/;
+    }
+};
 
 
 
@@ -108,10 +87,9 @@ open CONFIG, "<$config_filename" and eval
 DEBUGMSG sprintf "configuration from file:\n%s\n", Dumper \%configuration;
 
 # overwrite settings using command line options
-foreach my $option (keys %command_line_options)
+foreach my $option (GetCommandLineOptions)
 {
-    next if $option =~ /help|verbose/;
-    $configuration{$option} = $command_line_options{$option};
+    $configuration{$option} = GetCommandLineOption $option;
 }
 
 # default values if not set

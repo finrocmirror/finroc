@@ -23,7 +23,7 @@
 package FINROC::getopt;
 use Exporter;
 @ISA = qw/Exporter/;
-@EXPORT = qw/ScriptName SetHelp PrintHelp ParseCommandLine GetCommandLineOption AssignCommandLineOptionDefaultValue/;
+@EXPORT = qw/ScriptName SetHelp PrintHelp ParseCommandLine GetCommandLineOptions GetCommandLineOption AssignCommandLineOptionDefaultValue/;
 
 
 use strict;
@@ -80,6 +80,11 @@ sub ParseCommandLine($$)
 
     &$check_optional_arguments if defined $check_optional_arguments;
     PrintHelp if defined $command_line_options{"help"};
+}
+
+sub GetCommandLineOptions()
+{
+    return grep { $_ !~ /help|verbose/ } keys %command_line_options;
 }
 
 sub GetCommandLineOption($)
