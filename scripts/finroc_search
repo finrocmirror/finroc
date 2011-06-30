@@ -87,7 +87,7 @@ DEBUGMSG sprintf "results:\n%s\n", Dumper \%results;
 
 my ($max_name_length, $max_source_length) = (0, 0);
 sub max($$) { my ($a, $b) = @_; return $a > $b ? $a : $b; }
-map { $max_name_length = max $max_name_length, length $_; $max_source_length = max $max_source_length, length $results{$_}; } keys %results;
+map { $max_name_length = max $max_name_length, length $_; $max_source_length = max $max_source_length, length $results{$_}{'source'}; } keys %results;
 my $format_string = sprintf "%%-%ds    %%-%ds    %%s\n", $max_name_length, $max_source_length;
 
 printf "<results>\n" if GetCommandLineOption "xml";
