@@ -109,12 +109,12 @@ sub GetComponentDirectory($)
     }
 
     $directory =~ s/^rrlib_/rrlib\//;
-    $directory =~ s/^finroc_plugins_/finroc\/plugins\//;
-    $directory =~ s/^finroc_libraries_/finroc\/libraries\//;
-    $directory =~ s/^finroc_tools_gui_plugins_/finroc\/tools\/gui\/plugins\//;
-    $directory =~ s/^finroc_tools_/finroc\/tools\//;
-    $directory =~ s/^finroc_projects_/finroc\/projects\//;
-    $directory =~ s/^finroc_/finroc\//;
+    $directory =~ s/^finroc_plugins_/plugins\//;
+    $directory =~ s/^finroc_libraries_/libraries\//;
+    $directory =~ s/^finroc_tools_gui_plugins_/tools\/gui\/plugins\//;
+    $directory =~ s/^finroc_tools_/tools\//;
+    $directory =~ s/^finroc_projects_/projects\//;
+    $directory =~ s/^finroc_//;
 
     return sprintf "sources/%s/%s", $language, $directory;
 }
