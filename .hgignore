@@ -2,6 +2,9 @@ syntax: glob
 
 .finroc.conf
 
+# offline-cache
+.offline
+
 # checkout targets (for other RCS)
 make_builder
 sources
@@ -17,3 +20,8 @@ Makefile
 
 # emacs
 *~
+
+# eclipse
+.project
+.cproject
+.includepath

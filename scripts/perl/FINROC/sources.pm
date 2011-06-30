@@ -49,21 +49,31 @@ sub GetAllComponents()
     my $pad_before_first_warning = "\n";
     foreach my $source (keys %source_to_rank_map)
     {
-        $source =~ s/^\s*//;
-        $source =~ s/\s*$//;
-        $source =~ s/#.*//;
-
         next unless $source ne "";
 
-        my $command = sprintf "curl -fsk %s/components.xml", $source;
+        my $command = sprintf "curl -fsk %s.xml", $source;
 
         DEBUGMSG sprintf "Executing '%s'\n", $command;
 
         my $xml_content = join "", `$command`;
 
+	my $offline_source = $source;
+	$offline_source =~ s/[\:\/]/./g;
+	if ($? == 0)
+	{
+	    mkdir "$FINROC_HOME/.offline" unless -d "$FINROC_HOME/.offline";
+	    open OFFLINE, ">$FINROC_HOME/.offline/$offline_source.xml" or ERRORMSG "Could not open offline file to write: $!\n";
+	    print OFFLINE $xml_content;
+	    close OFFLINE;
+	}
+	else
+	{
+	    $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null`;
+	}
+
         if ($xml_content eq "")
         {
-            WARNMSG sprintf "%sCould not read components declaration at %s\n", $pad_before_first_warning, $source;
+            WARNMSG sprintf "%sNo components found at %s\n", $pad_before_first_warning, $source;
             $pad_before_first_warning = "";
             next;
         }
