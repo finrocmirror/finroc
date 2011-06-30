@@ -132,7 +132,11 @@ foreach my $source (map { chomp; $_ } `cat $sources_list_filename`)
     $source =~ s/#.*//;
 
     next unless $source ne "";
-    $source_to_rank_map{$source} = $rank++;
+
+    my ($prefix, @group) = split " ", $source;
+    push @group, "main" unless @group;
+    map { $source_to_rank_map{sprintf "%s/%s", $prefix, $_} = $rank; } @group;
+    $rank++;
 }
 
 
