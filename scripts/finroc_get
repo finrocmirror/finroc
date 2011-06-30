@@ -97,12 +97,24 @@ sub GetComponentDirectory($)
     my $language = scalar @name_parts == 2 ? $name_parts[1] : "cpp";
     my $directory = $name_parts[0];
 
+    if ($language eq "java")
+    {
+	$directory =~ s/^rrlib_/org\/rrlib\//;
+	$directory =~ s/^finroc_plugins_/org\/finroc\/plugins\//;
+	$directory =~ s/^finroc_libraries_/org\/finroc\/libraries\//;
+	$directory =~ s/^finroc_tools_gui_plugins_/org\/finroc\/tools\/gui\/plugins\//;
+	$directory =~ s/^finroc_tools_/org\/finroc\/tools\//;
+	$directory =~ s/^finroc_projects_/org\/finroc\/projects\//;
+	$directory =~ s/^finroc_$/org\/finroc\//;
+    }
+
     $directory =~ s/^rrlib_/rrlib\//;
     $directory =~ s/^finroc_plugins_/finroc\/plugins\//;
     $directory =~ s/^finroc_libraries_/finroc\/libraries\//;
     $directory =~ s/^finroc_tools_gui_plugins_/finroc\/tools\/gui\/plugins\//;
     $directory =~ s/^finroc_tools_/finroc\/tools\//;
     $directory =~ s/^finroc_projects_/finroc\/projects\//;
+    $directory =~ s/^finroc_/finroc\//;
 
     return sprintf "sources/%s/%s", $language, $directory;
 }
