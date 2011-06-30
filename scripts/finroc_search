@@ -38,15 +38,28 @@ use FINROC::sources;
 ##  Command line options  ##
 ############################
 
-SetHelp "<search_string>", undef, undef;
+SetHelp "<search_string>", { "-f, --files" => "search for files only", "-x, --xml" => "produce xml-output" }, undef;
 
-ParseCommandLine undef, undef;
+ParseCommandLine [ "files", "xml" ], undef;
 
 # non-optional arguments
 ERRORMSG sprintf "<search_string> not specified. Use %s --help for more information.\n", ScriptName unless defined $ARGV[0];
 
 my $search_pattern = qr/$ARGV[0]/i;
 
+my $component_name;
+if (GetCommandLineOption "files")
+{
+    INFOMSG "Searching for files only\n";
+    $component_name = sprintf "rrlib_%s", $1 if $ARGV[0] =~ s/^rrlib\/([^\/]+)\///;
+    $component_name = sprintf "finroc_core" if $ARGV[0] =~ s/^core\///;
+    $component_name = sprintf "finroc_plugins_%s", $1 if $ARGV[0] =~ s/^plugins\/([^\/]+)\///;
+    $component_name = sprintf "finroc_libraries_%s", $1 if $ARGV[0] =~ s/^libraries\/([^\/]+)\///;
+    $component_name = sprintf "finroc_tools_%s", $1 if $ARGV[0] =~ s/^tools\/([^\/]+)\///;
+    $component_name = sprintf "finroc_projects_%s", $1 if $ARGV[0] =~ s/^projects\/([^\/]+)\///;
+
+    $search_pattern = qr/$ARGV[0]/;
+}
 
 #########################
 ##  Search components  ##
@@ -58,19 +71,41 @@ foreach my $name (keys %components)
 {
     DEBUGMSG sprintf "component:\n%s\n", Dumper \$components{$name};
 
+    next unless !defined $component_name or $name =~ qr/^$component_name(-.+)?/;
+
     my $match = 0;
-    $match ||= $name =~ $search_pattern;
-    $match ||= ${$components{$name}}{'description'} =~ $search_pattern if defined ${$components{$name}}{'description'};
+    if (!GetCommandLineOption "files")
+    {
+	$match ||= $name =~ $search_pattern;
+	$match ||= ${$components{$name}}{'description'} =~ $search_pattern if defined ${$components{$name}}{'description'};
+    }
+    $match ||= ${$components{$name}}{'manifest'} =~ $search_pattern if defined ${$components{$name}}{'manifest'};
     $results{$name} = $components{$name} if $match;
-    next if $match;
 }
 
 DEBUGMSG sprintf "results:\n%s\n", Dumper \%results;
 
+my ($max_name_length, $max_source_length) = (0, 0);
+sub max($$) { my ($a, $b) = @_; return $a > $b ? $a : $b; }
+map { $max_name_length = max $max_name_length, length $_; $max_source_length = max $max_source_length, length $results{$_}; } keys %results;
+my $format_string = sprintf "%%-%ds    %%-%ds    %%s\n", $max_name_length, $max_source_length;
+
+printf "<results>\n" if GetCommandLineOption "xml";
 foreach my $key (sort keys %results)
 {
-    printf "%-34s %s\n", $key, defined $results{$key}{'description'} ? $results{$key}{'description'} : "<description not given>";
+    if (GetCommandLineOption "xml")
+    {
+	printf "  <component>\n";
+	printf "    <name>%s</name>\n", $key;
+	printf "    <description>%s</description>\n", defined $results{$key}{'description'} ? $results{$key}{'description'} : "";
+	printf "    <url>%s</url>\n", $results{$key}{'url'};
+	printf "    <source>%s</source>\n", $results{$key}{'source'};
+	printf "  </component>\n";
+	next;
+    }
+    printf $format_string, $key, $results{$key}{'source'}, defined $results{$key}{'description'} ? $results{$key}{'description'} : "<description not given>";
 }
+printf "</results>\n" if GetCommandLineOption "xml";
 
 
 

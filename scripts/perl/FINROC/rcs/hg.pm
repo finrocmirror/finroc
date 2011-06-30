@@ -39,18 +39,9 @@ END
 {
     my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
     chdir $FINROC_HOME;
-    system 'scripts/tools/update_hg_hooks \&> /dev/null';
+    system "scripts/tools/update_hg_hooks";
     chdir $working_directory;
 }
-
-#sub GetRepositoryPrefix()
-#{
-#    my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
-#    chdir $FINROC_HOME;
-#    my $result = sprintf "%s", map { chomp; s/.*=\s*//; s/\/[^\/]*$//; $_ } `hg paths | grep "default ="`;
-#    chdir $working_directory;
-#    return $result;
-#}
 
 sub Checkout($$$$)
 {
@@ -64,17 +55,9 @@ sub Checkout($$$$)
     system "mkdir -p $target_base";
     ERRORMSG "Command failed!\n" if $? != 0;
 
-    my $command = sprintf "hg clone --noupdate %s %s", $url, $target;
+    my $command = sprintf "hg clone %s %s", $url, $target;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    ERRORMSG "Command failed!\n" if $? != 0;
-
-    my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
-    chdir $target;
-    $command = sprintf "hg update --clean %s", $branch;
-    INFOMSG sprintf "Executing '%s' in '%s'\n", $command, $target;
-    system $command;
-    chdir $working_directory;
     ERRORMSG "Command failed!\n" if $? != 0;
 }
 

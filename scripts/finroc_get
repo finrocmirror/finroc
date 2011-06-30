@@ -105,7 +105,7 @@ sub GetComponentDirectory($)
 	$directory =~ s/^finroc_tools_gui_plugins_/org\/finroc\/tools\/gui\/plugins\//;
 	$directory =~ s/^finroc_tools_/org\/finroc\/tools\//;
 	$directory =~ s/^finroc_projects_/org\/finroc\/projects\//;
-	$directory =~ s/^finroc_$/org\/finroc\//;
+	$directory =~ s/^finroc_/org\/finroc\//;
     }
 
     $directory =~ s/^rrlib_/rrlib\//;
@@ -124,6 +124,8 @@ sub AddComponent($$)
 {
     my ($component_name, $list) = @_;
 
+    DEBUGMSG sprintf "AddComponent(%s, %s) called\n", $component_name, $list;
+
     return if exists $$list{$component_name} or exists $mandatory_components{$component_name};
 
     DEBUGMSG sprintf "Adding component %s\n", $component_name;
@@ -135,7 +137,7 @@ sub AddComponent($$)
 
     if (defined $component{'dependencies'})
     {
-        foreach my $dependency_name (split " ", join " ", @{$component{'dependencies'}})
+        foreach my $dependency_name (split " ", $component{'dependencies'})
         {
             AddComponent $dependency_name, $list;
         }
@@ -143,7 +145,7 @@ sub AddComponent($$)
 
     if (defined $component{'optional_dependencies'})
     {
-        foreach my $dependency_name (split " ", join " ", @{$component{'optional_dependencies'}})
+        foreach my $dependency_name (split " ", $component{'optional_dependencies'})
         {
             AddComponent $dependency_name, \%optional_components;
         }
@@ -155,7 +157,7 @@ sub FixImplicitDependencies()
     foreach my $component_name (keys %mandatory_components)
     {
         AddComponent "make_builder", \%mandatory_components;
-        AddComponent "finroc_tools_gui%s", defined $1 ? $1 : "" if $component_name =~ /^finroc_tools_gui_[^-]+(-\S+)?/;
+        AddComponent sprintf("finroc_tools_gui%s", defined $1 ? $1 : ""), \%mandatory_components if $component_name =~ /^finroc_tools_gui_[^-]+(-\S+)?/;
     }
 }
 

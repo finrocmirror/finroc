@@ -72,7 +72,7 @@ sub GetAllComponents()
 
         push @parsed_xml_content, XMLin($xml_content,
                                         KeyAttr => [],
-                                        ForceArray => [ "dependencies", "optional_dependencies" ],
+#                                        ForceArray => [ "dependencies", "optional_dependencies", "manifest" ],
 #                                        ForceContent => [ "dependencies", "optional_dependencies" ],
                                         NormalizeSpace => 2,
                                         SuppressEmpty => 1);

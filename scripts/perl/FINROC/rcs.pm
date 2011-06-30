@@ -42,6 +42,9 @@ sub Checkout($$$$)
     ERRORMSG sprintf "'%s' already exists\n", $target if -e $target;
 
     my $rcs_name = @{[ reverse split "/", $url ]}[1];
+
+    ERRORMSG sprintf "Could not determine revision control system for URL '%s'!\n", $url unless defined $rcs_name and $rcs_name ne "";;
+    
     $url = sprintf "'%s'", $url;
     $target = sprintf "'%s'", $target;
     $username = defined $username ? sprintf "'%s'", $username : "undef";
