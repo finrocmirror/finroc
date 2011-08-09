@@ -82,10 +82,9 @@ sub GetAllComponents()
 
         push @parsed_xml_content, XMLin($xml_content,
                                         KeyAttr => [],
-#                                        ForceArray => [ "dependencies", "optional_dependencies", "manifest" ],
-#                                        ForceContent => [ "dependencies", "optional_dependencies" ],
                                         NormalizeSpace => 2,
-                                        SuppressEmpty => 1);
+                                        SuppressEmpty => 1,
+	                                ForceArray => [ 'component'] );
 
         DEBUGMSG sprintf "parsed_content:\n%s\n", Dumper \@parsed_xml_content;
 
