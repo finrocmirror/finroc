@@ -43,6 +43,17 @@ END
     chdir $working_directory;
 }
 
+sub PathAvailable($$)
+{
+    my ($directory, $path_alias) = @_;
+    
+    my $command = sprintf "hg --cwd %s path %s", $directory, $path_alias;
+    DEBUGMSG sprintf "Executing  '%s'\n", $command;
+    my $output = join "", `$command 2> /dev/null`;
+    DEBUGMSG $output;
+    return $output ne "";
+}
+
 sub Checkout($$$$)
 {
     my ($url, $target, $username, $password) = @_;
@@ -64,6 +75,8 @@ sub Checkout($$$$)
 sub Update($$$)
 {
     my ($directory, $username, $password) = @_;
+
+    return "_" unless PathAvailable $directory, "default";
 
     my $command = sprintf "hg --cwd %s in", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
@@ -104,7 +117,10 @@ sub Status($$$)
 
     my $result = "";
 
-    if ($incoming)
+    my ($pull_path_available, $push_path_available) = PathAvailable($directory, "default") ? (1, 1) : (0, 0);
+    $push_path_available = PathAvailable $directory, "default-push" unless $push_path_available;
+
+    if ($pull_path_available and $incoming)
     {
         my $command = sprintf "hg --cwd %s in", $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
@@ -113,7 +129,7 @@ sub Status($$$)
         $result .= sprintf "%sIncoming changesets:\n\n%s\n", ($result ne "" ? "\n" : ""), join "\n", grep { /^(changeset|user|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
     }
 
-    unless ($local_modifications_only)
+    if ($push_path_available and not $local_modifications_only)
     {
         my $command = sprintf "hg --cwd %s out", $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;

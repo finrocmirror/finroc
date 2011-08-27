@@ -85,7 +85,7 @@ sub GetAllComponents()
                                         KeyAttr => [],
                                         NormalizeSpace => 2,
                                         SuppressEmpty => 1,
-	                                ForceArray => [ 'component'] );
+                                        ForceArray => [ 'component'] );
 
         DEBUGMSG sprintf "parsed_content:\n%s\n", Dumper \@parsed_xml_content;
 

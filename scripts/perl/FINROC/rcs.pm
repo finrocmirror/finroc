@@ -42,12 +42,12 @@ sub GetRCSNameOfWorkingCopy($)
     my ($directory) = @_;
 
     my $rcs_name;
-    $rcs_name = "svn" if -d "$directory/.svn";
     $rcs_name = "hg" if -d "$directory/.hg";
+    $rcs_name = "svn" if -d "$directory/.svn";
 
-    ERRORMSG sprintf "Could not determine revision control system used in '%s'!", $directory unless defined $rcs_name;
+#    ERRORMSG sprintf "Could not determine revision control system used in '%s'!", $directory unless defined $rcs_name;
 
-    DEBUGMSG sprintf "Revision control system: %s\n", $rcs_name;
+    DEBUGMSG sprintf "Revision control system: %s\n", defined $rcs_name ? $rcs_name : "<none>";
 
     return $rcs_name;
 }
@@ -78,6 +78,8 @@ sub Update($$$)
 
     my $rcs_name = GetRCSNameOfWorkingCopy $directory;
 
+    return "_" unless defined $rcs_name;
+
     $directory = sprintf "'%s'", $directory;
     $username = defined $username ? sprintf "'%s'", $username : "undef";
     $password = defined $password ? sprintf "'%s'", $password : "undef";
@@ -94,6 +96,8 @@ sub Status($$$)
     my ($directory, $local_modifications_only, $incoming) = @_;
 
     my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+
+    return "" unless defined $rcs_name;
 
     $directory = sprintf "'%s'", $directory;
 
