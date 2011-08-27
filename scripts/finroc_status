@@ -59,7 +59,7 @@ sub CheckStatus($)
 {
     my ($directory) = @_;
 
-    return unless -d $directory;
+    ERRORMSG sprintf "Directory '%s' does not exists!\n" unless -d $directory;
 
     DEBUGMSG sprintf "%s\n", $directory;
 

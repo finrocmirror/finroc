@@ -33,6 +33,7 @@ use Data::Dumper;
 use XML::Simple;
 use Storable qw(dclone);
 
+use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 
 my %source_to_rank_map;
@@ -50,26 +51,26 @@ sub GetAllComponents()
     foreach my $source (keys %source_to_rank_map)
     {
         next unless $source ne "";
-
-        my $command = sprintf "curl -fsk %s.xml", $source;
-
-        DEBUGMSG sprintf "Executing '%s'\n", $command;
-
-        my $xml_content = join "", `$command`;
-
+        
         my $offline_source = $source;
         $offline_source =~ s/[\:\/]/./g;
-        if ($? == 0)
+
+        my $xml_content;
+        if (-f "$FINROC_HOME/.offline/$offline_source.xml" and time > ${[stat _]}[9] + 10)
         {
-            mkdir "$FINROC_HOME/.offline" unless -d "$FINROC_HOME/.offline";
-            open OFFLINE, ">$FINROC_HOME/.offline/$offline_source.xml" or ERRORMSG "Could not open offline file to write: $!\n";
-            print OFFLINE $xml_content;
-            close OFFLINE;
+            my $command = sprintf "curl -fsk %s.xml", $source;
+            DEBUGMSG sprintf "Executing '%s'\n", $command;
+            $xml_content = join "", `$command`;        
+            if ($? == 0)
+            {
+                mkdir "$FINROC_HOME/.offline" unless -d "$FINROC_HOME/.offline";
+                open OFFLINE, ">$FINROC_HOME/.offline/$offline_source.xml" or ERRORMSG "Could not open offline file to write: $!\n";
+                print OFFLINE $xml_content;
+                close OFFLINE;
+            }
         }
-        else
-        {
-            $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null`;
-        }
+
+        $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null` unless defined $xml_content and $xml_content ne "";
 
         if ($xml_content eq "")
         {

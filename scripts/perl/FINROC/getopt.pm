@@ -28,7 +28,6 @@ use Exporter;
 
 use strict;
 
-use Env '$FINROC_HOME';
 use Getopt::Long;
 use Data::Dumper;
 
