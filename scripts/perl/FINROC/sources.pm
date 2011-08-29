@@ -55,8 +55,12 @@ sub GetAllComponents()
         my $offline_source = $source;
         $offline_source =~ s/[\:\/]/./g;
 
-        my $xml_content;
-        if (-f "$FINROC_HOME/.offline/$offline_source.xml" and time > ${[stat _]}[9] + 10)
+        my $xml_content = "";
+        if (-f "$FINROC_HOME/.offline/$offline_source.xml" and time < ${[stat _]}[9] + 10)
+        {
+            $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null`;
+        }
+        else
         {
             my $command = sprintf "curl -fsk %s.xml", $source;
             DEBUGMSG sprintf "Executing '%s'\n", $command;
@@ -69,8 +73,6 @@ sub GetAllComponents()
                 close OFFLINE;
             }
         }
-
-        $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null` unless defined $xml_content and $xml_content ne "";
 
         if ($xml_content eq "")
         {
