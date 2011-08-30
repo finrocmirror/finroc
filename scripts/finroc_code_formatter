@@ -101,7 +101,7 @@ sub CollectModifiedFiles()
         $line =~ s/\s+(\+\s+)?/ /;
         my ($status, $filename) = split " ", $line;
         next unless $status =~ /^[AMR]$/;
-        $files{"$directory/$filename"} = 1 if FileRelevant $filename;
+        $files{$filename} = 1 if FileRelevant $filename;
     }
 }
 
