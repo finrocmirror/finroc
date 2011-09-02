@@ -55,8 +55,9 @@ fi
 # check changed files
 for FILE in `hg status --added --modified --no-status`
 do
-    EXTENSION=`basename $FILE | sed -e 's/\([^\.]\+\.\)\+//'`
-    TEMP_FILE=`echo $FILE | sed -e "s/$EXTENSION/hg_hook_formatted.$EXTENSION/"`
+    TEMP_FILE=`echo $FILE | sed -re "s/\.([^.]+)$/.hg_hook_formatted.\1/"`
+    [[ "$TEMP_FILE" == "$FILE" ]] && TEMP_FILE="$FILE.hg_hook_formatted"
+    echo $TEMP_FILE
     cp $FILE $TEMP_FILE
     finroc_code_formatter -f $TEMP_FILE &> /dev/null
     diff --brief $FILE $TEMP_FILE &> /dev/null
