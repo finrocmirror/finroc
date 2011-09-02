@@ -39,13 +39,27 @@ use FINROC::terminal;
 ##  Command line options  ##
 ############################
 
-SetHelp undef,
+SetHelp "[<directory>]",
 {
     "-l, --local-modifications-only" => "do not check for outgoing changesets (much faster)",
     "-i, --incoming" => "show also working copies with incoming changesets"
-}, undef;
+}, "If specified, only repositories below <directory> are inspected.";
 
 ParseCommandLine [ "local-modifications-only", "incoming" ], undef;
+
+my $root = $ARGV[0] if defined $ARGV[0];
+
+if (defined $root)
+{
+    $root = sprintf "%s/%s", join("", map { chomp; $_} `pwd`), $root unless $root =~ /^\//;
+    $root =~ s/\/\.\//\//g;
+    $root =~ s/\/\//\//g;
+    $root =~ s/\/\.$//g;
+
+    ERRORMSG "<directory> must be below \$FINROC_HOME!\n" unless $FINROC_HOME eq substr $root, 0, length $FINROC_HOME;
+
+    INFOMSG "Checking only repositories below $root\n";
+}
 
 
 
@@ -76,11 +90,34 @@ sub CheckStatus($)
 ##  Search components  ##
 #########################
 
-my @directories;
+my %directories;
 sub AddDirectory($)
 {
     my ($directory) = @_;
-    push @directories, $directory if -d $directory;
+    return unless -d $directory;
+    return if defined $root and $root ne substr $directory, 0, length $root;
+
+    $directories{$directory} = 1;
+}
+
+sub AddSubtreeRepositoryRoot()
+{
+    return unless defined $root;
+
+    my $directory = $root;
+
+    while (length $directory > length $FINROC_HOME)
+    {
+        my $component = $1 if $directory =~ s/\/([^\/]+)$//;
+
+        if (grep { my $pattern = qr/$_$/; $directory =~ $pattern } ( "rrlib", "libraries", "tools", "plugins", "projects", "sources/cpp", "sources/java/org/finroc" ))
+        {
+            $directories{sprintf "%s/%s", $directory, $component} = 1;
+            return;
+        }
+    }
+    ERRORMSG "Fatal error!\n" if $directory ne $FINROC_HOME;
+    $directories{"$FINROC_HOME"} = 1;
 }
 
 AddDirectory "$FINROC_HOME/make_builder";
@@ -99,15 +136,17 @@ foreach my $class (@classes)
 
 AddDirectory "$FINROC_HOME";
 
+AddSubtreeRepositoryRoot;
+
 my $prompt = sprintf "Checking status of working copies%s: [", defined GetCommandLineOption "local-modifications-only" ? "" : " and repositories";
 INFOMSG $prompt;
 DEBUGMSG "\n";
 
 my $i = 0;
-my $format_string = sprintf "%%%dd/%d", length "".scalar @directories, scalar @directories;
-foreach my $directory (@directories)
+my $format_string = sprintf "%%%dd/%d", length "".scalar keys %directories, scalar keys %directories;
+foreach my $directory (keys %directories)
 {
-    my $progress = sprintf $format_string, ++$i, scalar @directories;
+    my $progress = sprintf $format_string, ++$i, scalar keys %directories;
 
     INFOMSG sprintf "%s] %s", $progress, ClearEndOfLineSequence;
     my $current_output = $directory;
@@ -116,7 +155,7 @@ foreach my $directory (@directories)
     CheckStatus $directory;
     INFOMSG MoveCursorInRowSequence -(2 + length($current_output) + length($progress));
 }
-INFOMSG sprintf "$format_string] Done%s\n", scalar @directories, ClearEndOfLineSequence;
+INFOMSG sprintf "$format_string] Done%s\n", scalar keys %directories, ClearEndOfLineSequence;
 
 INFOMSG "\n$status" if $status ne "";
 
