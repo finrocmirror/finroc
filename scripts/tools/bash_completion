@@ -62,6 +62,8 @@ complete -F _finroc_search finroc_search
 _finroc_status()
 {
     _options && return 0
+    
+    compopt -o dirnames
 }
 complete -F _finroc_status finroc_status
 
