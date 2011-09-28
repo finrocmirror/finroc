@@ -1,6 +1,7 @@
 syntax: glob
 
 .finroc.conf
+etc/sources.list
 
 # offline-cache
 .offline
