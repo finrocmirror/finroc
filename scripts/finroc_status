@@ -55,6 +55,7 @@ if (defined $root)
     $root =~ s/\/\.\//\//g;
     $root =~ s/\/\//\//g;
     $root =~ s/\/\.$//g;
+    $root =~ s/\/$//g;
 
     ERRORMSG "<directory> must be below \$FINROC_HOME!\n" unless $FINROC_HOME eq substr $root, 0, length $FINROC_HOME;
 
