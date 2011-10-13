@@ -46,6 +46,7 @@ END
     chdir $FINROC_HOME;
     system "scripts/tools/update_hg_hooks";
     chdir $working_directory;
+    exit ErrorOccurred;
 }
 
 sub PathAvailable($$)

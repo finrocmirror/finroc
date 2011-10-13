@@ -29,8 +29,10 @@
 #
 #----------------------------------------------------------------------
 
-test -f ./scripts/setenv || echo "Please source this script in FINROC base directory"
-test -f ./scripts/setenv || return
+if [ ! -f ./scripts/setenv ] ; then
+    echo "Please source this script in FINROC base directory"
+    return 1
+fi
 eval `./scripts/tools/configure $@`
 
 export LC_CTYPE=en_US.UTF-8
@@ -40,3 +42,5 @@ export LANG=en_US.UTF-8
 source ./scripts/tools/bash_completion
 # enable tab completion for makeSafe and makeFast if system provides bash completion for GNU make
 [ -f /etc/bash_completion.d/make ] && complete -F _make -o filenames makeSafe makeFast
+
+return 0
