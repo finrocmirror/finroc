@@ -47,10 +47,11 @@ SetHelp "<repository_list>",
 {
     "-o [yes|no], --optional=[yes|no]" => "get optional dependencies? - default: ask",
     "-u <username>, --username=<username>" => "use <username> to get access to repositories",
-    "-p <password, --password=<password>" => "use <password> to get access to repositories"
+    "-p <password>, --password=<password>" => "use <password> to get access to repositories",
+    "-y, --yes" => "automatic yes to all prompts for non-interactive contexts"
 }, undef;
 
-ParseCommandLine [ "optional=s", "username=s", "password=s" ], sub
+ParseCommandLine [ "optional=s", "username=s", "password=s", "yes" ], sub
 {
     if (defined GetCommandLineOption "optional")
     {
@@ -193,8 +194,8 @@ while (keys %optional_components)
 
         if (   ${$optional_components{$candidate_name}}{'installed'}
             or GetCommandLineOption "optional" eq "yes"
-            or (GetCommandLineOption "optional" eq "ask" and AskForOptionalComponent $candidate_name))
-        {
+            or (GetCommandLineOption "optional" eq "ask" and (defined GetCommandLineOption "yes" or AskForOptionalComponent $candidate_name)))
+{
             AddComponent $candidate_name, \%mandatory_components
         }
         delete $optional_components{$candidate_name};
@@ -248,7 +249,7 @@ sub FormatSummarizedDiskUsage($)
 
 INFOMSG sprintf "After this operation, %s of additional disk space will be used.\n", FormatSummarizedDiskUsage [ map { $mandatory_components{$_}{'disk_usage'}; } keys %mandatory_components ];
 
-if (keys %extra_components)
+if (keys %extra_components and not defined GetCommandLineOption "yes")
 {
     INFOMSG "Do you want to continue? [Y/n] ";
     if (<STDIN> =~ /^n/)
