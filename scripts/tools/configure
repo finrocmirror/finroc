@@ -52,21 +52,17 @@ my $platform = `python -c 'import sys\nimport platform\nsys.stdout.write(platfor
 
 SetHelp undef,
 {
-    "-p PROJECT, --project=PROJECT" => "override project name",
-    "-t TARGET, --target=TARGET" => "target name - default: debug",
-    "-l [yes|no], --local=[yes|no]" => "use only local source files? - default: yes"
+    "-p <project>, --project=<project>" => "override project name",
+    "-l [<language>], --language=[<language>]" => "programming language",
+    "-t <target>, --target=<target>" => "target name - default: debug",
 }, undef;
 
-ParseCommandLine [ "project:s", "target:s", "local=s" ], sub
+ParseCommandLine [ "project=s", "language:s", "target=s" ], sub
 {
     if (defined GetCommandLineOption "target")
     {
         my $target = sprintf "%s_%s", $platform, GetCommandLineOption "target";
         ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
-    }
-    if (defined GetCommandLineOption "local")
-    {
-        ERRORMSG "Possible values for --local: yes|no\n" unless GetCommandLineOption("local") =~ /yes|no/;
     }
 };
 
@@ -99,15 +95,25 @@ foreach my $option (GetCommandLineOptions)
 
 # default values if not set
 $configuration{"project"} = undef unless defined $configuration{"project"} and $configuration{"project"} ne "";
+$configuration{"language"} = undef unless defined $configuration{"language"} and $configuration{"language"} ne "";
 $configuration{"target"} = "debug" unless defined $configuration{"target"} and $configuration{"target"} ne "";
-$configuration{"local"} = "yes" unless defined $configuration{"local"};
 
 # check existence of project
-if (defined $configuration{"project"})
+if (defined $configuration{"project"} or defined $configuration{'language'})
 {
-    unless (-d sprintf "sources/cpp/projects/%s", $configuration{"project"})
+    my $project_exists = 0;
+    foreach my $language (defined $configuration{'language'} ? ( $configuration{'language'} ) : map { chomp; $_ } `ls sources`)
     {
-        INFOMSG sprintf "\nWarning: Project `%s' does not exist!\n\n", $configuration{"project"};
+        if (-d sprintf "sources/%s/projects/%s", $language, $configuration{"project"})
+        {
+	    $project_exists = 1;
+            $configuration{'language'} = $language;
+            last;
+        }
+    }
+    unless ($project_exists)
+    {
+        INFOMSG sprintf "\nWarning: %s project `%s' does not exist!\n\n", $configuration{'language'}, $configuration{'project'};
         $configuration{"project"} = undef;
     }
 }
@@ -126,7 +132,7 @@ close CONFIG;
 $configuration{"target"} = sprintf "%s_%s", $platform, $configuration{"target"};
 use Cwd;
 $configuration{"home"} = getcwd;
-$configuration{"project_home"} = sprintf "%s/sources/cpp/projects/%s", $configuration{"home"}, $configuration{"project"} if defined $configuration{"project"};
+$configuration{"project_home"} = sprintf "%s/sources/%s/projects/%s", $configuration{"home"}, $configuration{'language'}, $configuration{"project"} if defined $configuration{"project"};
 DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper \%configuration;
 
 
@@ -143,8 +149,8 @@ INFOMSG "----------------------------------\n";
 PrintSetting "Home", $configuration{"home"};
 PrintSetting "Project", defined $configuration{"project"} ? $configuration{"project"} : "<unknown>";
 PrintSetting "Project Home", defined $configuration{"project_home"} ? $configuration{"project_home"} : "<unknown>";
+PrintSetting "Language", defined $configuration{"language"} ? $configuration{"language"} : "<unknown>";
 PrintSetting "Target", $configuration{"target"};
-PrintSetting "Local Build", $configuration{"local"};
 INFOMSG "----------------------------------\n";
 
 
@@ -174,10 +180,6 @@ SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_
 # FINROC_TARGET
 SetEnvironment sprintf "unset FINROC_TARGET";
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
-
-# FINROC_LOCAL
-SetEnvironment sprintf "unset FINROC_LOCAL";
-SetEnvironment sprintf "export FINROC_LOCAL=%s", $configuration{"local"};
 
 #RRLIB_SIMVIS3D_RESOURCES
 SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources", $configuration{"home"};
