@@ -58,16 +58,16 @@ END
     exit ErrorOccurred;
 }
 
-sub ManageCredentials($)
+sub ManageCredentials($$$)
 {
-    my ($url) = @_;
+    my ($url, $username, $password) = @_;
     $url =~ s/\/[^\/]*$//;
 
     # Check configfile and permissions
     unless (-e "$HOME/.hgrc")
     {
         INFOMSG "\nYou have not configured mercurial in $HOME/.hgrc, yet.\n";
-        return unless "y" eq UI::ReadValue "Create a minimal configuration to be used with Finroc? (y|n)", '(y|n)', undef;
+        return unless "y" eq UI::ReadValue "Create a minimal configuration to be used with Finroc? (y|n)", '(y|n)', "y";
         open HGRC, ">$HOME/.hgrc" or die $!;
         close HGRC;
         chmod 0600, "$HOME/.hgrc";
@@ -79,30 +79,33 @@ sub ManageCredentials($)
     }
 
     # Read config file
-    my $current_section;
-    foreach (map { chomp; $_} `cat $HOME/.hgrc`)
+    unless (%hgrc_sections)
     {
-        s/^\s*//;
-        s/\s*$//;
-        next if $_ eq "";
-
-        if (/^\[([^\]]+)\]$/)
+        my $current_section;
+        foreach (map { chomp; $_} `cat $HOME/.hgrc`)
         {
-            $current_section = $1;
-            $hgrc_sections{$current_section} = {};
-            next;
-        }
+            s/^\s*//;
+            s/\s*$//;
+            next if $_ eq "";
 
-        if ($current_section eq "auth")
-        {
+            if (/^\[([^\]]+)\]$/)
+            {
+                $current_section = $1;
+                $hgrc_sections{$current_section} = {};
+                next;
+            }
+
+            if ($current_section eq "auth")
+            {
+                my ($key, @value) = map { s/^\s*//; s/\s*$//; $_ } split "=";
+                my ($group, $entry) = split '\.', $key;
+                $hgrc_sections{'auth'}{$group}{$entry} = join " ", @value;
+                next;
+            }
+
             my ($key, @value) = map { s/^\s*//; s/\s*$//; $_ } split "=";
-            my ($group, $entry) = split '\.', $key;
-            $hgrc_sections{'auth'}{$group}{$entry} = join " ", @value;
-            next;
+            $hgrc_sections{$current_section}{$key} = join " ", @value;
         }
-
-        my ($key, @value) = map { s/^\s*//; s/\s*$//; $_ } split "=";
-        $hgrc_sections{$current_section}{$key} = join " ", @value;
     }
 
     my $update_hgrc = 0;
@@ -128,28 +131,30 @@ sub ManageCredentials($)
     unless (exists $hgrc_sections{'auth'} and grep {  $_ eq substr $url, 0, length $_ } map { $hgrc_sections{'auth'}{$_}{'prefix'} } keys %{$hgrc_sections{'auth'}})
     {
         next unless $url =~ /^https?:\/\//;
-        INFOMSG sprintf "\nI need your auth data for %s.\n", $url;
-        INFOMSG "It will be stored in plaintext in $HOME/.hgrc which is OK as only you can read that file.\n";
-        INFOMSG "However, you should be careful if you edit that file when someone else could have a look at you screen.\n";
+        INFOMSG sprintf "\nYour auth data for %s will be stored in plaintext in $HOME/.hgrc which is OK as only you can read that file.\n", $url;
+        INFOMSG "However, you should be careful if you edit that file when someone else could have a look at you screen!\n";
+        my $auth_username = $username;
+        my $auth_password = $password;
         while (1)
         {
-            my $username = UI::ReadValue "Username", undef, $USER;
+            $auth_username = UI::ReadValue "Username", undef, $USER unless defined $auth_username;
             ReadMode 'noecho';
-            my $password = UI::ReadValue "Password", undef, undef;
+            $auth_password = UI::ReadValue "Password", undef, undef unless defined $auth_password;
             INFOMSG "\n";
             ReadMode 'restore';
-            my $auth_test = join "", `curl -fsku '$username':'$password' $url`;
+            my $auth_test = join "", `curl -fsku '$auth_username':'$auth_password' $url`;
             if ($auth_test ne "")
             {
                 my $key = $url;
                 $key =~ s/^https?:\/\/([^\/]+)\/.*$/$1/;
                 $key =~ s/(\.|\/)/_/g;
                 $hgrc_sections{'auth'}{$key}{'prefix'} = "$url";
-                $hgrc_sections{'auth'}{$key}{'username'} = $username;
-                $hgrc_sections{'auth'}{$key}{'password'} = $password;
+                $hgrc_sections{'auth'}{$key}{'username'} = $auth_username;
+                $hgrc_sections{'auth'}{$key}{'password'} = $auth_password;
                 last;
             }
             WARNMSG sprintf "Could not authenticate to %s. Invalid username/password combination.\n", $url;
+            ($auth_username, $auth_password) = (undef, undef);
         }    
         $update_hgrc = 1;
     }
@@ -194,7 +199,7 @@ sub Checkout($$$$)
 {
     my ($url, $target, $username, $password) = @_;
     
-    ManageCredentials $url;
+    ManageCredentials $url, $username, $password;
 
     my $branch = "default";
 
@@ -217,7 +222,7 @@ sub Update($$$)
     my $default_path = GetPath $directory, "default";
     return "_" unless defined $default_path;
 
-    ManageCredentials $default_path;
+    ManageCredentials $default_path, $username, $password;
 
     my $command = sprintf "hg --cwd %s in", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
@@ -264,7 +269,7 @@ sub Status($$$)
 
     if (defined $pull_path and $incoming)
     {
-        ManageCredentials $pull_path;
+        ManageCredentials $pull_path, undef, undef;
         my $command = sprintf "hg --cwd %s in", $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
         my $output = join "", `$command`;
@@ -274,7 +279,7 @@ sub Status($$$)
 
     if (defined $push_path and not $local_modifications_only)
     {
-        ManageCredentials $push_path;
+        ManageCredentials $push_path, undef, undef;
         my $command = sprintf "hg --cwd %s out", $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
         my $output = join "", `$command`;
