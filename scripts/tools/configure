@@ -99,14 +99,14 @@ $configuration{"language"} = undef unless defined $configuration{"language"} and
 $configuration{"target"} = "debug" unless defined $configuration{"target"} and $configuration{"target"} ne "";
 
 # check existence of project
-if (defined $configuration{"project"} or defined $configuration{'language'})
+if (defined $configuration{"project"})
 {
     my $project_exists = 0;
     foreach my $language (defined $configuration{'language'} ? ( $configuration{'language'} ) : map { chomp; $_ } `ls sources`)
     {
         if (-d sprintf "sources/%s/projects/%s", $language, $configuration{"project"})
         {
-	    $project_exists = 1;
+            $project_exists = 1;
             $configuration{'language'} = $language;
             last;
         }
@@ -117,6 +117,7 @@ if (defined $configuration{"project"} or defined $configuration{'language'})
         $configuration{"project"} = undef;
     }
 }
+$configuration{'language'} = undef unless defined $configuration{'project'};
 
 DEBUGMSG sprintf "resulting configuration:\n%s\n", Dumper \%configuration;
 
