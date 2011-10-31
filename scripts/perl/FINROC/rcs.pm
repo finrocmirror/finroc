@@ -28,7 +28,7 @@
 package FINROC::rcs;
 use Exporter;
 @ISA = qw/Exporter/;
-@EXPORT = qw/Checkout Update Status/;
+@EXPORT = qw/Checkout Update Status IsOnDefaultBranch ParentDateUTCTimestamp/;
 
 
 use strict;
@@ -50,9 +50,7 @@ sub GetRCSNameOfWorkingCopy($)
     $rcs_name = "hg" if -d "$directory/.hg";
     $rcs_name = "svn" if -d "$directory/.svn";
 
-#    ERRORMSG sprintf "Could not determine revision control system used in '%s'!", $directory unless defined $rcs_name;
-
-    DEBUGMSG sprintf "Revision control system: %s\n", defined $rcs_name ? $rcs_name : "<none>";
+    DEBUGMSG sprintf "Revision control system: %s\n", defined $rcs_name ? $rcs_name : "<unknown>";
 
     return $rcs_name;
 }
@@ -66,7 +64,7 @@ sub Checkout($$$$)
 
     my $rcs_name = @{[ reverse split "/", $url ]}[1];
 
-    ERRORMSG sprintf "Could not determine revision control system for URL '%s'!\n", $url unless defined $rcs_name and $rcs_name ne "";;
+    ERRORMSG sprintf "Could not determine revision control system for URL '%s'!\n", $url unless defined $rcs_name and $rcs_name ne "";
 
     $url = sprintf "'%s'", $url;
     $target = sprintf "'%s'", $target;
@@ -108,6 +106,40 @@ sub Status($$$)
 
     my $result;
     eval sprintf "\$result = FINROC::rcs::%s::Status(%s, %s, %s)", $rcs_name, $directory, $local_modifications_only, $incoming;
+    ERRORMSG $@ if $@;
+
+    return $result;
+}
+
+sub IsOnDefaultBranch($)
+{
+    my ($directory) = @_;
+
+    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+
+    ERRORMSG sprintf "Could not determine revision control system in '%s'!\n", $directory unless defined $rcs_name and $rcs_name ne "";
+
+    $directory = sprintf "'%s'", $directory;
+
+    my $result;
+    eval sprintf "\$result = FINROC::rcs::%s::IsOnDefaultBranch(%s)", $rcs_name, $directory;
+    ERRORMSG $@ if $@;
+
+    return $result;
+}
+
+sub ParentDateUTCTimestamp($)
+{
+    my ($directory) = @_;
+
+    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+
+    ERRORMSG sprintf "Could not determine revision control system in '%s'!\n", $directory unless defined $rcs_name and $rcs_name ne "";
+
+    $directory = sprintf "'%s'", $directory;
+
+    my $result;
+    eval sprintf "\$result = FINROC::rcs::%s::ParentDateUTCTimestamp(%s)", $rcs_name, $directory;
     ERRORMSG $@ if $@;
 
     return $result;

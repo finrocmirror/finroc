@@ -29,12 +29,13 @@ package FINROC::rcs::svn;
 use Exporter;
 @ISA = qw/Exporter/;
 @EXPORT = qw//;
-@EXPORT_OK = qw/Checkout/;
 
 use strict;
 
 use Env '$FINROC_HOME';
 use Data::Dumper;
+use Time::ParseDate;
+use XML::Simple;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
@@ -86,6 +87,26 @@ sub Status($$$)
 
     return sprintf "Local modifications:\n%s\n", $output unless $output eq "";
     return "";
+}
+
+sub IsOnDefaultBranch($)
+{
+    my ($directory) = @_;
+
+    my $command = sprintf "svn info --xml %s", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+
+    return ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'url'} =~ /trunk$/;
+}
+
+sub ParentDateUTCTimestamp($)
+{
+    my ($directory) = @_;
+
+    my $command = sprintf "svn info --xml %s", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+
+    return int parsedate ${XMLin join "", `$command`}{'entry'}{'commit'}{'date'};
 }
 
 

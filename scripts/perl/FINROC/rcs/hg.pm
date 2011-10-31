@@ -29,8 +29,6 @@ package FINROC::rcs::hg;
 use Exporter;
 @ISA = qw/Exporter/;
 @EXPORT = qw//;
-@EXPORT_OK = qw/Checkout Update/;
-
 
 use strict;
 
@@ -120,8 +118,7 @@ sub ManageCredentials($$$)
 
     if (!exists $hgrc_sections{'ui'}{'username'})
     {
-        my $fullname = ${[split ":", join "", map { chomp; $_ } `getent passwd \$USER`]}[4];
-        $fullname = UI::ReadValue "Full name", undef, $fullname;
+        my $fullname = UI::ReadValue "Full name", '\S+( \S+)+', ${[split ":", join "", map { chomp; $_ } `getent passwd \$USER`]}[4];
         my $email_addr = UI::ReadValue "Email address", '\S+@\S+(\.\S+)+', undef;
         $hgrc_sections{'ui'}{'username'} = sprintf "%s <%s>", $fullname, $email_addr;
         $update_hgrc = 1;
@@ -295,6 +292,26 @@ sub Status($$$)
     $result .= sprintf "%sLocal modifications:\n%s", ($result ne "" ? "\n" : ""), $output unless $output eq "";
 
     return $result;
+}
+
+sub IsOnDefaultBranch($)
+{
+    my ($directory) = @_;
+
+    my $command = sprintf "hg --cwd %s branch", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+
+    return "default" eq join "", map { chomp; $_ } `$command`;
+}
+
+sub ParentDateUTCTimestamp($)
+{
+    my ($directory) = @_;
+
+    my $command = sprintf "hg --cwd %s parent --template '{date}'", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+
+    return int join "", map { /^(.*)((-|\+).*)$/ ? $1 + $2 : $_ } `$command`;
 }
 
 
