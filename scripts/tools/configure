@@ -191,7 +191,6 @@ push @finroc_path, sprintf "%s/export/%s/bin", $configuration{"home"}, $configur
 push @finroc_path, sprintf "%s/%s", $configuration{"project_home"}, "scripts" if defined $configuration{"project_home"};
 push @finroc_path, sprintf "%s/scripts", $configuration{"home"};
 push @finroc_path, sprintf "%s/make_builder/scripts", $configuration{"home"};
-push @finroc_path, "/usr/local/share/finroc/bin" if $configuration{"local"} eq "no";
 
 if (exists $ENV{"PATH"})
 {
@@ -208,7 +207,6 @@ my (@ld_library_path, @finroc_ld_library_path, %finroc_ld_library_path_elements)
 push @finroc_ld_library_path, sprintf "%s/export/%s/lib", $configuration{"home"}, $configuration{"target"};
 push @finroc_ld_library_path, sprintf "/usr/lib/gluegen";
 push @finroc_ld_library_path, sprintf "/usr/lib/jogl";
-push @finroc_ld_library_path, "/usr/local/share/finroc/lib" if $configuration{"local"} eq "no";
 
 if (exists $ENV{"LD_LIBRARY_PATH"})
 {
