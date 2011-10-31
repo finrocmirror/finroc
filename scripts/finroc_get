@@ -125,10 +125,10 @@ sub GetComponentDirectory($)
     return sprintf "sources/%s/%s", $language, $directory;
 }
 
-sub AddComponent($$);
-sub AddComponent($$)
+sub AddComponent($$$);
+sub AddComponent($$$)
 {
-    my ($component_name, $list) = @_;
+    my ($component_name, $list, $force) = @_;
 
     DEBUGMSG sprintf "AddComponent(%s, %s) called\n", $component_name, $list;
 
@@ -140,12 +140,23 @@ sub AddComponent($$)
 
     $$list{$component_name} = { 'url' => $component{'url'}, 'target' => GetComponentDirectory $component_name, 'disk_usage' => $component{'disk_usage'} };
     ${$$list{$component_name}}{'installed'} = -d "$FINROC_HOME/${$$list{$component_name}}{'target'}";
+    unless ($force)
+    {
+        my $release_description = `lsb_release -d`;
+        if ($release_description =~ /(debian|ubuntu)/i)
+        {
+            my $debian_name = $component_name;
+            $debian_name =~ s/_/-/g;
+            $debian_name = "lib$debian_name-dev" if `dpkg --get-selections | grep install | grep '^lib$debian_name'`;
+            ${$$list{$component_name}}{'installed'} |= `dpkg --get-selections | grep install | grep '^$debian_name'`;
+        }
+    }
 
     if (defined $component{'dependencies'})
     {
         foreach my $dependency_name (split " ", $component{'dependencies'})
         {
-            AddComponent $dependency_name, $list;
+            AddComponent $dependency_name, $list, 0;
         }
     }
 
@@ -153,7 +164,7 @@ sub AddComponent($$)
     {
         foreach my $dependency_name (split " ", $component{'optional_dependencies'})
         {
-            AddComponent $dependency_name, \%optional_components;
+            AddComponent $dependency_name, \%optional_components, 0;
         }
     }
 }
@@ -172,7 +183,7 @@ DEBUGMSG "\n";
 
 my $pad_first_question = "\n";
 
-map { AddComponent $_, \%mandatory_components } keys %requested_components;
+map { AddComponent $_, \%mandatory_components, 1 } keys %requested_components;
 
 FixImplicitDependencies;
 map { delete $optional_components{$_} } keys %mandatory_components;
