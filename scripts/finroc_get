@@ -37,6 +37,7 @@ use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
+use FINROC::components;
 use FINROC::rcs;
 
 ############################
@@ -92,39 +93,6 @@ ERRORMSG sprintf "Could not find requested component%s: %s!\n", keys %not_found_
 my %mandatory_components;
 my %optional_components;
 
-sub GetComponentDirectory($)
-{
-    my ($component_name) = @_;
-
-    return "make_builder" if $component_name eq "make_builder";
-
-    my @name_parts = split "-", $component_name;
-    ERRORMSG sprintf "Invalid number of '-' in source component '%s'\n", $component_name if scalar @name_parts > 2;
-    my $language = scalar @name_parts == 2 ? $name_parts[1] : "cpp";
-    my $directory = $name_parts[0];
-
-    if ($language eq "java")
-    {
-        $directory =~ s/^rrlib_/org\/rrlib\//;
-        $directory =~ s/^finroc_plugins_/org\/finroc\/plugins\//;
-        $directory =~ s/^finroc_libraries_/org\/finroc\/libraries\//;
-        $directory =~ s/^finroc_tools_gui_plugins_/org\/finroc\/tools\/gui\/plugins\//;
-        $directory =~ s/^finroc_tools_/org\/finroc\/tools\//;
-        $directory =~ s/^finroc_projects_/org\/finroc\/projects\//;
-        $directory =~ s/^finroc_/org\/finroc\//;
-    }
-
-    $directory =~ s/^rrlib_/rrlib\//;
-    $directory =~ s/^finroc_plugins_/plugins\//;
-    $directory =~ s/^finroc_libraries_/libraries\//;
-    $directory =~ s/^finroc_tools_gui_plugins_/tools\/gui\/plugins\//;
-    $directory =~ s/^finroc_tools_/tools\//;
-    $directory =~ s/^finroc_projects_/projects\//;
-    $directory =~ s/^finroc_//;
-
-    return sprintf "sources/%s/%s", $language, $directory;
-}
-
 sub AddComponent($$$);
 sub AddComponent($$$)
 {
@@ -138,7 +106,7 @@ sub AddComponent($$$)
 
     my %component = GetComponent $component_name;
 
-    $$list{$component_name} = { 'url' => $component{'url'}, 'target' => GetComponentDirectory $component_name, 'disk_usage' => $component{'disk_usage'} };
+    $$list{$component_name} = { 'url' => $component{'url'}, 'target' => ${ComponentInfo $component_name}{'directory'}, 'disk_usage' => $component{'disk_usage'} };
     ${$$list{$component_name}}{'installed'} = -d "$FINROC_HOME/${$$list{$component_name}}{'target'}";
     unless ($force)
     {
@@ -147,8 +115,10 @@ sub AddComponent($$$)
         {
             my $debian_name = $component_name;
             $debian_name =~ s/_/-/g;
-            $debian_name = "lib$debian_name-dev" if `dpkg --get-selections | grep install | grep '^lib$debian_name'` ne "";
-            ${$$list{$component_name}}{'installed'} |= `dpkg --get-selections | grep install | grep '^$debian_name'` ne "";
+	    $debian_name = sprintf "lib%s", $debian_name if ${ComponentInfo $component_name}{'type'} eq "lib";
+	    $debian_name = sprintf "%s-dev", $debian_name if ${ComponentInfo $component_name}{'language'} eq "cpp";
+            my $package_info = join "", map { chomp; $_ } `dpkg -l $debian_name 2> /dev/null | grep $debian_name | awk '{print \$1}'`;
+            ${$$list{$component_name}}{'installed'} |= $package_info eq "ii";
         }
     }
 

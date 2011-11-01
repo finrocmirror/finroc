@@ -127,33 +127,35 @@ sub ManageCredentials($$$)
     # Authentication data
     unless (exists $hgrc_sections{'auth'} and grep {  $_ eq substr $url, 0, length $_ } map { $hgrc_sections{'auth'}{$_}{'prefix'} } keys %{$hgrc_sections{'auth'}})
     {
-        next unless $url =~ /^https?:\/\//;
-        INFOMSG sprintf "\nYour auth data for %s will be stored in plaintext in $HOME/.hgrc which is OK as only you can read that file.\n", $url;
-        INFOMSG "However, you should be careful if you edit that file when someone else could have a look at you screen!\n";
-        my $auth_username = $username;
-        my $auth_password = $password;
-        while (1)
-        {
-            $auth_username = UI::ReadValue "Username", undef, $USER unless defined $auth_username;
-            ReadMode 'noecho';
-            $auth_password = UI::ReadValue "Password", undef, undef unless defined $auth_password;
-            INFOMSG "\n";
-            ReadMode 'restore';
-            my $auth_test = join "", `curl -fsku '$auth_username':'$auth_password' $url`;
-            if ($auth_test ne "")
+        if ($url =~ /^https?:\/\//)
+	{
+            INFOMSG sprintf "\nYour auth data for %s will be stored in plaintext in $HOME/.hgrc which is OK as only you can read that file.\n", $url;
+            INFOMSG "However, you should be careful if you edit that file when someone else could have a look at you screen!\n";
+            my $auth_username = $username;
+            my $auth_password = $password;
+            while (1)
             {
-                my $key = $url;
-                $key =~ s/^https?:\/\/([^\/]+)\/.*$/$1/;
-                $key =~ s/(\.|\/)/_/g;
-                $hgrc_sections{'auth'}{$key}{'prefix'} = "$url";
-                $hgrc_sections{'auth'}{$key}{'username'} = $auth_username;
-                $hgrc_sections{'auth'}{$key}{'password'} = $auth_password;
-                last;
-            }
-            WARNMSG sprintf "Could not authenticate to %s. Invalid username/password combination.\n", $url;
-            ($auth_username, $auth_password) = (undef, undef);
-        }    
-        $update_hgrc = 1;
+                $auth_username = UI::ReadValue "Username", undef, $USER unless defined $auth_username;
+                ReadMode 'noecho';
+                $auth_password = UI::ReadValue "Password", undef, undef unless defined $auth_password;
+                INFOMSG "\n";
+                ReadMode 'restore';
+                my $auth_test = join "", `curl -fsku '$auth_username':'$auth_password' $url`;
+                if ($auth_test ne "")
+                {
+                    my $key = $url;
+                    $key =~ s/^https?:\/\/([^\/]+)\/.*$/$1/;
+                    $key =~ s/(\.|\/)/_/g;
+                    $hgrc_sections{'auth'}{$key}{'prefix'} = "$url";
+                    $hgrc_sections{'auth'}{$key}{'username'} = $auth_username;
+                    $hgrc_sections{'auth'}{$key}{'password'} = $auth_password;
+                    last;
+                }
+                WARNMSG sprintf "Could not authenticate to %s. Invalid username/password combination.\n", $url;
+                ($auth_username, $auth_password) = (undef, undef);
+            }    
+            $update_hgrc = 1;
+        }
     }
 
     # Write configfile

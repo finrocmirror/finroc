@@ -36,7 +36,6 @@ use strict;
 use Env '$FINROC_HOME';
 use Data::Dumper;
 use XML::Simple;
-use Storable qw(dclone);
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
