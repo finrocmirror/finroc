@@ -69,7 +69,7 @@ foreach my $class (@$classes)
             {
                 my @words = split ("_", $member->{name});
                 my $w0 = $words[0];
-                if (($w0 eq 'si' && $type eq 'tSensorInput') || ($w0 eq 'so' && $type eq 'tSensorOutput') || ($w0 eq 'ci' && $type eq 'tControllerInput') || ($w0 eq 'co' && $type eq 'tControllerOutput') || ($w0 eq 'par' && $type eq 'tParameter'))
+                if (($w0 eq 'si' && $type eq 'tSensorInput') || ($w0 eq 'so' && $type eq 'tSensorOutput') || ($w0 eq 'ci' && $type eq 'tControllerInput') || ($w0 eq 'co' && $type eq 'tControllerOutput') || ($w0 eq 'par' && $type eq 'tParameter') || ($w0 eq 'in' && $type eq 'tInput') || ($w0 eq 'out' && $type eq 'tOutput'))
                 {
                     shift(@words);
                 }
