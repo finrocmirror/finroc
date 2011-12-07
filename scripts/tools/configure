@@ -183,7 +183,7 @@ SetEnvironment sprintf "unset FINROC_TARGET";
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
 
 #RRLIB_SIMVIS3D_RESOURCES
-SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources", $configuration{"home"};
+SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources/simvis3d", $configuration{"home"};
 
 # PATH
 my (@path, @finroc_path, %finroc_path_elements);
