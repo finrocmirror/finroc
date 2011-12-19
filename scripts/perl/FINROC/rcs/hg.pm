@@ -128,7 +128,7 @@ sub ManageCredentials($$$)
     unless (exists $hgrc_sections{'auth'} and grep {  $_ eq substr $url, 0, length $_ } map { $hgrc_sections{'auth'}{$_}{'prefix'} } keys %{$hgrc_sections{'auth'}})
     {
         if ($url =~ /^https?:\/\//)
-	{
+        {
             INFOMSG sprintf "\nYour auth data for %s will be stored in plaintext in $HOME/.hgrc which is OK as only you can read that file.\n", $url;
             INFOMSG "However, you should be careful if you edit that file when someone else could have a look at you screen!\n";
             my $auth_username = $username;

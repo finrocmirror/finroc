@@ -115,8 +115,8 @@ sub AddComponent($$$)
         {
             my $debian_name = $component_name;
             $debian_name =~ s/_/-/g;
-	    $debian_name = sprintf "lib%s", $debian_name if ${ComponentInfo $component_name}{'type'} eq "lib";
-	    $debian_name = sprintf "%s-dev", $debian_name if ${ComponentInfo $component_name}{'language'} eq "cpp";
+            $debian_name = sprintf "lib%s", $debian_name if ${ComponentInfo $component_name}{'type'} eq "lib";
+            $debian_name = sprintf "%s-dev", $debian_name if ${ComponentInfo $component_name}{'language'} eq "cpp";
             my $package_info = join "", map { chomp; $_ } `dpkg -l $debian_name 2> /dev/null | grep $debian_name | awk '{print \$1}'`;
             ${$$list{$component_name}}{'installed'} |= $package_info eq "ii";
         }
