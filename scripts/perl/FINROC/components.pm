@@ -54,7 +54,13 @@ sub ComponentInfo($)
     $directory = $name_parts[0];
     $type = "lib";
 
-    $directory =~ s/^rrlib_simvis3d_resources_/..\/..\/resources\/simvis3d\//;
+    if ($directory =~ s/^rrlib_simvis3d_resources_//)
+    {
+        $directory =~ s/^environments_/environments\//;
+        $directory =~ s/^robots_/robots\//;
+
+        $directory = sprintf "../../resources/simvis3d/%s", $directory;
+    }
 
     if ($language eq "java")
     {
