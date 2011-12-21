@@ -55,7 +55,7 @@ SetHelp "[<targets>]",
 ParseCommandLine [ "simulate", "config=s", "list" ], undef;
 
 # default values if not set
-AssignCommandLineOptionDefaultValue "config", "$FINROC_PROJECT_HOME/etc/sync_config.xml" if defined $FINROC_PROJECT_HOME;
+AssignCommandLineOptionDefaultValue "config", "$FINROC_PROJECT_HOME/etc/sync_config.xml" if defined $FINROC_PROJECT_HOME and not defined GetCommandLineOption "config";
 
 
 
@@ -73,7 +73,7 @@ my @targets = @ARGV;
 
 DEBUGMSG sprintf "Looking for config file '%s'.\n", GetCommandLineOption "config";
 
-ERRORMSG "Configuration file '%s' not found!\n", GetCommandLineOption "config" unless -f GetCommandLineOption "config";
+ERRORMSG sprintf "Configuration file '%s' not found!\n", GetCommandLineOption "config" unless -f GetCommandLineOption "config";
 
 my $sync_config = XMLin(GetCommandLineOption "config",
                         ForceContent => 1,
