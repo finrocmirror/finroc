@@ -1,12 +1,11 @@
 syntax: glob
 
 .finroc.conf
-etc/sources.list
 
 # offline-cache
 .offline
 
-# checkout targets (for other RCS)
+# checkout targets
 make_builder
 sources
 resources
