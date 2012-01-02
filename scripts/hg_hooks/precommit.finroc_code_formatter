@@ -36,6 +36,7 @@ if [ -z $FINROC_HOME ] ; then
     if [ -z $1 ] ; then
         echo 1>&2
         echo "Could not determine \$FINROC_HOME." 1>&2
+        exit 1
     else
         if [ -f $1/scripts/setenv ] ; then
             cd $1
@@ -45,6 +46,7 @@ if [ -z $FINROC_HOME ] ; then
         if [ -z $FINROC_HOME ] ; then
             echo 1>&2
             echo "'$1' is not valid as \$FINROC_HOME." 1>&2
+            exit 1
         fi
     fi
 fi
@@ -64,6 +66,11 @@ do
     [[ "$TEMP_FILE" == "$FILE" ]] && TEMP_FILE="$FILE.hg_hook_formatted"
     cp $FILE $TEMP_FILE
     finroc_code_formatter -f $TEMP_FILE &> /dev/null
+    if [ $? -ne 0 ] ; then
+        finroc_code_formatter -f $TEMP_FILE
+        echo "Could not run finroc_code_formatter!" 1>&2
+        exit 1
+    fi
     diff --brief $FILE $TEMP_FILE &> /dev/null
     if [ $? -ne 0 ] ; then
         echo 1>&2
@@ -74,7 +81,7 @@ do
         echo 1>&2
         echo "Please run finroc_code_formatter and recompile." 1>&2
         echo 1>&2
-        echo "Diff output:" 1>&2
+        echo "Diff output for $FILE:" 1>&2
         diff $FILE $TEMP_FILE 1>&2
         rm $TEMP_FILE
         exit 1

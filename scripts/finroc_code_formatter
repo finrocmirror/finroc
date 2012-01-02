@@ -42,7 +42,8 @@ use FINROC::messages;
 use FINROC::getopt;
 use FINROC::rcs;
 
-ERRORMSG sprintf "\nWrong astyle version. Please use %s\n", `cat $FINROC_HOME/etc/astyle.version` if (`astyle --version 2>&1` ne `cat $FINROC_HOME/etc/astyle.version`);
+my $astyle_version = `astyle --version 2>&1` or ERRORMSG sprintf "\nCould not execute astyle: %s\n\n", $!;
+ERRORMSG sprintf "\nWrong astyle version. Please use %s\n", `cat $FINROC_HOME/etc/astyle.version` if $astyle_version ne `cat $FINROC_HOME/etc/astyle.version`;
 
 my %format_flags;
 $format_flags{"cpp"}  = "--style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren";
