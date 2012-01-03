@@ -121,7 +121,7 @@ sub GetComponentNameFromDirectory($)
         }
 
         return sprintf "%s%s", ReplaceSlashesByUnderscores $component_name, $language if $component_name =~ /^rrlib\//;
-        return sprintf "finroc_%s%s", ReplaceSlashesByUnderscores $component_name, $language unless $component_name =~ /^rrlib\//;
+        return sprintf "finroc_%s%s", ReplaceSlashesByUnderscores $component_name, $language;
     }
     
     return undef;
