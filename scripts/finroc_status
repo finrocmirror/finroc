@@ -39,6 +39,7 @@ use FINROC::getopt;
 use FINROC::sources;
 use FINROC::rcs;
 use FINROC::terminal;
+use FINROC::components;
 
 ############################
 ##  Command line options  ##
@@ -47,10 +48,17 @@ use FINROC::terminal;
 SetHelp "[<directory>]",
 {
     "-l, --local-modifications-only" => "do not check for outgoing changesets (much faster)",
-    "-i, --incoming" => "show also working copies with incoming changesets"
+    "-i, --incoming" => "show also working copies with incoming changesets",
+    "-c, --check" => "check which components are checked out and at what local state"
 }, "If specified, only repositories below <directory> are inspected.";
 
-ParseCommandLine [ "local-modifications-only", "incoming" ], undef;
+ParseCommandLine [ "local-modifications-only", "incoming", "check" ], sub
+{
+    if (GetCommandLineOption "check" and (GetCommandLineOption "local-modifications-only" or GetCommandLineOption "incoming"))
+    {
+        ERRORMSG "--check can not be used together with --incoming or --local-modifications-only!\n";
+    } 
+};
 
 my $root = $ARGV[0] if defined $ARGV[0];
 
@@ -143,6 +151,16 @@ foreach my $class (@classes)
 AddDirectory "$FINROC_HOME";
 
 AddSubtreeRepositoryRoot;
+
+if (GetCommandLineOption "check")
+{
+    my @components = grep { defined } map { GetComponentNameFromDirectory $_ } keys %directories;
+    foreach (@components)
+    {
+        printf "%s\n", $_;
+    }
+    exit 0;
+}
 
 my $prompt = sprintf "Checking status of working copies%s: [", defined GetCommandLineOption "local-modifications-only" ? "" : " and repositories";
 INFOMSG $prompt;

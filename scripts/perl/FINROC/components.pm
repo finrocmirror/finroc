@@ -28,7 +28,7 @@
 package FINROC::components;
 use Exporter;
 @ISA = qw/Exporter/;
-@EXPORT = qw/ComponentInfo/;
+@EXPORT = qw/ComponentInfo GetComponentNameFromDirectory/;
 
 
 use strict;
@@ -86,6 +86,46 @@ sub ComponentInfo($)
     return { 'type' => $type, 'language' => $language, 'directory' => sprintf "sources/%s/%s", $language, $directory };
 }
 
+sub ReplaceSlashesByUnderscores($)
+{
+    my ($result) = @_;
+    $result =~ s/\//_/g;
+    return $result;
+}
+
+sub GetComponentNameFromDirectory($)
+{
+    my ($directory) = @_;
+    $directory =~ s/^$FINROC_HOME\/// if $directory =~ /^\//;
+
+    return "make_builder" if $directory eq "make_builder";
+
+    my (undef, $component_name) = $directory =~ /([^\/]+)\/(.+)/;
+
+    if ($directory =~ /^resources\//)
+    {
+        return sprintf "rrlib_simvis3d_resources_%s", ReplaceSlashesByUnderscores $1 if $component_name =~ /^simvis3d\/(.+)/;
+    }
+
+    if ($directory =~ /^sources\//)
+    {
+        my ($language, $component_name) = $component_name =~ /([^\/]+)\/(.+)/;
+
+        $language = $language eq "cpp" ? "" : sprintf "-%s", $language;
+
+        if ($language eq "-java")
+        {
+            return sprintf "%s%s", ReplaceSlashesByUnderscores $1, $language if $component_name =~ /^org\/(rrlib\/.+)/;
+            return sprintf "%s%s", ReplaceSlashesByUnderscores $1, $language if $component_name =~ /^org\/(finroc\/.+)/;
+            return undef;
+        }
+
+        return sprintf "%s%s", ReplaceSlashesByUnderscores $component_name, $language if $component_name =~ /^rrlib\//;
+        return sprintf "finroc_%s%s", ReplaceSlashesByUnderscores $component_name, $language unless $component_name =~ /^rrlib\//;
+    }
+    
+    return undef;
+}
 
 
 1;
