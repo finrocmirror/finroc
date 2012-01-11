@@ -167,7 +167,6 @@ sub SetEnvironment($) {
 }
 
 # FINROC_HOME
-SetEnvironment sprintf "unset FINROC_HOME";
 SetEnvironment sprintf "export FINROC_HOME=%s", $configuration{"home"};
 
 # FINROC_PROJECT
@@ -179,11 +178,13 @@ SetEnvironment sprintf "unset FINROC_PROJECT_HOME";
 SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"};
 
 # FINROC_TARGET
-SetEnvironment sprintf "unset FINROC_TARGET";
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
 
 # RRLIB_SIMVIS3D_RESOURCES
 SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources/simvis3d:/usr/local/share/rrlib/simvis3d:/usr/share/rrlib/simvis3d", $configuration{"home"};
+
+# RRLIB_LOGGING_PATH
+SetEnvironment sprintf "export RRLIB_LOGGING_PATH=/usr/include:/usr/include/finroc:sources/cpp";
 
 # PATH
 my (@path, @finroc_path, %finroc_path_elements);
