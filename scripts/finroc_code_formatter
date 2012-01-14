@@ -46,14 +46,14 @@ my $astyle_version = `astyle --version 2>&1` or ERRORMSG sprintf "\nCould not ex
 ERRORMSG sprintf "\nWrong astyle version. Please use %s\n", `cat $FINROC_HOME/etc/astyle.version` if $astyle_version ne `cat $FINROC_HOME/etc/astyle.version`;
 
 my %format_flags;
-$format_flags{"cpp"}  = "--style=ansi --convert-tabs --indent-preprocessor --indent=spaces=2 --pad=oper --min-conditional-indent=0 --unpad=paren";
+$format_flags{"cpp"}  = "--style=ansi --indent-preprocessor --indent=spaces=2 --pad-oper --min-conditional-indent=0 --unpad-paren --pad-header";
 $format_flags{"c"}    = $format_flags{"cpp"};
 $format_flags{"cc"}   = $format_flags{"cpp"};
 $format_flags{"cu"}   = $format_flags{"cpp"};
 $format_flags{"h"}    = $format_flags{"cpp"};
 $format_flags{"hpp"}  = $format_flags{"cpp"};
-$format_flags{"java"} = "--mode=java --style=java --convert-tabs --pad=oper --unpad=paren";
-
+$format_flags{"java"} = "--mode=java --style=java --pad=oper --unpad=paren";
+my $shared_flags = "--convert-tabs --lineend=linux";
 
 
 ############################
@@ -162,12 +162,12 @@ my $changes = 0;
 foreach my $filename (sort keys %files)
 {
     my $extension = (reverse split '\.', $filename)[0];
-    ERRORMSG "" unless defined $format_flags{lc $extension};
-    my $command = sprintf "astyle --suffix=.original --options=none %s %s", $format_flags{lc $extension}, $filename;
+    ERRORMSG sprintf "Not format flags specified for extension %s", $extension unless defined $format_flags{lc $extension};
+    my $command = sprintf "astyle --suffix=.original --options=none %s %s %s", $format_flags{lc $extension}, $shared_flags, $filename;
 
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $message = `$command`;
-    $changes += INFOMSG $message if $message =~ /^formatted /;
+    $changes += INFOMSG $message if $message =~ /^formatted /i;
     unlink "$filename.original"
 }
 
