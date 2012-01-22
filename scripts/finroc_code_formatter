@@ -46,14 +46,14 @@ my $astyle_version = `astyle --version 2>&1` or ERRORMSG sprintf "\nCould not ex
 ERRORMSG sprintf "\nWrong astyle version. Please use %s\n", `cat $FINROC_HOME/etc/astyle.version` if $astyle_version ne `cat $FINROC_HOME/etc/astyle.version`;
 
 my %format_flags;
-$format_flags{"cpp"}  = "--style=ansi --indent-preprocessor --indent=spaces=2 --pad-oper --min-conditional-indent=0 --unpad-paren --pad-header";
+$format_flags{"cpp"}  = "--style=ansi --indent-preprocessor --indent=spaces=2 --min-conditional-indent=0";
 $format_flags{"c"}    = $format_flags{"cpp"};
 $format_flags{"cc"}   = $format_flags{"cpp"};
 $format_flags{"cu"}   = $format_flags{"cpp"};
 $format_flags{"h"}    = $format_flags{"cpp"};
 $format_flags{"hpp"}  = $format_flags{"cpp"};
-$format_flags{"java"} = "--mode=java --style=java --pad=oper --unpad=paren";
-my $shared_flags = "--convert-tabs --lineend=linux";
+$format_flags{"java"} = "--mode=java --style=java";
+my $shared_flags = "--convert-tabs --pad-oper --unpad-paren --pad-header --lineend=linux";
 
 
 ############################
