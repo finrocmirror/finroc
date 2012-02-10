@@ -98,9 +98,9 @@ sub AddComponent($$$)
 {
     my ($component_name, $list, $force) = @_;
 
-    DEBUGMSG sprintf "AddComponent(%s, %s) called\n", $component_name, $list;
+    DEBUGMSG sprintf "AddComponent(name=%s, list=%s, force=%s) called\n", $component_name, ($list == \%mandatory_components ? "mandatory" : "optional"), $force;
 
-    return if exists $$list{$component_name} or exists $mandatory_components{$component_name};
+    return if (exists $$list{$component_name} or exists $mandatory_components{$component_name}) and not $force;
 
     DEBUGMSG sprintf "Adding component %s\n", $component_name;
 
@@ -119,6 +119,7 @@ sub AddComponent($$$)
             $debian_name = sprintf "%s-dev", $debian_name if ${ComponentInfo $component_name}{'language'} eq "cpp";
             my $package_info = join "", map { chomp; $_ } `dpkg -l $debian_name 2> /dev/null | grep $debian_name | awk '{print \$1}'`;
             ${$$list{$component_name}}{'installed'} |= $package_info eq "ii";
+            DEBUGMSG sprintf "%s is already installed.\n", $component_name if ${$$list{$component_name}}{'installed'};
         }
     }
 
