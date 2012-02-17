@@ -48,12 +48,12 @@ use FINROC::rcs;
 
 
 my $content_templates = XMLin("$FINROC_HOME/etc/content_templates.xml",
-			      KeyAttr => { 'language' => 'name',
-					   'section' => 'name',
-					   'type' => 'name',
-					   'content' => 'language',
-					   'replace' => 'key'},
-			      ForceArray => [ 'file', 'replace' ]);
+                              KeyAttr => { 'language' => 'name',
+                                           'section' => 'name',
+                                           'type' => 'name',
+                                           'content' => 'language',
+                                           'replace' => 'key'},
+                              ForceArray => [ 'file', 'replace' ]);
 
 # Stupid ForceArray does not work again... Workaround: reorganize structure
 if (exists $$content_templates{'copyright'})
@@ -75,9 +75,9 @@ foreach (keys %{$$content_templates{'content'}})
 {
     if (exists ${$$content_templates{'content'}}{$_}{'section'}{'name'})
     {
-	${$$content_templates{'content'}}{$_}{'section'}{${$$content_templates{'content'}}{$_}{'section'}{'name'}}{'type'} = ${$$content_templates{'content'}}{$_}{'section'}{'type'};
-	delete ${$$content_templates{'content'}}{$_}{'section'}{'name'};
-	delete ${$$content_templates{'content'}}{$_}{'section'}{'type'};
+        ${$$content_templates{'content'}}{$_}{'section'}{${$$content_templates{'content'}}{$_}{'section'}{'name'}}{'type'} = ${$$content_templates{'content'}}{$_}{'section'}{'type'};
+        delete ${$$content_templates{'content'}}{$_}{'section'}{'name'};
+        delete ${$$content_templates{'content'}}{$_}{'section'}{'type'};
     }
 }
 
@@ -109,7 +109,7 @@ foreach (keys %{$$content_templates{'content'}})
 SetHelp undef, {
 #    "-o [frame|content], --output=[frame|content]" => "Create new component frame or content",
 #    "-f <type>, --frame=<type>" => ("Create new component frame, where <type> is one of\n".
-#				    "  finroc_project\n  finroc_library\n  finroc_plugin\n  finroc_tool\n  rrlib"),
+#                                    "  finroc_project\n  finroc_library\n  finroc_plugin\n  finroc_tool\n  rrlib"),
 #    "-c <type>, --content=<type>" => ("Create new content (file), where <type> if one of\n".
 #                                      "  ".join "\n  ", map { s/, /_/g; lc } sort @content_types)
 }, undef;
@@ -224,11 +224,11 @@ unless (defined $$sections{$section}{'members_as_subfolders'} and $$sections{$se
 {
     my @members = map { chomp; basename $_ } `find $base_folder -mindepth 1 -maxdepth 1 -type d -a ! -name ".*"`;
     my $member = $dialog->menu(
-	title => "Member",
-	text => "",
-	list => [ map { ( $_, "" ) } sort @members ],
-	listheight => scalar @members,
-	height => 7 + scalar @members) or exit;
+        title => "Member",
+        text => "",
+        list => [ map { ( $_, "" ) } sort @members ],
+        listheight => scalar @members,
+        height => 7 + scalar @members) or exit;
     $base_folder .= "/$member";
 }
 
@@ -244,29 +244,29 @@ sub SelectSubFolder($)
 
     while (1)
     {
-	my $parent = $base.(length $subfolder ? "/$subfolder" : "");
-	my @folders = map { chomp; basename $_ } `find $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
-	my @options = ( "Create here", "." );
-	push @options, ( "Parent", ".." ) if length $subfolder;
-	my $counter = 1;
-	push @options, map { ( $counter++, $_ ) }sort @folders;
-	my $folder = $dialog->menu(
-	    title => "Select Folder",
-	    text => "$parent",
-	    list => [ @options ],
-	    listheight => 0.5 * scalar @options,
-	    height => 7 + 0.5 * scalar @options) or exit;
+        my $parent = $base.(length $subfolder ? "/$subfolder" : "");
+        my @folders = map { chomp; basename $_ } `find $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
+        my @options = ( "Create here", "." );
+        push @options, ( "Parent", ".." ) if length $subfolder;
+        my $counter = 1;
+        push @options, map { ( $counter++, $_ ) }sort @folders;
+        my $folder = $dialog->menu(
+            title => "Select Folder",
+            text => "$parent",
+            list => [ @options ],
+            listheight => 0.5 * scalar @options,
+            height => 7 + 0.5 * scalar @options) or exit;
 
-	return $parent if $folder eq "Create here";
+        return $parent if $folder eq "Create here";
 
-	if ($folder eq "Parent")
-	{
-	    $subfolder = dirname $subfolder;
-	    $subfolder = "" if $subfolder eq ".";
-	    next;
-	}
+        if ($folder eq "Parent")
+        {
+            $subfolder = dirname $subfolder;
+            $subfolder = "" if $subfolder eq ".";
+            next;
+        }
 
-	$subfolder .= (length $subfolder ? "/" : "").$folders[$folder - 1];
+        $subfolder .= (length $subfolder ? "/" : "").$folders[$folder - 1];
     }
 }
 
@@ -315,15 +315,15 @@ my $name;
 while (1)
 {
     $name = $dialog->inputbox(
-	title => "Name",
-	text => sprintf("Enter name of new %s. (%s)", lc $type, $$types{$type}{'format'}),
-	height => 7) or exit;
+        title => "Name",
+        text => sprintf("Enter name of new %s. (%s)", lc $type, $$types{$type}{'format'}),
+        height => 7) or exit;
     unless (length $name < 3)
     {
-	last if $$types{$type}{'format'} eq "UpperCamelCase" and not BreaksUpperCamelCase $name;
-	last if $$types{$type}{'format'} eq "lowerCamelCase" and not BreaksLowerCamelCase $name;
-	last if $$types{$type}{'format'} eq "lower_case_with_underscore" and not BreaksLowerCaseWithUnderscore $name;
-	last if $$types{$type}{'format'} eq "UPPER_CASE_WITH_UNDERSCORE" and not BreaksLowerCaseWithUnderscore $name;
+        last if $$types{$type}{'format'} eq "UpperCamelCase" and not BreaksUpperCamelCase $name;
+        last if $$types{$type}{'format'} eq "lowerCamelCase" and not BreaksLowerCamelCase $name;
+        last if $$types{$type}{'format'} eq "lower_case_with_underscore" and not BreaksLowerCaseWithUnderscore $name;
+        last if $$types{$type}{'format'} eq "UPPER_CASE_WITH_UNDERSCORE" and not BreaksLowerCaseWithUnderscore $name;
     }
 }
 
@@ -338,7 +338,7 @@ while (1)
 {
     foreach (<STDIN>)
     {
-	$description .= $_;
+        $description .= $_;
     }
     last if scalar @{[ split /\s/, $description ]} > 5;
     printf "Too short! Please give a serious description of your new %s.\n", lc $type;
@@ -367,34 +367,36 @@ foreach (@files)
 
 
 my %common_replacements = ( 'LICENSE' => qq("$$content_templates{'license'}"),
-			    'COPYRIGHT' => qq("$$content_templates{'copyright'}"),
-			    'AUTHOR' => qq("$author"),
-			    'DATE' => strftime("\"%Y-%m-%d\"", localtime time),
-			    'NAME' => qq("$name"),
-#			    'SHORT_DESCRIPTION' => $short_description,
-			    'DESCRIPTION' => qq("$description"),
-			    'FILE' => q("$folder/$filename.$$file{'extension'}")
+                            'COPYRIGHT' => qq("$$content_templates{'copyright'}"),
+                            'AUTHOR' => qq("$author"),
+                            'DATE' => strftime("\"%Y-%m-%d\"", localtime time),
+                            'NAME' => qq("$name"),
+#                            'SHORT_DESCRIPTION' => $short_description,
+                            'DESCRIPTION' => qq("$description"),
+                            'FILE' => q("$folder/$filename.$$file{'extension'}"),
+                            'INDENT_ONE_NAME' => " " x length $name,
+                            'INDENT_TWO_NAMES' => " " x (2 * length $name),
     );
 
 if (exists ${$$languages{$language}}{'replace'})
 {
     foreach (keys %{${$$languages{$language}}{'replace'}})
     {
-	$common_replacements{$_} = qq(${$$languages{$language}}{'replace'}{$_}{'content'});
+        $common_replacements{$_} = qq(${$$languages{$language}}{'replace'}{$_}{'content'});
     }
 }
 if (exists ${$$sections{$section}}{'replace'})
 {
     foreach (keys %{${$$sections{$section}}{'replace'}})
     {
-	$common_replacements{$_} = qq(${$$sections{$section}}{'replace'}{$_}{'content'});
+        $common_replacements{$_} = qq(${$$sections{$section}}{'replace'}{$_}{'content'});
     }
 }
 if (exists ${$$types{$type}}{'replace'})
 {
     foreach (keys %{${$$types{$type}}{'replace'}})
     {
-	$common_replacements{$_} = qq(${$$types{$type}}{'replace'}{$_}{'content'});
+        $common_replacements{$_} = qq(${$$types{$type}}{'replace'}{$_}{'content'});
     }
 }
 
@@ -405,7 +407,7 @@ foreach my $file (@files)
     my %replacements;
     foreach (keys %common_replacements)
     {
-	$replacements{$_} = eval $common_replacements{$_} or die;
+        $replacements{$_} = eval $common_replacements{$_} or die;
     }
 
     my $template = `echo -n $$file{'template'}`;
@@ -413,17 +415,17 @@ foreach my $file (@files)
     open TARGET, ">$$file{'path'}" or die sprintf "Could not open target '%s': %s\n", $$file{'path'}, $!;
     foreach my $line (<TEMPLATE>)
     {
-	while ($line =~ /%%([^%]+)%%/)
-	{
-	    my $replacement = $1;
-	    $replacement = $replacements{$1} if exists $replacements{$1};
-	    if ($line =~ /^(.+)%%[^%]+%%/)
-	    {
-		$replacement = join "\n$1", split /\n/, $replacement;
-	    }
-	    $line =~ s/%%[^%]+%%/$replacement/;
-	}
-	print TARGET $line;
+        while ($line =~ /%%([^%]+)%%/)
+        {
+            my $replacement = $1;
+            $replacement = $replacements{$1} if exists $replacements{$1};
+            if ($line =~ /^(.+)%%[^%]+%%/)
+            {
+                $replacement = join "\n$1", split /\n/, $replacement;
+            }
+            $line =~ s/%%[^%]+%%/$replacement/;
+        }
+        print TARGET $line;
     }
     close TARGET;
     close TEMPLATE;
