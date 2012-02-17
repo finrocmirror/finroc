@@ -1,0 +1,476 @@
+#!/usr/bin/perl -w
+
+# You received this file as part of Finroc
+# A framework for integrated robot control
+# 
+# Copyright (C) Finroc GbR (finroc.org)
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    finroc_create
+#
+# \author  Tobias Foehst
+#
+# \date    2012-01-17
+#
+#----------------------------------------------------------------------
+
+use strict;
+
+use Env '$FINROC_HOME';
+use Env '$USER';
+use UI::Dialog::Console;
+use XML::Simple;
+use File::Basename;
+use Data::Dumper;
+use POSIX qw(strftime);
+use open qw(:std :utf8);
+
+use lib "$FINROC_HOME/scripts/perl";
+use FINROC::messages;
+use FINROC::getopt;
+use FINROC::sources;
+use FINROC::components;
+use FINROC::rcs;
+
+
+my $content_templates = XMLin("$FINROC_HOME/etc/content_templates.xml",
+			      KeyAttr => { 'language' => 'name',
+					   'section' => 'name',
+					   'type' => 'name',
+					   'content' => 'language',
+					   'replace' => 'key'},
+			      ForceArray => [ 'file', 'replace' ]);
+
+# Stupid ForceArray does not work again... Workaround: reorganize structure
+if (exists $$content_templates{'copyright'})
+{
+    $$content_templates{'copyright'} = join "\n", map { s/^\s+//; $_ } split /\n/, $$content_templates{'copyright'};
+    $$content_templates{'copyright'} =~ s/^\s//;
+    $$content_templates{'copyright'} =~ s/\s$//;
+    $$content_templates{'license'} = join "\n", map { s/^\s+//; $_ } split /\n/, $$content_templates{'license'};
+    $$content_templates{'license'} =~ s/^\s//;
+    $$content_templates{'license'} =~ s/\s$//;
+}
+if (exists ${$$content_templates{'content'}}{'language'})
+{
+    ${$$content_templates{'content'}}{${$$content_templates{'content'}}{'language'}}{'section'} = ${$$content_templates{'content'}}{'section'};
+    delete ${$$content_templates{'content'}}{'language'};
+    delete ${$$content_templates{'content'}}{'section'};
+}
+foreach (keys %{$$content_templates{'content'}})
+{
+    if (exists ${$$content_templates{'content'}}{$_}{'section'}{'name'})
+    {
+	${$$content_templates{'content'}}{$_}{'section'}{${$$content_templates{'content'}}{$_}{'section'}{'name'}}{'type'} = ${$$content_templates{'content'}}{$_}{'section'}{'type'};
+	delete ${$$content_templates{'content'}}{$_}{'section'}{'name'};
+	delete ${$$content_templates{'content'}}{$_}{'section'}{'type'};
+    }
+}
+
+foreach (keys %{$$content_templates{'content'}})
+{
+    ERRORMSG "Language $_ not declared. Content templates are not reachable.\n", unless exists $$content_templates{'language'}{$_};
+}
+
+#exit;
+
+
+
+#my @content_types = ("Part", "Module", "Group", "Class", "Declarations, Functions, Utilities");
+#
+#my %content_types;
+#
+#foreach my $plugins_path (`find $FINROC_HOME/sources -type d -name "plugins"`)
+#{
+#    my $language = (split "/", substr($plugins_path, length "$FINROC_HOME/sources/"))[0];
+#    print "$language\n";
+#}
+
+
+
+############################
+##  Command line options  ##
+############################
+
+SetHelp undef, {
+#    "-o [frame|content], --output=[frame|content]" => "Create new component frame or content",
+#    "-f <type>, --frame=<type>" => ("Create new component frame, where <type> is one of\n".
+#				    "  finroc_project\n  finroc_library\n  finroc_plugin\n  finroc_tool\n  rrlib"),
+#    "-c <type>, --content=<type>" => ("Create new content (file), where <type> if one of\n".
+#                                      "  ".join "\n  ", map { s/, /_/g; lc } sort @content_types)
+}, undef;
+
+ParseCommandLine [ "output:s", "frame:s" ], sub {
+#    if (defined GetCommandLineOption "output")
+#    {
+#        ERRORMSG "Possible values for --output: frame|content\n" unless (GetCommandLineOption "output") =~ /^(frame|content)$/;
+#    }
+};
+
+
+####################
+##  Setup dialog  ##
+####################
+
+my $dialog = new UI::Dialog::Console(
+    backtitle => "Finroc",
+    title => "",
+    height => 15,
+    width => 72,
+    debug => 0);
+
+my $base_folder = $FINROC_HOME;
+
+sub UpdateBaseFolder($)
+{
+    my ($xml_node) = @_;
+    $base_folder .= "/$$xml_node{'folder'}" if exists $$xml_node{'folder'};
+}
+
+
+############################
+##  Programming language  ##
+############################
+
+my $languages = $$content_templates{'language'};
+my $language = $dialog->menu(
+    title => "Programming Language",
+    text => "",
+    list => [ map { ($_, $$languages{$_}{'description'}) } sort keys %{$languages}],
+    listheight => scalar keys %{$languages},
+    height => 7 + scalar keys %{$languages}) or exit;
+
+UpdateBaseFolder $$languages{$language};
+
+my $language_folder = $base_folder;
+
+
+###############
+##  Section  ##
+###############
+
+my $sections = $$content_templates{'content'}{$language}{'section'};
+my $section = $dialog->menu(
+    title => "Section",
+    text => "",
+    list => [ map { ( $_, "" ) } sort keys %{$sections} ],
+    listheight => scalar keys %{$sections},
+    height => 7 + scalar keys %{$sections}) or exit;
+
+UpdateBaseFolder $$sections{$section};
+
+
+####################
+##  Content type  ##
+####################
+
+my $types = $$content_templates{'content'}{$language}{'section'}{$section}{'type'};
+my $type = $dialog->menu(
+    title => "Content Type",
+    text => "",
+    list => [ map { ($_, $$types{$_}{'description'} ) } sort keys %{$types} ],
+    listheight => scalar keys %{$types},
+    height => 7 + scalar keys %{$types}) or exit;
+
+UpdateBaseFolder $$types{$type};
+
+
+#########################
+##  Files to generate  ##
+#########################
+
+my @optional_files = grep { defined $$_{'optional'} and $$_{'optional'} eq "true" } @{$$types{$type}{'file'}};
+my @files = grep { not defined $$_{'optional'} or $$_{'optional'} eq "false" } @{$$types{$type}{'file'}};
+
+my $counter = 1;
+my @selected_files = $dialog->checklist(
+    title => "Optional Files",
+    text => "Select optional files to generate.",
+    list => [ map { ( $counter++, [ $$_{'name'}, (defined $$_{'preselected'} and $$_{'preselected'} eq "true") ] ) } @optional_files ],
+    listheight =>  scalar @optional_files,
+    height =>  7 + scalar @optional_files) or exit;
+
+foreach (@selected_files)
+{
+    push @files, $optional_files[$_ - 1];
+}
+
+unless (scalar $$types{$type})
+{
+    INFOMSG "Nothing to do!\n";
+    exit;
+}
+
+
+#################
+##  Subfolder  ##
+#################
+
+unless (defined $$sections{$section}{'members_as_subfolders'} and $$sections{$section}{'members_as_subfolders'} eq "false")
+{
+    my @members = map { chomp; basename $_ } `find $base_folder -mindepth 1 -maxdepth 1 -type d -a ! -name ".*"`;
+    my $member = $dialog->menu(
+	title => "Member",
+	text => "",
+	list => [ map { ( $_, "" ) } sort @members ],
+	listheight => scalar @members,
+	height => 7 + scalar @members) or exit;
+    $base_folder .= "/$member";
+}
+
+
+##############
+##  Folder  ##
+##############
+
+sub SelectSubFolder($)
+{
+    my ($base) = @_;
+    my $subfolder = "";
+
+    while (1)
+    {
+	my $parent = $base.(length $subfolder ? "/$subfolder" : "");
+	my @folders = map { chomp; basename $_ } `find $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
+	my @options = ( "Create here", "." );
+	push @options, ( "Parent", ".." ) if length $subfolder;
+	my $counter = 1;
+	push @options, map { ( $counter++, $_ ) }sort @folders;
+	my $folder = $dialog->menu(
+	    title => "Select Folder",
+	    text => "$parent",
+	    list => [ @options ],
+	    listheight => 0.5 * scalar @options,
+	    height => 7 + 0.5 * scalar @options) or exit;
+
+	return $parent if $folder eq "Create here";
+
+	if ($folder eq "Parent")
+	{
+	    $subfolder = dirname $subfolder;
+	    $subfolder = "" if $subfolder eq ".";
+	    next;
+	}
+
+	$subfolder .= (length $subfolder ? "/" : "").$folders[$folder - 1];
+    }
+}
+
+my $folder = SelectSubFolder $base_folder;
+$folder = substr $folder, 1 + length $language_folder;
+
+############
+##  Name  ##
+############
+
+sub BreaksUpperCamelCase($)
+{
+    my ($string) = @_;
+    map { return 1 if $_ eq " " } split //, $string;
+    map { return 1 if $_ eq "_" } split //, $string;
+    return 1 if substr($string, 0, 1) ne uc substr $string, 0, 1;
+    return 0;
+}
+
+sub BreaksLowerCamelCase($)
+{
+    my ($string) = @_;
+    map { return 1 if $_ eq " " } split //, $string;
+    map { return 1 if $_ eq "_" } split //, $string;
+    return 1 if substr($string, 0, 1) ne lc substr $string, 0, 1;
+    return 0;
+}
+
+sub BreaksLowerCaseWithUnderscore($)
+{
+    my ($string) = @_;
+    map { return 1 if $_ eq " " } split //, $string;
+    map { return 1 if $_ ne lc $_ } split //, $string;
+    return 0;
+}
+
+sub BreaksUpperCaseWithUnderscore($)
+{
+    my ($string) = @_;
+    map { return 1 if $_ eq " " } split //, $string;
+    map { return 1 if $_ ne uc $_ } split //, $string;
+    return 0;
+}
+
+my $name;
+while (1)
+{
+    $name = $dialog->inputbox(
+	title => "Name",
+	text => sprintf("Enter name of new %s. (%s)", lc $type, $$types{$type}{'format'}),
+	height => 7) or exit;
+    unless (length $name < 3)
+    {
+	last if $$types{$type}{'format'} eq "UpperCamelCase" and not BreaksUpperCamelCase $name;
+	last if $$types{$type}{'format'} eq "lowerCamelCase" and not BreaksLowerCamelCase $name;
+	last if $$types{$type}{'format'} eq "lower_case_with_underscore" and not BreaksLowerCaseWithUnderscore $name;
+	last if $$types{$type}{'format'} eq "UPPER_CASE_WITH_UNDERSCORE" and not BreaksLowerCaseWithUnderscore $name;
+    }
+}
+
+
+###################
+##  Description  ##
+###################
+
+printf "Describe your new %s %s. Use one empty line to start a new paragraph and ctrl-d when you are done.\n", lc $type, $name;
+my $description;
+while (1)
+{
+    foreach (<STDIN>)
+    {
+	$description .= $_;
+    }
+    last if scalar @{[ split /\s/, $description ]} > 5;
+    printf "Too short! Please give a serious description of your new %s.\n", lc $type;
+}
+
+
+##############
+##  AUTHOR  ##
+##############
+
+my $author = ${[ split ",", ${[split ":", join "", map { chomp; $_ } `getent passwd \$USER`]}[4] ]}[0];
+$author = UI::ReadValue "Author's full name", undef, $author;
+
+
+#############
+##  FILES  ##
+#############
+
+my $filename = $name;
+$filename = eval ${$$types{$type}}{'filename'} if exists ${$$types{$type}}{'filename'};
+foreach (@files)
+{
+    $$_{'path'} = "$language_folder/$folder/$filename.$$_{'extension'}";
+    die "$$_{'path'} already exists!\n" if -f $$_{'path'};
+}
+
+
+my %common_replacements = ( 'LICENSE' => qq("$$content_templates{'license'}"),
+			    'COPYRIGHT' => qq("$$content_templates{'copyright'}"),
+			    'AUTHOR' => qq("$author"),
+			    'DATE' => strftime("\"%Y-%m-%d\"", localtime time),
+			    'NAME' => qq("$name"),
+#			    'SHORT_DESCRIPTION' => $short_description,
+			    'DESCRIPTION' => qq("$description"),
+			    'FILE' => q("$folder/$filename.$$file{'extension'}")
+    );
+
+if (exists ${$$languages{$language}}{'replace'})
+{
+    foreach (keys %{${$$languages{$language}}{'replace'}})
+    {
+	$common_replacements{$_} = qq(${$$languages{$language}}{'replace'}{$_}{'content'});
+    }
+}
+if (exists ${$$sections{$section}}{'replace'})
+{
+    foreach (keys %{${$$sections{$section}}{'replace'}})
+    {
+	$common_replacements{$_} = qq(${$$sections{$section}}{'replace'}{$_}{'content'});
+    }
+}
+if (exists ${$$types{$type}}{'replace'})
+{
+    foreach (keys %{${$$types{$type}}{'replace'}})
+    {
+	$common_replacements{$_} = qq(${$$types{$type}}{'replace'}{$_}{'content'});
+    }
+}
+
+foreach my $file (@files)
+{
+    INFOMSG sprintf "Creating new file '%s' ... ", $$file{'path'};
+    
+    my %replacements;
+    foreach (keys %common_replacements)
+    {
+	$replacements{$_} = eval $common_replacements{$_} or die;
+    }
+
+    my $template = `echo -n $$file{'template'}`;
+    open TEMPLATE, "<$template" or die sprintf "Could not open template '%s': %s\n", $template, $!;
+    open TARGET, ">$$file{'path'}" or die sprintf "Could not open target '%s': %s\n", $$file{'path'}, $!;
+    foreach my $line (<TEMPLATE>)
+    {
+	while ($line =~ /%%([^%]+)%%/)
+	{
+	    my $replacement = $1;
+	    $replacement = $replacements{$1} if exists $replacements{$1};
+	    if ($line =~ /^(.+)%%[^%]+%%/)
+	    {
+		$replacement = join "\n$1", split /\n/, $replacement;
+	    }
+	    $line =~ s/%%[^%]+%%/$replacement/;
+	}
+	print TARGET $line;
+    }
+    close TARGET;
+    close TEMPLATE;
+
+    INFOMSG "done\n";
+}
+
+exit;
+
+
+#my $output_type = lc $dialog->menu(
+#    title => "What to create?",
+#    text => "...",
+#    list => [ "Content", "Classes, Modules, Groups, Parst or plain Files",
+#              "Frame", "Components like projects, libraries, plugins or tools" ],
+#    height => 9) or exit 0;
+#
+#if ($output_type eq "frame")
+#{
+#    my $finroc_or_rrlib = lc $dialog->menu(
+#        title => "Create component",
+#        text => "...",
+#        list => [ "Finroc", "...",
+#                  "RRlib", "..." ]) or exit 0;
+#
+#    my $component_type = "rrlib";
+#    if ($finroc_or_rrlib eq "finroc")
+#    {
+#        $component_type = lc $dialog->menu(
+#            title => "Create Finroc component",
+#            text => "...",
+#            list => [ "Project", "...",
+#                      "Library", "...",
+#                      "Plugin", "...",
+#                      "Tool", "..." ]) or exit 0;
+#        $component_type = "finroc_".$component_type;
+#    }
+#}
+#
+#
+#if ($output_type eq "content")
+#{
+#    
+#}
+
+
+
+
+
+exit 0;

@@ -1,0 +1,80 @@
+//
+// %%INTRO%%
+//
+// Copyright (C) %%COPYRIGHT%%
+//
+// %%LICENSE%%
+//
+//----------------------------------------------------------------------
+/*!\file    %%FILE%%
+ *
+ * \author  %%AUTHOR%%
+ *
+ * \date    %%DATE%%
+ *
+ * \brief Contains g%%NAME%%
+ *
+ * \b g%%NAME%%
+ *
+ * %%DESCRIPTION%%
+ *
+ */
+//----------------------------------------------------------------------
+#ifndef %%SENTINEL%%
+#define %%SENTINEL%%
+
+#include "core/structure/tGroup.h"
+
+//----------------------------------------------------------------------
+// External includes (system with <>, local with "")
+//----------------------------------------------------------------------
+#include "core/finstructable/tFinstructableGroup.h"
+
+//----------------------------------------------------------------------
+// Internal includes with ""
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Namespace declaration
+//----------------------------------------------------------------------
+%%OPEN_NAMESPACE%%
+
+//----------------------------------------------------------------------
+// Forward declarations / typedefs / enums
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Class declaration
+//----------------------------------------------------------------------
+//! %%SHORT_DESCRIPTION%%
+/*!
+ * %%DESCRIPTION%%
+ */
+class g%%NAME%% : public core::structure::tGroup
+{
+  static core::tStandardCreateModuleAction<g%%NAME%%> cCREATE_ACTION;
+
+//----------------------------------------------------------------------
+// Ports (These are the only variables that may be declared public)
+//----------------------------------------------------------------------
+public:
+
+  tControllerInput<> ci_signal_1;
+
+//----------------------------------------------------------------------
+// Public methods and typedefs
+//----------------------------------------------------------------------
+public:
+
+  g%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%",
+    %%INDENT_ONE_NAME%%const finroc::util::tString &structure_config_file = __FILE__".xml");
+
+};
+
+//----------------------------------------------------------------------
+// End of namespace declaration
+//----------------------------------------------------------------------
+%%CLOSE_NAMESPACE
+%%INCLUDE_HPP%%
+
+#endif
