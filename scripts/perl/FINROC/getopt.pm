@@ -64,7 +64,12 @@ sub SetHelp($$$)
     $help .= sprintf $format_string, "-v, --verbose", "more output for debugging";
     foreach my $key (keys %$options)
     {
-        $help .= sprintf $format_string, $key, $$options{$key};
+	my @help_string_parts = split "\n", $$options{$key};
+	$help .= sprintf $format_string, $key, shift @help_string_parts;
+	foreach (@help_string_parts)
+	{
+	    $help .= sprintf $format_string, "", "$_";
+	}
     }
     $help .= "\n";
     $help .= sprintf "%s\n", $additional_text if defined $additional_text;

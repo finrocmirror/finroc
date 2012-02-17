@@ -47,7 +47,7 @@ use FINROC::terminal;
 SetHelp undef,
 {
     "-u <username>, --username=<username>" => "use <username> to get access to repositories",
-    "-p <password, --password=<password>" => "use <password> to get access to repositories"
+    "-p <password>, --password=<password>" => "use <password> to get access to repositories"
 }, undef;
 
 ParseCommandLine [ "optional=s", "username=s", "password=s" ], undef;
