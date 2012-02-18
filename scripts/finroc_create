@@ -374,8 +374,8 @@ my %common_replacements = ( 'LICENSE' => qq("$$content_templates{'license'}"),
 #                            'SHORT_DESCRIPTION' => $short_description,
                             'DESCRIPTION' => qq("$description"),
                             'FILE' => q("$folder/$filename.$$file{'extension'}"),
-                            'INDENT_ONE_NAME' => " " x length $name,
-                            'INDENT_TWO_NAMES' => " " x (2 * length $name),
+                            'INDENT_ONE_NAME' => q(" " x length $name),
+                            'INDENT_TWO_NAMES' => q(" " x (2 * length $name)),
     );
 
 if (exists ${$$languages{$language}}{'replace'})
