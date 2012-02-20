@@ -83,5 +83,5 @@ foreach my $class (@$classes)
 }
 print "\n  return 0;\n";
 print "}\n\n";
-print "int cINIT = InitializePortNames();\n\n";
+print "static int cINIT = InitializePortNames();\n\n";
 print "}\n}\n";
