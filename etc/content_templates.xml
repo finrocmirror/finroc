@@ -28,7 +28,7 @@
       return sprintf "__%s_h__", $result;
     </replace>
     <replace key="HEADER_PATH">
-      "$folder/$filename.h.template"
+      "$folder/$filename.h"
     </replace>
     <replace key="OPEN_NAMESPACE">
       "namespace finroc\n{\nnamespace ".join("\n{\nnamespace ", split /\//, $folder)."\n{"

@@ -246,7 +246,7 @@ sub SelectSubFolder($)
     {
         my $parent = $base.(length $subfolder ? "/$subfolder" : "");
         my @folders = map { chomp; basename $_ } `find $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
-        my @options = ( "Create here", "." );
+        my @options = ( "Create here", ".", "New folder", "" );
         push @options, ( "Parent", ".." ) if length $subfolder;
         my $counter = 1;
         push @options, map { ( $counter++, $_ ) }sort @folders;
@@ -263,6 +263,19 @@ sub SelectSubFolder($)
         {
             $subfolder = dirname $subfolder;
             $subfolder = "" if $subfolder eq ".";
+            next;
+        }
+
+        if ($folder eq "New folder")
+        {
+            my $new_folder = $dialog->inputbox(
+                title => "Create new folder",
+                text => "$parent");
+            if ($new_folder)
+            {
+                mkdir "$parent/$new_folder" or die "Could not create new folder: $!";
+                $subfolder .= "$new_folder";
+            }
             next;
         }
 
