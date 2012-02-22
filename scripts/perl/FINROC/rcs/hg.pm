@@ -229,12 +229,6 @@ sub Update($$$)
     DEBUGMSG $output;
     return "." if $?;
 
-    $command = sprintf "hg --cwd %s pull", $directory;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-    $output = join "", `$command`;
-    DEBUGMSG $output;
-    ERRORMSG "Command failed!\n" if $?;
-
     $command = sprintf "hg --cwd %s st -q", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     $output = join "", `$command`;
@@ -246,6 +240,12 @@ sub Update($$$)
     $output = join "", `$command`;
     DEBUGMSG $output;
     return "O" unless $?;
+
+    $command = sprintf "hg --cwd %s pull", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    $output = join "", `$command`;
+    DEBUGMSG $output;
+    ERRORMSG "Command failed!\n" if $?;
 
     $command = sprintf "hg --cwd %s update", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
