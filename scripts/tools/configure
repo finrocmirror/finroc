@@ -30,20 +30,16 @@
 
 use strict;
 
-use Getopt::Long;
 use Data::Dumper;
+use Config;
 
 use lib "scripts/perl";
 use FINROC::messages;
-use FINROC::getopt;
+use FINROC::getopt; 
 
 # config file
 my $config_filename = ".finroc.conf";
 
-# platform
-#use Config;
-#my $platform = $Config{archname};
-my $platform = `python -c 'import sys\nimport platform\nsys.stdout.write(platform.machine()+"_"+platform.system())'`;
 
 
 ############################
@@ -52,19 +48,14 @@ my $platform = `python -c 'import sys\nimport platform\nsys.stdout.write(platfor
 
 SetHelp undef,
 {
-    "-p <project>, --project=<project>" => "override project name",
+    "-p <project>, --project=<project>" => "set project name",
     "-l [<language>], --language=[<language>]" => "programming language",
-    "-t <target>, --target=<target>" => "target name - default: debug",
+    "-a <architecture>, --architecture=<architecture>" => "cross-compiling - default: auto",
+    "-o <operating_system>, --operating-system=<operating_system>" => "cross-compiling - default: auto",
+    "-m <mode>, --mode=<mode>" => "compile mode - default: debug",
 }, undef;
 
-ParseCommandLine [ "project=s", "language:s", "target=s" ], sub
-{
-    if (defined GetCommandLineOption "target")
-    {
-        my $target = sprintf "%s_%s", $platform, GetCommandLineOption "target";
-        ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
-    }
-};
+ParseCommandLine [ "project=s", "language:s", "architecture=s", "operating-system=s", "mode=s" ], undef;
 
 
 
@@ -96,7 +87,20 @@ foreach my $option (GetCommandLineOptions)
 # default values if not set
 $configuration{"project"} = undef unless defined $configuration{"project"} and $configuration{"project"} ne "";
 $configuration{"language"} = undef unless defined $configuration{"language"} and $configuration{"language"} ne "";
-$configuration{"target"} = "debug" unless defined $configuration{"target"} and $configuration{"target"} ne "";
+$configuration{"architecture"} = "auto" unless defined $configuration{"architecture"} and $configuration{"architecture"} ne "";
+$configuration{"operating-system"} = "auto" unless defined $configuration{"operating-system"} and $configuration{"operating-system"} ne "";
+$configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
+
+# check target
+my $architecture = $configuration{"architecture"};
+$architecture = lc $1 if $architecture eq "auto" and $Config{'archname'} =~ /([^-]+)(-.*)?/;
+my $operating_system = $configuration{"operating-system"};
+$operating_system = lc $Config{'osname'} if $operating_system eq "auto";
+my $target = sprintf "%s_%s_%s", $architecture, $operating_system, lc $configuration{"mode"};
+if (defined $configuration{"mode"})
+{
+    ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
+}
 
 # check existence of project
 if (defined $configuration{"project"})
@@ -130,7 +134,9 @@ foreach my $option (keys %configuration)
 close CONFIG;
 
 # additional configuration
-$configuration{"target"} = sprintf "%s_%s", $platform, $configuration{"target"};
+$configuration{"architecture"} = $architecture;
+$configuration{"operating-system"} = $operating_system;
+$configuration{"target"} = $target;
 use Cwd;
 $configuration{"home"} = getcwd;
 $configuration{"project_home"} = sprintf "%s/sources/%s/projects/%s", $configuration{"home"}, $configuration{'language'}, $configuration{"project"} if defined $configuration{"project"};
@@ -176,6 +182,15 @@ SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if 
 # FINROC_PROJECT_HOME
 SetEnvironment sprintf "unset FINROC_PROJECT_HOME";
 SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"};
+
+# FINROC_OPERATING_SYSTEM
+SetEnvironment sprintf "export FINROC_OPERATING_SYSTEM=%s", $configuration{"operating-system"};
+
+# FINROC_ARCHITECTURE
+SetEnvironment sprintf "export FINROC_ARCHITECTURE=%s", $configuration{"architecture"};
+
+# FINROC_MODE
+SetEnvironment sprintf "export FINROC_MODE=%s", $configuration{"mode"};
 
 # FINROC_TARGET
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
