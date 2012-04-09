@@ -3,7 +3,7 @@
 //
 // Copyright (C) %%COPYRIGHT%%
 //
-// $$LICENSE%%
+// %%LICENSE%%
 //
 //----------------------------------------------------------------------
 /*!\file    %%FILE%%
@@ -11,6 +11,12 @@
  * \author  %%AUTHOR%%
  *
  * \date    %%DATE%%
+ *
+ * \brief Contains m%%NAME%%
+ *
+ * \b p%%NAME%%
+ *
+ * %%DESCRIPTION%%
  *
  */
 //----------------------------------------------------------------------
@@ -23,8 +29,8 @@
 //----------------------------------------------------------------------
 // Internal includes with ""
 //----------------------------------------------------------------------
-//%%INCLUDE_MODULE_HEADER%%
-%%INCLUDE_GROUP_HEADER%%
+//#include "%%GROUP_HEADER_PATH%%"
+#include "%%MODULE_HEADER_PATH%%"
 
 //----------------------------------------------------------------------
 // Debugging
@@ -42,7 +48,7 @@
 //----------------------------------------------------------------------
 // Const values
 //----------------------------------------------------------------------
-const char * const cPROGRAM_VERSION = "ver 1.0";
+const char * const cPROGRAM_VERSION = "1.0";
 const char * const cPROGRAM_DESCRIPTION = "This program executes the %%NAME%% module/group.";
 
 //----------------------------------------------------------------------
@@ -58,10 +64,10 @@ void StartUp()
 //----------------------------------------------------------------------
 // InitMainGroup
 //----------------------------------------------------------------------
-void InitMainGroup(finroc::core::tThreadContainer *main_thread, std::vector<char*> remaining_args)
+void InitMainGroup(finroc::core::tThreadContainer *main_thread, std::vector<char *> remaining_args)
 {
 
-  new finroc::%%NAMESPACE%%::m%%NAME%%(main_thread);
+  new %%NAMESPACE%%::m%%NAME%%(main_thread);
 
   main_thread->SetCycleTime(500);
 }

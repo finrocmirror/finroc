@@ -58,6 +58,9 @@ my $content_templates = XMLin("$FINROC_HOME/etc/content_templates.xml",
 # Stupid ForceArray does not work again... Workaround: reorganize structure
 if (exists $$content_templates{'copyright'})
 {
+    $$content_templates{'intro'} = join "\n", map { s/^\s+//; $_ } split /\n/, $$content_templates{'intro'};
+    $$content_templates{'intro'} =~ s/^\s//;
+    $$content_templates{'intro'} =~ s/\s$//;
     $$content_templates{'copyright'} = join "\n", map { s/^\s+//; $_ } split /\n/, $$content_templates{'copyright'};
     $$content_templates{'copyright'} =~ s/^\s//;
     $$content_templates{'copyright'} =~ s/\s$//;
@@ -204,12 +207,14 @@ my @selected_files = $dialog->checklist(
     listheight =>  scalar @optional_files,
     height =>  7 + scalar @optional_files) or exit;
 
+@selected_files = () if scalar @selected_files == 1 and not $selected_files[0];
+
 foreach (@selected_files)
 {
     push @files, $optional_files[$_ - 1];
 }
 
-unless (scalar $$types{$type})
+unless (scalar @files)
 {
     INFOMSG "Nothing to do!\n";
     exit;
@@ -245,11 +250,12 @@ sub SelectSubFolder($)
     while (1)
     {
         my $parent = $base.(length $subfolder ? "/$subfolder" : "");
-        my @folders = map { chomp; basename $_ } `find $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
+        my @folders = sort map { chomp; basename $_ } `find $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
         my @options = ( "Create here", ".", "New folder", "" );
         push @options, ( "Parent", ".." ) if length $subfolder;
         my $counter = 1;
-        push @options, map { ( $counter++, $_ ) }sort @folders;
+        push @options, map { ( $counter++, $_ ) } @folders;
+
         my $folder = $dialog->menu(
             title => "Select Folder",
             text => "$parent",
@@ -378,8 +384,8 @@ foreach (@files)
     die "$$_{'path'} already exists!\n" if -f $$_{'path'};
 }
 
-
-my %common_replacements = ( 'LICENSE' => qq("$$content_templates{'license'}"),
+my %common_replacements = ( 'INTRO' => qq("$$content_templates{'intro'}"),
+                            'LICENSE' => qq("$$content_templates{'license'}"),
                             'COPYRIGHT' => qq("$$content_templates{'copyright'}"),
                             'AUTHOR' => qq("$author"),
                             'DATE' => strftime("\"%Y-%m-%d\"", localtime time),

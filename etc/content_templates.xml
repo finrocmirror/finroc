@@ -1,7 +1,7 @@
 <content_templates>
   <intro>
     You received this file as part of Finroc
-    A Framework for integrated robot control
+    A Framework for intelligent robot control
   </intro>
   <copyright>
     Finroc GbR (finroc.org)
@@ -125,6 +125,12 @@
         <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/misc.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
       </type>
+      <replace key="MODULE_HEADER_PATH">
+        "$folder/m$name.h"
+      </replace>
+      <replace key="GROUP_HEADER_PATH">
+        "$folder/g$name.h"
+      </replace>
     </section>
     <section name="Finroc Tools" folder="tools">
       <type name="Part" description="Finroc Part (Executable)" format="UpperCamelCase" filename="qq(p$name)">
