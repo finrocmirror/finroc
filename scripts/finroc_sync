@@ -34,6 +34,7 @@ use Env '$FINROC_HOME';
 use Env '$FINROC_PROJECT_HOME';
 use Data::Dumper;
 use XML::Simple;
+use Net::Ping;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
@@ -133,9 +134,10 @@ sub Transfer($$$$$)
     my $rsync_options = "-avP";
     $rsync_options .= "n" if defined GetCommandLineOption "simulate";
 
-    my $command = sprintf "rsync %s --rsync-path='mkdir -p %s && rsync' %s %s%s%s/", $rsync_options, $directory, $files, $username, $hostname, $directory;
+    my $command = sprintf "rsync %s --exclude=.svn --rsync-path='mkdir -p %s && rsync' %s %s%s%s", $rsync_options, $directory, $files, $username, $hostname, $directory;
     DEBUGMSG sprintf "command = '%s'\n", $command;
     system $command;
+    ERRORMSG "Sync failed!\n" if $?;
 }
 
 
@@ -144,6 +146,7 @@ sub Transfer($$$$$)
 #  Process targets  #
 #####################
 
+my $check_host = Net::Ping->new();
 foreach my $target (@{$$sync_config{'target'}})
 {
     my %target = %{$target};
@@ -164,6 +167,12 @@ foreach my $target (@{$$sync_config{'target'}})
     DEBUGMSG sprintf "hostname = '%s'.\n", $hostname if defined $hostname;
     DEBUGMSG sprintf "username = '%s'.\n", $username if defined $username;
 
+    unless ($check_host->ping($hostname))
+    {
+        INFOMSG sprintf "Target '%s' not reachable. Skipping.\n", $target{'name'};
+        next;
+    }
+
     my $bin = $target{'directories'}{'bin'}{'content'};
     my $lib = $target{'directories'}{'lib'}{'content'};
     my $etc = $target{'directories'}{'etc'}{'content'};
@@ -176,10 +185,11 @@ foreach my $target (@{$$sync_config{'target'}})
     DEBUGMSG sprintf "etc target directory = '%s'.\n", $etc if defined $etc;
 
     my @libraries;
-    foreach my $transfer_block (@{$target{'programs'}})
+    foreach my $transfer_block ((@{$target{'programs'}}, @{$$sync_config{'programs'}}))
     {
         my @binaries;
         DEBUGMSG Dumper \$transfer_block;
+        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
         foreach my $source (split " ", $$transfer_block{'content'})
         {
 #            my $binary = $source =~ /\// ? $source : sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
@@ -202,25 +212,28 @@ foreach my $target (@{$$sync_config{'target'}})
     my %seen;
     Transfer $hostname, $username, $lib, undef, join " ", grep { !$seen{$_}++ } @libraries if @libraries;
 
-    foreach my $transfer_block (@{$target{'config'}})
+    foreach my $transfer_block ((@{$target{'config'}}, @{$$sync_config{'config'}}))
     {
         DEBUGMSG Dumper \$transfer_block;
 
         my $prefix = "";
         $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
+        $prefix = sprintf "$MCAPROJECTHOME/etc/%s", $prefix unless $prefix =~ /^\//;
 
+        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
         my @files = split " ", $$transfer_block{'content'};
 
         Transfer $hostname, $username, $etc, $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
     }
 
-    foreach my $transfer_block (@{$target{'misc'}})
+    foreach my $transfer_block ((@{$target{'misc'}}, @{$$sync_config{'misc'}}))
     {
         DEBUGMSG Dumper \$transfer_block;
 
         my $prefix = "";
         $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
 
+        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
         my @files = split " ", $$transfer_block{'content'};
 
         Transfer $hostname, $username, "", $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
