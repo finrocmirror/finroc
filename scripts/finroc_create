@@ -97,7 +97,7 @@ foreach (keys %{$$content_templates{'content'}})
 #
 #my %content_types;
 #
-#foreach my $plugins_path (`find $FINROC_HOME/sources -type d -name "plugins"`)
+#foreach my $plugins_path (`find -L $FINROC_HOME/sources -type d -name "plugins"`)
 #{
 #    my $language = (split "/", substr($plugins_path, length "$FINROC_HOME/sources/"))[0];
 #    print "$language\n";
@@ -227,7 +227,7 @@ unless (scalar @files)
 
 unless (defined $$sections{$section}{'members_as_subfolders'} and $$sections{$section}{'members_as_subfolders'} eq "false")
 {
-    my @members = map { chomp; basename $_ } `find $base_folder -mindepth 1 -maxdepth 1 -type d -a ! -name ".*"`;
+    my @members = map { chomp; basename $_ } `find -L $base_folder -mindepth 1 -maxdepth 1 -type d -a ! -name ".*"`;
     my $member = $dialog->menu(
         title => "Member",
         text => "",
@@ -250,7 +250,7 @@ sub SelectSubFolder($)
     while (1)
     {
         my $parent = $base.(length $subfolder ? "/$subfolder" : "");
-        my @folders = sort map { chomp; basename $_ } `find $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
+        my @folders = sort map { chomp; basename $_ } `find -L $parent -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
         my @options = ( "Create here", ".", "New folder", "" );
         push @options, ( "Parent", ".." ) if length $subfolder;
         my $counter = 1;
@@ -383,6 +383,7 @@ foreach (@files)
     $$_{'path'} = "$language_folder/$folder/$filename.$$_{'extension'}";
     die "$$_{'path'} already exists!\n" if -f $$_{'path'};
 }
+
 
 my %common_replacements = ( 'INTRO' => qq("$$content_templates{'intro'}"),
                             'LICENSE' => qq("$$content_templates{'license'}"),
