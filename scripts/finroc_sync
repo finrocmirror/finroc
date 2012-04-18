@@ -169,7 +169,7 @@ foreach my $target (@{$$sync_config{'target'}})
 
     unless ($check_host->ping($hostname))
     {
-        INFOMSG sprintf "Target '%s' not reachable. Skipping.\n", $target{'name'};
+        WARNMSG sprintf "Target '%s' is not reachable. Skipping.\n", $target{'name'};
         next;
     }
 
