@@ -1,0 +1,5 @@
+CFLAGS=-ggdb
+CXXFLAGS=$(CFLAGS) -std=gnu++0x
+NVCC_FLAGS=-g -G
+LIBNAME_CUDART=cudart
+LIBNAME_CUFFT=cufft
