@@ -175,7 +175,7 @@ sub SetEnvironment($) {
 }
 
 # FINROC_HOME
-SetEnvironment sprintf "export FINROC_HOME=%s", $configuration{"home"};
+SetEnvironment sprintf "export FINROC_HOME=\"%s\"", $configuration{"home"};
 
 # FINROC_PROJECT
 SetEnvironment sprintf "unset FINROC_PROJECT";
@@ -183,7 +183,7 @@ SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if 
 
 # FINROC_PROJECT_HOME
 SetEnvironment sprintf "unset FINROC_PROJECT_HOME";
-SetEnvironment sprintf "export FINROC_PROJECT_HOME=%s", $configuration{"project_home"} if defined $configuration{"project_home"};
+SetEnvironment sprintf "export FINROC_PROJECT_HOME=\"%s\"", $configuration{"project_home"} if defined $configuration{"project_home"};
 
 # FINROC_ARCHITECTURE
 SetEnvironment sprintf "export FINROC_ARCHITECTURE=%s", $configuration{"architecture"};
@@ -201,17 +201,17 @@ SetEnvironment sprintf "export FINROC_MODE=%s", $configuration{"mode"};
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
 
 # RRLIB_SIMVIS3D_RESOURCES
-SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=%s/resources/simvis3d:/usr/local/share/rrlib/simvis3d:/usr/share/rrlib/simvis3d", $configuration{"home"};
+SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=\"%s\"/resources/simvis3d:/usr/local/share/rrlib/simvis3d:/usr/share/rrlib/simvis3d", $configuration{"home"};
 
 # RRLIB_LOGGING_PATH
 SetEnvironment sprintf "export RRLIB_LOGGING_PATH=/usr/include:/usr/include/finroc:sources/cpp";
 
 # PATH
 my (@path, @finroc_path, %finroc_path_elements);
-push @finroc_path, sprintf "%s/export/%s/bin", $configuration{"home"}, $configuration{"target"};
-push @finroc_path, sprintf "%s/scripts", $configuration{"project_home"} if defined $configuration{"project_home"};
-push @finroc_path, sprintf "%s/scripts", $configuration{"home"};
-push @finroc_path, sprintf "%s/make_builder/scripts", $configuration{"home"};
+push @finroc_path, sprintf "\"%s\"/export/%s/bin", $configuration{"home"}, $configuration{"target"};
+push @finroc_path, sprintf "\"%s\"/scripts", $configuration{"project_home"} if defined $configuration{"project_home"};
+push @finroc_path, sprintf "\"%s\"/scripts", $configuration{"home"};
+push @finroc_path, sprintf "\"%s\"/make_builder/scripts", $configuration{"home"};
 
 if (exists $ENV{"PATH"})
 {
@@ -225,7 +225,7 @@ SetEnvironment 'export PATH=$FINROC_PATH:$PATH';
 
 # LD_LIBRARY_PATH
 my (@ld_library_path, @finroc_ld_library_path, %finroc_ld_library_path_elements);
-push @finroc_ld_library_path, sprintf "%s/export/%s/lib", $configuration{"home"}, $configuration{"target"};
+push @finroc_ld_library_path, sprintf "\"%s\"/export/%s/lib", $configuration{"home"}, $configuration{"target"};
 push @finroc_ld_library_path, sprintf "/usr/lib/gluegen";
 push @finroc_ld_library_path, sprintf "/usr/lib/jogl";
 
