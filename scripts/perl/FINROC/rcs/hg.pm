@@ -80,7 +80,7 @@ sub ManageCredentials($$$)
     unless (%hgrc_sections)
     {
         my $current_section;
-        foreach (map { chomp; $_} `cat $HOME/.hgrc`)
+        foreach (map { chomp; $_} `cat "$HOME/.hgrc"`)
         {
             s/^\s*//;
             s/\s*$//;
@@ -187,7 +187,7 @@ sub GetPath($$)
 {
     my ($directory, $path_alias) = @_;
     
-    my $command = sprintf "hg --cwd %s path %s", $directory, $path_alias;
+    my $command = sprintf "hg --cwd \"%s\" path %s", $directory, $path_alias;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", map { chomp; $_ } `$command 2> /dev/null`;
     DEBUGMSG $output;
@@ -208,7 +208,7 @@ sub Checkout($$$$)
     system "mkdir -p $target_base";
     ERRORMSG "Command failed!\n" if $?;
 
-    my $command = sprintf "hg clone %s %s", $url, $target;
+    my $command = sprintf "hg clone %s \"%s\"", $url, $target;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
@@ -223,31 +223,31 @@ sub Update($$$)
 
     ManageCredentials $default_path, $username, $password;
 
-    my $command = sprintf "hg --cwd %s in", $directory;
+    my $command = sprintf "hg --cwd \"%s\" in", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;
     return "." if $?;
 
-    $command = sprintf "hg --cwd %s st -q", $directory;
+    $command = sprintf "hg --cwd \"%s\" st -q", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     $output = join "", `$command`;
     DEBUGMSG $output;
     return "M" unless $output eq "";
 
-    $command = sprintf "hg --cwd %s out", $directory;
+    $command = sprintf "hg --cwd \"%s\" out", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     $output = join "", `$command`;
     DEBUGMSG $output;
     return "O" unless $?;
 
-    $command = sprintf "hg --cwd %s pull", $directory;
+    $command = sprintf "hg --cwd \"%s\" pull", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     $output = join "", `$command`;
     DEBUGMSG $output;
     ERRORMSG "Command failed!\n" if $?;
 
-    $command = sprintf "hg --cwd %s update", $directory;
+    $command = sprintf "hg --cwd \"%s\" update", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     $output = join "", `$command`;
     DEBUGMSG $output;
@@ -269,7 +269,7 @@ sub Status($$$)
     if (defined $pull_path and $incoming)
     {
         ManageCredentials $pull_path, undef, undef;
-        my $command = sprintf "hg --cwd %s in", $directory;
+        my $command = sprintf "hg --cwd \"%s\" in", $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
         my $output = join "", `$command`;
         DEBUGMSG $output;
@@ -279,14 +279,14 @@ sub Status($$$)
     if (defined $push_path and not $local_modifications_only)
     {
         ManageCredentials $push_path, undef, undef;
-        my $command = sprintf "hg --cwd %s out", $directory;
+        my $command = sprintf "hg --cwd \"%s\" out", $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
         my $output = join "", `$command`;
         DEBUGMSG $output;
         $result .= sprintf "%sOutgoing changesets:\n\n%s\n", ($result ne "" ? "\n" : ""), join "\n", grep { /^(changeset|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
     }
 
-    my $command = sprintf "hg --cwd %s st", $directory;
+    my $command = sprintf "hg --cwd \"%s\" st", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;
@@ -300,7 +300,7 @@ sub IsOnDefaultBranch($)
 {
     my ($directory) = @_;
 
-    my $command = sprintf "hg --cwd %s branch", $directory;
+    my $command = sprintf "hg --cwd \"%s\" branch", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
 
     return "default" eq join "", map { chomp; $_ } `$command`;
@@ -310,7 +310,7 @@ sub ParentDateUTCTimestamp($)
 {
     my ($directory) = @_;
 
-    my $command = sprintf "hg --cwd %s parent --template '{date}'", $directory;
+    my $command = sprintf "hg --cwd \"%s\" parent --template '{date}'", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
 
     return int join "", map { /^(.*)((-|\+).*)$/ ? $1 + $2 : $_ } `$command`;

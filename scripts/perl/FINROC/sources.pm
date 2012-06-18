@@ -62,7 +62,7 @@ sub GetAllComponents()
         my $xml_content = "";
         if (-f "$FINROC_HOME/.offline/$offline_source.xml" and time < ${[stat _]}[9] + 10)
         {
-            $xml_content = join "", `cat $FINROC_HOME/.offline/$offline_source.xml 2> /dev/null`;
+            $xml_content = join "", `cat "$FINROC_HOME/.offline/$offline_source.xml" 2> /dev/null`;
         }
         else
         {
@@ -141,7 +141,7 @@ ERRORMSG sprintf "File '%s' does not exist!\n", $sources_list_filename unless -f
 DEBUGMSG sprintf "Using file %s\n", $sources_list_filename;
 
 my $rank = 0;
-foreach my $source (map { chomp; $_ } `cat $sources_list_filename`)
+foreach my $source (map { chomp; $_ } `cat "$sources_list_filename"`)
 {
     $source =~ s/^\s*//;
     $source =~ s/\s*$//;

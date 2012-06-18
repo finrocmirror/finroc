@@ -196,7 +196,7 @@ foreach my $target (@{$$sync_config{'target'}})
             my $binary = sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
             ERRORMSG sprintf "Can not find program '%s'!\n", $source if $binary eq "";
             push @binaries, $binary;
-            foreach (split "\n", `ldd $binary`)
+            foreach (split "\n", `ldd "$binary"`)
             {
                 s/^\s*//;
                 ERRORMSG sprintf "Can not resolve all dependencies. Try a rebuild and check your environment.\n" if /=> not found/;
@@ -218,7 +218,7 @@ foreach my $target (@{$$sync_config{'target'}})
 
         my $prefix = "";
         $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
-        $prefix = sprintf "$MCAPROJECTHOME/etc/%s", $prefix unless $prefix =~ /^\//;
+        $prefix = sprintf "$FINROC_PROJECT_HOME/etc/%s", $prefix unless $prefix =~ /^\//;
 
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
         my @files = split " ", $$transfer_block{'content'};
@@ -236,7 +236,7 @@ foreach my $target (@{$$sync_config{'target'}})
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
         my @files = split " ", $$transfer_block{'content'};
 
-        Transfer $hostname, $username, "", $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
+        Transfer $hostname, $username, "", $$transfer_block{'subdir'}, join " ", map { "\"$prefix$_\"" } @files if @files;
     }
 
     INFOMSG "Done.\n";

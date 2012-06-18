@@ -201,17 +201,17 @@ SetEnvironment sprintf "export FINROC_MODE=%s", $configuration{"mode"};
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
 
 # RRLIB_SIMVIS3D_RESOURCES
-SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=\"%s\"/resources/simvis3d:/usr/local/share/rrlib/simvis3d:/usr/share/rrlib/simvis3d", $configuration{"home"};
+SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=\"%s/resources/simvis3d\":/usr/local/share/rrlib/simvis3d:/usr/share/rrlib/simvis3d", $configuration{"home"};
 
 # RRLIB_LOGGING_PATH
 SetEnvironment sprintf "export RRLIB_LOGGING_PATH=/usr/include:/usr/include/finroc:sources/cpp";
 
 # PATH
 my (@path, @finroc_path, %finroc_path_elements);
-push @finroc_path, sprintf "\"%s\"/export/%s/bin", $configuration{"home"}, $configuration{"target"};
-push @finroc_path, sprintf "\"%s\"/scripts", $configuration{"project_home"} if defined $configuration{"project_home"};
-push @finroc_path, sprintf "\"%s\"/scripts", $configuration{"home"};
-push @finroc_path, sprintf "\"%s\"/make_builder/scripts", $configuration{"home"};
+push @finroc_path, sprintf "%s/export/%s/bin", $configuration{"home"}, $configuration{"target"};
+push @finroc_path, sprintf "%s/scripts", $configuration{"project_home"} if defined $configuration{"project_home"};
+push @finroc_path, sprintf "%s/scripts", $configuration{"home"};
+push @finroc_path, sprintf "%s/make_builder/scripts", $configuration{"home"};
 
 if (exists $ENV{"PATH"})
 {
@@ -219,13 +219,13 @@ if (exists $ENV{"PATH"})
     eval { push @path, $_ unless exists $finroc_path_elements{$_} } foreach (split ":", $ENV{"PATH"});
 }
 
-SetEnvironment sprintf "export PATH=%s", join ":", @path;
-SetEnvironment sprintf "export FINROC_PATH=%s", join ":", @finroc_path;
+SetEnvironment sprintf "export PATH=%s", join ":", map { "\"$_\"" } @path;
+SetEnvironment sprintf "export FINROC_PATH=%s", join ":", map { "\"$_\"" } @finroc_path;
 SetEnvironment 'export PATH=$FINROC_PATH:$PATH';
 
 # LD_LIBRARY_PATH
 my (@ld_library_path, @finroc_ld_library_path, %finroc_ld_library_path_elements);
-push @finroc_ld_library_path, sprintf "\"%s\"/export/%s/lib", $configuration{"home"}, $configuration{"target"};
+push @finroc_ld_library_path, sprintf "%s/export/%s/lib", $configuration{"home"}, $configuration{"target"};
 push @finroc_ld_library_path, sprintf "/usr/lib/gluegen";
 push @finroc_ld_library_path, sprintf "/usr/lib/jogl";
 
@@ -235,8 +235,8 @@ if (exists $ENV{"LD_LIBRARY_PATH"})
     eval { push @ld_library_path, $_ unless exists $finroc_ld_library_path_elements{$_} } foreach (split ":", $ENV{"LD_LIBRARY_PATH"});
 }
 
-SetEnvironment sprintf "export LD_LIBRARY_PATH=%s", join ":", @ld_library_path;
-SetEnvironment sprintf "export FINROC_LD_LIBRARY_PATH=%s", join ":", @finroc_ld_library_path;
+SetEnvironment sprintf "export LD_LIBRARY_PATH=%s", join ":", map { "\"$_\"" } @ld_library_path;
+SetEnvironment sprintf "export FINROC_LD_LIBRARY_PATH=%s", join ":", map { "\"$_\"" } @finroc_ld_library_path;
 SetEnvironment 'export LD_LIBRARY_PATH=$FINROC_LD_LIBRARY_PATH:$LD_LIBRARY_PATH';
 
 

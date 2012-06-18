@@ -50,7 +50,7 @@ ParseCommandLine undef, undef;
 ##  Find hg directories  ##
 ###########################
 
-my @hg_directories = split "\n", `find $FINROC_HOME -name ".hg"`;
+my @hg_directories = split "\n", `find "$FINROC_HOME" -name ".hg"`;
 
 DEBUGMSG Dumper \@hg_directories;
 

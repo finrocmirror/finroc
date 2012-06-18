@@ -31,12 +31,12 @@
 #
 #----------------------------------------------------------------------
 
-if [ -z $FINROC_HOME ] ; then
+if [ -z "$FINROC_HOME" ] ; then
     echo "You have to source scripts/setenv from your Finroc directory first."
     exit 1
 fi
 
-cd $FINROC_HOME
+cd "$FINROC_HOME"
 doxygen documentation/cpp/Doxyfile
 doxygen documentation/java/Doxyfile
 cd -

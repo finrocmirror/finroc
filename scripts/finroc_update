@@ -113,11 +113,11 @@ sub UpdateList($$)
 
 UpdateList "make_builder", [ "$FINROC_HOME/make_builder" ];
 
-UpdateList "core", [ map { chomp; $_ } `find $FINROC_HOME/sources -maxdepth 4 -name "core" 2> /dev/null` ];
+UpdateList "core", [ map { chomp; $_ } `find "$FINROC_HOME/sources" -maxdepth 4 -name "core" 2> /dev/null` ];
 
 foreach my $class ( "rrlib", "libraries", "tools", "plugins", "projects" )
 {
-    UpdateList $class, [ map { chomp; my $base = $_; map { chomp; sprintf "%s/%s", $base, $_ } `ls $_` } `find $FINROC_HOME/sources -name "$class" 2> /dev/null` ];
+    UpdateList $class, [ map { chomp; my $base = $_; map { chomp; sprintf "%s/%s", $base, $_ } `ls $_` } `find "$FINROC_HOME/sources" -name "$class" 2> /dev/null` ];
 }
 
 UpdateList "finroc", [ "$FINROC_HOME" ];

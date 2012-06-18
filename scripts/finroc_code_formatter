@@ -163,7 +163,7 @@ foreach my $filename (sort keys %files)
 {
     my $extension = (reverse split '\.', $filename)[0];
     ERRORMSG sprintf "No format flags specified for extension %s!\n", $extension unless defined $format_flags{lc $extension};
-    my $command = sprintf "astyle --suffix=.original --options=none %s %s %s", $format_flags{lc $extension}, $shared_flags, $filename;
+    my $command = sprintf "astyle --suffix=.original --options=none %s %s '%s'", $format_flags{lc $extension}, $shared_flags, $filename;
 
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $message = `$command`;

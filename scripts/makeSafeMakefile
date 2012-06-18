@@ -19,8 +19,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-[ -z $FINROC_HOME ] && source scripts/setenv ""
-cd $FINROC_HOME
+[ -z "$FINROC_HOME" ] && source scripts/setenv ""
+cd "$FINROC_HOME"
 make -C make_builder
 rm Makefile
 [ "x$FINROC_LOCAL" == "xno" ] && USE_SYSTEM_INSTALL=--usesysteminstall

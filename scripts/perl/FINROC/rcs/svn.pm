@@ -26,9 +26,6 @@
 #
 #----------------------------------------------------------------------
 package FINROC::rcs::svn;
-use Exporter;
-@ISA = qw/Exporter/;
-@EXPORT = qw//;
 
 use strict;
 
@@ -50,7 +47,7 @@ sub Checkout($$$$)
     $credentials = sprintf " --username=%s", $username if defined $username;
     $credentials .= sprintf " --password=%s", $password if defined $password;
 
-    my $command = sprintf "svn co --ignore-externals %s %s %s", $credentials, $url, $target;
+    my $command = sprintf "svn co --ignore-externals %s \"%s\" \"%s\"", $credentials, $url, $target;
     INFOMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
@@ -64,7 +61,7 @@ sub Update($$$)
     $credentials = sprintf " --username=%s", $username if defined $username;
     $credentials .= sprintf " --password=%s", $password if defined $password;
 
-    my $command = sprintf "svn up --ignore-externals --accept postpone %s %s", $credentials, $directory;
+    my $command = sprintf "svn up --ignore-externals --accept postpone %s \"%s\"", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;
@@ -79,7 +76,7 @@ sub Status($$$)
 {
     my ($directory, $local_modifications_only, $incoming) = @_;
 
-    my $command = sprintf "svn st --ignore-externals %s", $directory;
+    my $command = sprintf "svn st --ignore-externals \"%s\"", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;
@@ -93,7 +90,7 @@ sub IsOnDefaultBranch($)
 {
     my ($directory) = @_;
 
-    my $command = sprintf "svn info --xml %s", $directory;
+    my $command = sprintf "svn info --xml \"%s\"", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
 
     return ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'url'} =~ /trunk$/;
@@ -103,7 +100,7 @@ sub ParentDateUTCTimestamp($)
 {
     my ($directory) = @_;
 
-    my $command = sprintf "svn info --xml %s", $directory;
+    my $command = sprintf "svn info --xml \"%s\"", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
 
     return int parsedate ${XMLin join "", `$command`}{'entry'}{'commit'}{'date'};

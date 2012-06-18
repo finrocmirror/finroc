@@ -32,7 +32,7 @@
 
 
 # setup finroc environment
-if [ -z $FINROC_HOME ] ; then
+if [ -z "$FINROC_HOME" ] ; then
     if [ -z $1 ] ; then
         echo 1>&2
         echo "Could not determine \$FINROC_HOME." 1>&2
@@ -43,7 +43,7 @@ if [ -z $FINROC_HOME ] ; then
             source scripts/setenv &> /dev/null
             cd - &> /dev/null
         fi
-        if [ -z $FINROC_HOME ] ; then
+        if [ -z "$FINROC_HOME" ] ; then
             echo 1>&2
             echo "'$1' is not valid as \$FINROC_HOME." 1>&2
             exit 1
@@ -51,7 +51,7 @@ if [ -z $FINROC_HOME ] ; then
     fi
 fi
 
-if [ -z $FINROC_HOME ] ; then
+if [ -z "$FINROC_HOME" ] ; then
     echo 1>&2
     echo "Either source scripts/setenv from \$FINROC_HOME or specify" 1>&2
     echo "\$FINROC_HOME as command line argument to this script." 1>&2
