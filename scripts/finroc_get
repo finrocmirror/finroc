@@ -111,7 +111,7 @@ sub AddComponent($$$)
     unless ($force)
     {
         my $release_description = `lsb_release -d`;
-        if ($release_description =~ /(debian|ubuntu)/i)
+        if ($release_description =~ /(debian|buntu)/i)
         {
             my $debian_name = $component_name;
             $debian_name =~ s/_/-/g;

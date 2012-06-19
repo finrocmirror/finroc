@@ -90,8 +90,8 @@ foreach my $hg_directory (@hg_directories)
         1;
     };
 
-    $hooks{"precommit.finroc_code_formatter"} = sprintf "%s/scripts/hg_hooks/precommit.finroc_code_formatter %s", $FINROC_HOME, $FINROC_HOME;
-    $hooks{"pretxncommit.author"} = sprintf "%s/scripts/hg_hooks/pretxncommit.author", $FINROC_HOME;
+    $hooks{"precommit.finroc_code_formatter"} = sprintf "\"%s/scripts/hg_hooks/precommit.finroc_code_formatter\" %s", $FINROC_HOME, $FINROC_HOME;
+    $hooks{"pretxncommit.author"} = sprintf "\"%s/scripts/hg_hooks/pretxncommit.author\"", $FINROC_HOME;
 
     DEBUGMSG $content;
     DEBUGMSG Dumper \%hooks;

@@ -144,7 +144,7 @@ foreach my $class (@classes)
 {
     foreach my $base (map { chomp; $_ } `find "$FINROC_HOME/sources" -name "$class" 2> /dev/null`)
     {
-        map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls $base`;
+        map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls "$base"`;
     }
 }
 
