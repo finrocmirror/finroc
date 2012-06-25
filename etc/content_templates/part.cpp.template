@@ -29,8 +29,8 @@
 //----------------------------------------------------------------------
 // Internal includes with ""
 //----------------------------------------------------------------------
-//#include "%%GROUP_HEADER_PATH%%"
 #include "%%MODULE_HEADER_PATH%%"
+//#include "%%GROUP_HEADER_PATH%%"
 
 //----------------------------------------------------------------------
 // Debugging
@@ -68,6 +68,7 @@ void InitMainGroup(finroc::core::tThreadContainer *main_thread, std::vector<char
 {
 
   new %%NAMESPACE%%::m%%NAME%%(main_thread);
+//  new %%NAMESPACE%%::g%%NAME%%(main_thread);
 
   main_thread->SetCycleTime(500);
 }

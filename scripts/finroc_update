@@ -37,7 +37,7 @@ use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
-use FINROC::rcs;
+use FINROC::scm;
 use FINROC::terminal;
 
 ############################

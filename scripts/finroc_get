@@ -38,7 +38,7 @@ use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
 use FINROC::components;
-use FINROC::rcs;
+use FINROC::scm;
 
 ############################
 ##  Command line options  ##

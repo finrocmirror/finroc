@@ -25,10 +25,7 @@
 # \date    2010-05-27
 #
 #----------------------------------------------------------------------
-package FINROC::rcs::hg;
-use Exporter;
-@ISA = qw/Exporter/;
-@EXPORT = qw//;
+package FINROC::scm::hg;
 
 use strict;
 

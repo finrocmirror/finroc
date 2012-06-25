@@ -25,7 +25,7 @@
 # \date    2010-05-27
 #
 #----------------------------------------------------------------------
-package FINROC::rcs::svn;
+package FINROC::scm::svn;
 
 use strict;
 

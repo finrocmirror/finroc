@@ -31,13 +31,13 @@
       "$folder/$filename.h"
     </replace>
     <replace key="OPEN_NAMESPACE">
-      "namespace finroc\n{\nnamespace ".join("\n{\nnamespace ", split /\//, $folder)."\n{"
+      "namespace finroc\n{\nnamespace ".join("\n{\nnamespace ", split /\//, eval { my $v = $folder; $v =~ s/^(libraries|projects|plugins)\///; $v })."\n{"
     </replace>
     <replace key="CLOSE_NAMESPACE">
-      "}"."\n}" x scalar @{[ split /\//, $folder ]}
+      "}"."\n}" x scalar @{[ split /\//, eval { my $v = $folder; $v =~ s/^(libraries|projects|plugins)\///; $v } ]}
     </replace>
     <replace key="NAMESPACE">
-      "finroc::".join("::", split /\//, $folder)
+      "finroc::".join("::", split /\//, eval { my $v = $folder; $v =~ s/^(libraries|projects|plugins)\///; $v })
     </replace>
     <replace key="INCLUDE_HPP">
       (grep { $$_{'extension'} eq "hpp" } @files) ? "\n#include \"$folder/$filename.h\"\n" : "\n"

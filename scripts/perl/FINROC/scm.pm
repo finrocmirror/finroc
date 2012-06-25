@@ -18,14 +18,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 #----------------------------------------------------------------------
-# \file    rcs.pm
+# \file    scm.pm
 #
 # \author  Tobias Foehst
 #
 # \date    2010-05-27
 #
 #----------------------------------------------------------------------
-package FINROC::rcs;
+package FINROC::scm;
 use Exporter;
 @ISA = qw/Exporter/;
 @EXPORT = qw/Checkout Update Status IsOnDefaultBranch ParentDateUTCTimestamp/;
@@ -39,20 +39,20 @@ use Data::Dumper;
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 
-use FINROC::rcs::hg;
-use FINROC::rcs::svn;
+use FINROC::scm::hg;
+use FINROC::scm::svn;
 
-sub GetRCSNameOfWorkingCopy($)
+sub GetSCMNameOfWorkingCopy($)
 {
     my ($directory) = @_;
 
-    my $rcs_name;
-    $rcs_name = "hg" if -d "$directory/.hg";
-    $rcs_name = "svn" if -d "$directory/.svn";
+    my $scm_name;
+    $scm_name = "hg" if -d "$directory/.hg";
+    $scm_name = "svn" if -d "$directory/.svn";
 
-    DEBUGMSG sprintf "Revision control system: %s\n", defined $rcs_name ? $rcs_name : "<unknown>";
+    DEBUGMSG sprintf "Source code management system: %s\n", defined $scm_name ? $scm_name : "<unknown>";
 
-    return $rcs_name;
+    return $scm_name;
 }
 
 sub Checkout($$$$)
@@ -62,16 +62,16 @@ sub Checkout($$$$)
     ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $target if -f $target;
     ERRORMSG sprintf "'%s' already exists\n", $target if -e $target;
 
-    my $rcs_name = @{[ reverse split "/", $url ]}[1];
+    my $scm_name = @{[ reverse split "/", $url ]}[1];
 
-    ERRORMSG sprintf "Could not determine revision control system for URL '%s'!\n", $url unless defined $rcs_name and $rcs_name ne "";
+    ERRORMSG sprintf "Could not determine source code management system for URL '%s'!\n", $url unless defined $scm_name and $scm_name ne "";
 
     $url = sprintf "'%s'", $url;
     $target = sprintf "'%s'", $target;
     $username = defined $username ? sprintf "'%s'", $username : "undef";
     $password = defined $password ? sprintf "'%s'", $password : "undef";
 
-    eval sprintf "FINROC::rcs::%s::Checkout(%s, %s, %s, %s)", $rcs_name, $url, $target, $username, $password;
+    eval sprintf "FINROC::scm::%s::Checkout(%s, %s, %s, %s)", $scm_name, $url, $target, $username, $password;
     ERRORMSG $@ if $@;
 }
 
@@ -79,16 +79,16 @@ sub Update($$$)
 {
     my ($directory, $username, $password) = @_;
 
-    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+    my $scm_name = GetSCMNameOfWorkingCopy $directory;
 
-    return "_" unless defined $rcs_name;
+    return "_" unless defined $scm_name;
 
     $directory = sprintf "'%s'", $directory;
     $username = defined $username ? sprintf "'%s'", $username : "undef";
     $password = defined $password ? sprintf "'%s'", $password : "undef";
 
     my $result;
-    eval sprintf "\$result = FINROC::rcs::%s::Update(%s, %s, %s)", $rcs_name, $directory, $username, $password;
+    eval sprintf "\$result = FINROC::scm::%s::Update(%s, %s, %s)", $scm_name, $directory, $username, $password;
     ERRORMSG $@ if $@;
 
     return $result;
@@ -98,14 +98,14 @@ sub Status($$$)
 {
     my ($directory, $local_modifications_only, $incoming) = @_;
 
-    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+    my $scm_name = GetSCMNameOfWorkingCopy $directory;
 
-    return "" unless defined $rcs_name;
+    return "" unless defined $scm_name;
 
     $directory = sprintf "'%s'", $directory;
 
     my $result;
-    eval sprintf "\$result = FINROC::rcs::%s::Status(%s, %s, %s)", $rcs_name, $directory, $local_modifications_only, $incoming;
+    eval sprintf "\$result = FINROC::scm::%s::Status(%s, %s, %s)", $scm_name, $directory, $local_modifications_only, $incoming;
     ERRORMSG $@ if $@;
 
     return $result;
@@ -115,14 +115,14 @@ sub IsOnDefaultBranch($)
 {
     my ($directory) = @_;
 
-    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+    my $scm_name = GetSCMNameOfWorkingCopy $directory;
 
-    ERRORMSG sprintf "Could not determine revision control system in '%s'!\n", $directory unless defined $rcs_name and $rcs_name ne "";
+    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
 
     $directory = sprintf "'%s'", $directory;
 
     my $result;
-    eval sprintf "\$result = FINROC::rcs::%s::IsOnDefaultBranch(%s)", $rcs_name, $directory;
+    eval sprintf "\$result = FINROC::scm::%s::IsOnDefaultBranch(%s)", $scm_name, $directory;
     ERRORMSG $@ if $@;
 
     return $result;
@@ -132,14 +132,14 @@ sub ParentDateUTCTimestamp($)
 {
     my ($directory) = @_;
 
-    my $rcs_name = GetRCSNameOfWorkingCopy $directory;
+    my $scm_name = GetSCMNameOfWorkingCopy $directory;
 
-    ERRORMSG sprintf "Could not determine revision control system in '%s'!\n", $directory unless defined $rcs_name and $rcs_name ne "";
+    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
 
     $directory = sprintf "'%s'", $directory;
 
     my $result;
-    eval sprintf "\$result = FINROC::rcs::%s::ParentDateUTCTimestamp(%s)", $rcs_name, $directory;
+    eval sprintf "\$result = FINROC::scm::%s::ParentDateUTCTimestamp(%s)", $scm_name, $directory;
     ERRORMSG $@ if $@;
 
     return $result;
