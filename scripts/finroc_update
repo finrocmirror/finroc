@@ -39,6 +39,7 @@ use FINROC::getopt;
 use FINROC::sources;
 use FINROC::scm;
 use FINROC::terminal;
+use FINROC::components;
 
 ############################
 ##  Command line options  ##
@@ -62,6 +63,7 @@ my @updated;
 my @conflicts;
 my @modified;
 my @outgoing;
+my @check_dependencies;
 
 sub UpdateWorkingCopy($$)
 {
@@ -75,6 +77,8 @@ sub UpdateWorkingCopy($$)
     INFOMSG $current_output;
 
     my $result = Update $directory, GetCommandLineOption "username", GetCommandLineOption "password";
+
+    push @check_dependencies, GetComponentNameFromDirectory $directory if $result ne "_";
 
     $directory =~ s/$FINROC_HOME/\$FINROC_HOME/;
 
@@ -123,7 +127,11 @@ foreach my $class ( "rrlib", "libraries", "tools", "plugins", "projects" )
 UpdateList "finroc", [ "$FINROC_HOME" ];
 
 INFOMSG "Checking for new dependencies...\n";
-`finroc_status -c | xargs finroc_get -o no -y`;
+if (@check_dependencies)
+{
+    my $check_dependencies = join " ", grep { defined } @check_dependencies;
+    `finroc_get -o no -y $check_dependencies`;
+}
 INFOMSG "Done.\n";
 
 
