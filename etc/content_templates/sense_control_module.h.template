@@ -1,0 +1,106 @@
+//
+// %%INTRO%%
+//
+// Copyright (C) %%COPYRIGHT%%
+//
+// %%LICENSE%%
+//
+//----------------------------------------------------------------------
+/*!\file    %%FILE%%
+ *
+ * \author  %%AUTHOR%%
+ *
+ * \date    %%DATE%%
+ *
+ * \brief Contains m%%NAME%%
+ *
+ * \b m%%NAME%%
+ *
+ * %%DESCRIPTION%%
+ *
+ */
+//----------------------------------------------------------------------
+#ifndef %%SENTINEL%%
+#define %%SENTINEL%%
+
+#include "core/structure/tSenseControlModule.h"
+
+//----------------------------------------------------------------------
+// External includes (system with <>, local with "")
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Internal includes with ""
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Namespace declaration
+//----------------------------------------------------------------------
+%%OPEN_NAMESPACE%%
+
+//----------------------------------------------------------------------
+// Forward declarations / typedefs / enums
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Class declaration
+//----------------------------------------------------------------------
+//! %%SHORT_DESCRIPTION%%
+/*!
+ * %%DESCRIPTION%%
+ */
+class m%%NAME%% : public core::structure::tSenseControlModule
+{
+  static core::tStandardCreateModuleAction<m%%NAME%%> cCREATE_ACTION;
+
+//----------------------------------------------------------------------
+// Ports (These are the only variables that may be declared public)
+//----------------------------------------------------------------------
+public:
+
+  tControllerInput<double> ci_signal_1;
+  tControllerInput<double> ci_signal_2;
+
+  tControllerOutput<double> co_signal_3;
+
+  tSensorInput<double> si_signal_1;
+  tSensorInput<double> si_signal_2;
+
+  tSensorOutput<double> so_signal_3;
+
+//----------------------------------------------------------------------
+// Public methods and typedefs
+//----------------------------------------------------------------------
+public:
+
+  m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%");
+
+  ~m%%NAME%%();
+
+  void SomeMethod();
+
+//----------------------------------------------------------------------
+// Protected methods
+//----------------------------------------------------------------------
+protected:
+
+  virtual void Control();
+
+  virtual void Sense();
+
+//----------------------------------------------------------------------
+// Private fields and methods
+//----------------------------------------------------------------------
+private:
+
+  double some_value;
+
+};
+
+//----------------------------------------------------------------------
+// End of namespace declaration
+//----------------------------------------------------------------------
+%%CLOSE_NAMESPACE%%
+%%INCLUDE_HPP%%
+
+#endif
