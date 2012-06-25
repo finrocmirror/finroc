@@ -122,6 +122,9 @@ foreach my $class ( "rrlib", "libraries", "tools", "plugins", "projects" )
 
 UpdateList "finroc", [ "$FINROC_HOME" ];
 
+INFOMSG "Checking for new dependencies...\n";
+`finroc_status -c | xargs finroc_get -o no -y`;
+INFOMSG "Done.\n";
 
 
 INFOMSG sprintf "The following directories were successfully updated:\n  %s\n", join " ", @updated if @updated;
