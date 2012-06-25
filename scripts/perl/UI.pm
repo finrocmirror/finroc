@@ -33,7 +33,7 @@ use UI::Dialog::Console;
 use Switch;
 use File::Basename;
 
-my $WIDTH = 72;
+my $WIDTH = 80;
 my $HEIGHT = 24;
 
 my $dialog;

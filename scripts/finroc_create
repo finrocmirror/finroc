@@ -88,6 +88,43 @@ foreach (keys %{$$content_templates{'content'}})
     ERRORMSG "Language $_ not declared. Content templates are not reachable.\n", unless exists $$content_templates{'language'}{$_};
 }
 
+# look for plugins that might extend our configuration
+foreach my $language (keys %{$$content_templates{'language'}})
+{
+    my $language_folder = sprintf "$FINROC_HOME/%s", ${$$content_templates{'language'}}{$language}{'folder'};
+
+    my $plugins_folder = sprintf "%s/plugins", $language_folder;
+    $plugins_folder = sprintf "%s/org/finroc/plugins", $language_folder if $language eq "Java";
+
+    next unless -d $plugins_folder;
+
+    foreach my $plugin (map { chomp; $_ } `find "$plugins_folder" -mindepth 1 -maxdepth 1 -type d`)
+    {
+        my $content_templates_extension_file = sprintf "%s/etc/content_templates.xml", $plugin;
+        if (-e $content_templates_extension_file)
+        {
+            my $content_templates_extension = XMLin($content_templates_extension_file,
+                                                    KeyAttr => { 'section' => 'name',
+                                                                 'type' => 'name',
+                                                                 'content' => 'language',
+                                                                 'replace' => 'key'},
+                                                    ForceArray => [ 'file', 'replace' ]);
+
+            foreach my $section (keys %{$$content_templates_extension{'section'}})
+            {
+                foreach my $type (keys %{$$content_templates_extension{'section'}{$section}{'type'}})
+                {
+                    ${$$content_templates{'content'}{$language}{'section'}{$section}{'type'}}{$type} = ${$$content_templates_extension{'section'}{$section}{'type'}}{$type};
+                }
+                foreach my $replace (keys %{$$content_templates_extension{'section'}{$section}{'replace'}})
+                {
+                    ${$$content_templates{'content'}{$language}{'section'}{$section}{'replace'}}{$replace} = ${$$content_templates_extension{'section'}{$section}{'replace'}}{$replace};
+                }
+            }
+        }
+    }
+}
+
 #print Dumper $content_templates;
 
 #exit;
