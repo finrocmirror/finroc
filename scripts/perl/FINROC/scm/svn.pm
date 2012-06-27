@@ -37,18 +37,27 @@ use XML::Simple;
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 
+sub CredentialsForCommandLine($$)
+{
+    my ($username, $password) = @_;
+
+    my $credentials = "";
+    $credentials = sprintf " --username='%s'", $username if defined $username;
+    $credentials .= sprintf " --password='%s'", $password if defined $password;
+
+    return $credentials;
+}
+
 sub Checkout($$$$)
 {
     my ($url, $target, $username, $password) = @_;
 
     $url .= "/trunk";
 
-    my $credentials = "";
-    $credentials = sprintf " --username=%s", $username if defined $username;
-    $credentials .= sprintf " --password=%s", $password if defined $password;
+    my $credentials = CredentialsForCommandLine $username, $password;
 
     my $command = sprintf "svn co --ignore-externals %s \"%s\" \"%s\"", $credentials, $url, $target;
-    INFOMSG sprintf "Executing '%s'\n", $command;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
 }
@@ -57,26 +66,23 @@ sub Update($$$)
 {
     my ($directory, $username, $password) = @_;
 
-    my $credentials = "";
-    $credentials = sprintf " --username=%s", $username if defined $username;
-    $credentials .= sprintf " --password=%s", $password if defined $password;
+    my $credentials = CredentialsForCommandLine $username, $password;
 
-    my $command = sprintf "svn up --ignore-externals --accept postpone %s \"%s\"", $credentials, $directory;
+    my $command = sprintf "svn up --ignore-externals --accept postpone -q %s \"%s\"", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $output = join "", `$command`;
-    DEBUGMSG $output;
+    system $command;
     ERRORMSG "Command failed!\n" if $?;
 
-    return "C" if grep { /^C\s/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
-    return "U" if grep { /^[ADUG]\s/ } map { chomp; s/^\s*//; $_ } split "\n", $output;
-    return ".";
+    return "Up to date";
 }
 
-sub Status($$$)
+sub Status($$$$$)
 {
-    my ($directory, $local_modifications_only, $incoming) = @_;
+    my ($directory, $local_modifications_only, $incoming, $username, $password) = @_;
 
-    my $command = sprintf "svn st --ignore-externals \"%s\"", $directory;
+    my $credentials = CredentialsForCommandLine $username, $password;
+
+    my $command = sprintf "svn st --ignore-externals %s \"%s\"", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;

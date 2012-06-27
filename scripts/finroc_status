@@ -38,7 +38,6 @@ use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
 use FINROC::scm;
-use FINROC::terminal;
 use FINROC::components;
 
 ############################
@@ -49,10 +48,12 @@ SetHelp "[<directory>]",
 {
     "-l, --local-modifications-only" => "do not check for outgoing changesets (much faster)",
     "-i, --incoming" => "show also working copies with incoming changesets",
-    "-c, --check" => "check which components are checked out and at what local state"
+    "-c, --check" => "check which components are checked out and at what local state",
+    "-u <username>, --username=<username>" => "use <username> to get access to repositories",
+    "-p <password>, --password=<password>" => "use <password> to get access to repositories"
 }, "If specified, only repositories below <directory> are inspected.";
 
-ParseCommandLine [ "local-modifications-only", "incoming", "check" ], sub
+ParseCommandLine [ "local-modifications-only", "incoming", "check", "username=s", "password=s" ], sub
 {
     if (GetCommandLineOption "check" and (GetCommandLineOption "local-modifications-only" or GetCommandLineOption "incoming"))
     {
@@ -77,25 +78,23 @@ if (defined $root)
 
 
 
-####################
-##  Check status  ##
-####################
+##############################
+##  Hidden password prompt  ##
+##############################
 
-my $status = "";
+my $username = GetCommandLineOption "username";
+my $password = GetCommandLineOption "password";
 
-sub CheckStatus($)
+if (defined $username and not defined $password)
 {
-    my ($directory) = @_;
-
-    ERRORMSG sprintf "Directory '%s' does not exists!\n" unless -d $directory;
-
-    DEBUGMSG sprintf "%s\n", $directory;
-
-    my $result = Status $directory, defined GetCommandLineOption "local-modifications-only" ? 1 : 0, defined GetCommandLineOption "incoming" ? 1 : 0;
-
-    $directory =~ s/$FINROC_HOME/\$FINROC_HOME/;
-
-    $status .= sprintf "Status of %s:\n%s\n", $directory, $result if $result ne "";
+    use Term::ReadKey;
+    ReadMode 'noecho';
+    INFOMSG "username: $username\n";
+    INFOMSG "password: ";
+    $password = <STDIN>;
+    ReadMode 'restore';
+    INFOMSG "\n";
+    chomp $password;
 }
 
 
@@ -152,6 +151,12 @@ AddDirectory "$FINROC_HOME";
 
 AddSubtreeRepositoryRoot;
 
+
+
+########################
+##  Check components  ##
+########################
+
 if (GetCommandLineOption "check")
 {
     my @components = grep { defined } map { GetComponentNameFromDirectory $_ } keys %directories;
@@ -162,27 +167,21 @@ if (GetCommandLineOption "check")
     exit 0;
 }
 
-my $prompt = sprintf "Checking status of working copies%s: [", defined GetCommandLineOption "local-modifications-only" ? "" : " and repositories";
-INFOMSG $prompt;
-DEBUGMSG "\n";
-
 my $i = 0;
 my $format_string = sprintf "%%%dd/%d", length "".scalar keys %directories, scalar keys %directories;
-foreach my $directory (keys %directories)
+foreach my $directory (sort keys %directories)
 {
     my $progress = sprintf $format_string, ++$i, scalar keys %directories;
 
-    INFOMSG sprintf "%s] %s", $progress, ClearEndOfLineSequence;
-    my $current_output = $directory;
-    $current_output =~ s/$FINROC_HOME/\$FINROC_HOME/;
-    INFOMSG $current_output;
-    CheckStatus $directory;
-    INFOMSG MoveCursorInRowSequence -(2 + length($current_output) + length($progress));
-}
-INFOMSG sprintf "$format_string] Done%s\n", scalar keys %directories, ClearEndOfLineSequence;
+    my $directory_name = $directory;
+    $directory_name =~ s/$FINROC_HOME/\$FINROC_HOME/;
 
-INFOMSG "\n$status" if $status ne "";
+    INFOMSG sprintf " [%s] %s\n", $progress, $directory_name;
+
+    Status $directory, defined GetCommandLineOption "local-modifications-only", defined GetCommandLineOption "incoming", $username, $password;
+}
 
 
 
 exit 0;
+    

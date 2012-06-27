@@ -81,7 +81,7 @@ sub Update($$$)
 
     my $scm_name = GetSCMNameOfWorkingCopy $directory;
 
-    return "_" unless defined $scm_name;
+    return "Update source not defined" unless defined $scm_name;
 
     $directory = sprintf "'%s'", $directory;
     $username = defined $username ? sprintf "'%s'", $username : "undef";
@@ -94,18 +94,20 @@ sub Update($$$)
     return $result;
 }
 
-sub Status($$$)
+sub Status($$$$$)
 {
-    my ($directory, $local_modifications_only, $incoming) = @_;
+    my ($directory, $local_modifications_only, $incoming, $username, $password) = @_;
 
     my $scm_name = GetSCMNameOfWorkingCopy $directory;
 
-    return "" unless defined $scm_name;
+    return "Unmanaged" unless defined $scm_name;
 
     $directory = sprintf "'%s'", $directory;
+    $username = defined $username ? sprintf "'%s'", $username : "undef";
+    $password = defined $password ? sprintf "'%s'", $password : "undef";
 
     my $result;
-    eval sprintf "\$result = FINROC::scm::%s::Status(%s, %s, %s)", $scm_name, $directory, $local_modifications_only, $incoming;
+    eval sprintf "\$result = FINROC::scm::%s::Status(%s, %d, %d, %s, %s)", $scm_name, $directory, $local_modifications_only, $incoming, $username, $password;
     ERRORMSG $@ if $@;
 
     return $result;

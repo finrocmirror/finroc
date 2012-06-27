@@ -87,6 +87,27 @@ ERRORMSG sprintf "Could not find requested component%s: %s!\n", keys %not_found_
 
 
 ##############################
+##  Hidden password prompt  ##
+##############################
+
+my $username = GetCommandLineOption "username";
+my $password = GetCommandLineOption "password";
+
+if (defined $username and not defined $password)
+{
+    use Term::ReadKey;
+    ReadMode 'noecho';
+    INFOMSG "username: $username\n";
+    INFOMSG "password: ";
+    $password = <STDIN>;
+    ReadMode 'restore';
+    INFOMSG "\n";
+    chomp $password;
+}
+
+
+
+##############################
 ##  Determine dependencies  ##
 ##############################
 
@@ -253,7 +274,7 @@ foreach my $component_name (sort keys %mandatory_components)
 
     DEBUGMSG sprintf "About to checkout component '%s' from '%s'\n", $component_name, $component{'url'};
 
-    Checkout $component{'url'}, "$FINROC_HOME/$component{'target'}", GetCommandLineOption "username", GetCommandLineOption "password";
+    Checkout $component{'url'}, "$FINROC_HOME/$component{'target'}", $username, $password;
 }
 
 

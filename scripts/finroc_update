@@ -32,13 +32,13 @@ use strict;
 
 use Env '$FINROC_HOME';
 use Data::Dumper;
+use Switch;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
 use FINROC::scm;
-use FINROC::terminal;
 use FINROC::components;
 
 ############################
@@ -55,6 +55,58 @@ ParseCommandLine [ "optional=s", "username=s", "password=s" ], undef;
 
 
 
+##############################
+##  Hidden password prompt  ##
+##############################
+
+my $username = GetCommandLineOption "username";
+my $password = GetCommandLineOption "password";
+
+if (defined $username and not defined $password)
+{
+    use Term::ReadKey;
+    ReadMode 'noecho';
+    INFOMSG "username: $username\n";
+    INFOMSG "password: ";
+    $password = <STDIN>;
+    ReadMode 'restore';
+    INFOMSG "\n";
+    chomp $password;
+}
+
+
+
+#########################
+##  Search components  ##
+#########################
+
+my %directories;
+sub AddDirectory($)
+{
+    my ($directory) = @_;
+    return unless -d $directory;
+
+    $directories{$directory} = 1;
+}
+
+AddDirectory "$FINROC_HOME/make_builder";
+
+map { chomp; AddDirectory $_ } `find "$FINROC_HOME/sources" -maxdepth 4 -name "core" 2> /dev/null`;
+
+my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
+
+foreach my $class (@classes)
+{
+    foreach my $base (map { chomp; $_ } `find "$FINROC_HOME/sources" -name "$class" 2> /dev/null`)
+    {
+        map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls "$base"`;
+    }
+}
+
+AddDirectory "$FINROC_HOME";
+
+
+
 ######################
 ##  Perform update  ##
 ######################
@@ -65,74 +117,48 @@ my @modified;
 my @outgoing;
 my @check_dependencies;
 
-sub UpdateWorkingCopy($$)
+my $i = 0;
+my $format_string = sprintf "%%%dd/%d", length "".scalar keys %directories, scalar keys %directories;
+foreach my $directory (sort keys %directories)
 {
-    my ($directory, $remaining) = @_;
+    my $progress = sprintf $format_string, ++$i, scalar keys %directories;
 
-    DEBUGMSG sprintf "%s\n", $directory;
+    my $directory_name = $directory;
+    $directory_name =~ s/$FINROC_HOME/\$FINROC_HOME/;
 
-    my $current_output = $directory;
-    $current_output =~ s/$FINROC_HOME/\$FINROC_HOME/;
+    INFOMSG sprintf " [%s] %s\n", $progress, $directory_name;
     
-    INFOMSG $current_output;
+    my $result = Update $directory, $username, $password;
 
-    my $result = Update $directory, GetCommandLineOption "username", GetCommandLineOption "password";
+    push @check_dependencies, GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
+    
+    INFOMSG "$result\n" if $result eq "Updated";
+    WARNMSG "$result\n" if grep { $result eq $_ } [ "Conflicts", "Modified working copy", "Outgoing changesets" ];
 
-    push @check_dependencies, GetComponentNameFromDirectory $directory if $result ne "_";
-
-    $directory =~ s/$FINROC_HOME/\$FINROC_HOME/;
-
-    push @updated, $directory if $result eq "U";
-    push @conflicts, $directory if $result eq "C";
-    push @modified, $directory if $result eq "M";
-    push @outgoing, $directory if $result eq "O";
-
-    INFOMSG MoveCursorInRowSequence -($remaining + 3 + length $current_output);
-    INFOMSG $result;
-    INFOMSG MoveCursorInRowSequence $remaining + 2;
-    INFOMSG ClearEndOfLineSequence;
-    DEBUGMSG "\n";
+    push @updated, $directory_name if $result eq "Updated";
+    push @conflicts, $directory_name if $result eq "Conflicts";
+    push @modified, $directory_name if $result eq "Modified working copy";
+    push @outgoing, $directory_name if $result eq "Outgoing changesets";
 }
 
 
 
-#########################
-##  Search components  ##
-#########################
-
-sub UpdateList($$)
-{
-    my ($name, $list) = @_;
-
-    my @existing = grep { -d $_ } @$list;
-
-    return unless @existing;
-
-    INFOMSG sprintf "Updating %s: [%s] ", $name, ' ' x scalar @existing;
-    DEBUGMSG "\n";
-    my $i = 0;
-    map { UpdateWorkingCopy $_, scalar @existing - ++$i; } @existing;
-    INFOMSG "Done\n";
-}
-
-UpdateList "make_builder", [ "$FINROC_HOME/make_builder" ];
-
-UpdateList "core", [ map { chomp; $_ } `find "$FINROC_HOME/sources" -maxdepth 4 -name "core" 2> /dev/null` ];
-
-foreach my $class ( "rrlib", "libraries", "tools", "plugins", "projects" )
-{
-    UpdateList $class, [ map { chomp; my $base = $_; map { chomp; sprintf "%s/%s", $base, $_ } `ls $_` } `find "$FINROC_HOME/sources" -name "$class" 2> /dev/null` ];
-}
-
-UpdateList "finroc", [ "$FINROC_HOME" ];
+##################################
+##  Check for new dependencies  ##
+##################################
 
 INFOMSG "Checking for new dependencies...\n";
 if (@check_dependencies)
 {
-    my $check_dependencies = join " ", grep { defined } @check_dependencies;
-    `finroc_get -o no -y $check_dependencies`;
+    my $check_dependencies = join " ", grep { defined and `finroc_search $_ 2>/dev/null`} @check_dependencies;
+    my $credentials = "";
+    $credentials .= sprintf " --username '%s'", $username if defined $username;
+    $credentials .= sprintf " --password '%s'", $password if defined $password;
+    DEBUGMSG sprintf "Executing '%s'\n", "finroc_get -o no -y $credentials $check_dependencies";
+    system "finroc_get -o no -y $credentials $check_dependencies";
 }
 INFOMSG "Done.\n";
+
 
 
 INFOMSG sprintf "The following directories were successfully updated:\n  %s\n", join " ", @updated if @updated;
