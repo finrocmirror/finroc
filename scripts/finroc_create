@@ -338,7 +338,7 @@ while (1)
 #############
 
 my $author = ${[ split ",", ${[split ":", join "", map { chomp; $_ } `getent passwd \$USER`]}[4] ]}[0];
-$author = UI::InputText("Author's full name", undef, '\S+( \S+)+'$author);
+$author = UI::InputText("Author's full name", undef, '\S+( \S+)+', $author);
 
 
 #############
