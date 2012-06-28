@@ -182,7 +182,6 @@ sub UpdateBaseFolder($)
 ##  Programming language  ##
 ############################
 
-
 my $languages = $$content_templates{'language'};
 my $language = UI::Menu("Programming Language",
                         undef,
@@ -224,14 +223,17 @@ UpdateBaseFolder $$types{$type};
 my @optional_files = grep { defined $$_{'optional'} and $$_{'optional'} eq "true" } @{$$types{$type}{'file'}};
 my @files = grep { not defined $$_{'optional'} or $$_{'optional'} eq "false" } @{$$types{$type}{'file'}};
 
-my $selected_files = UI::CheckList("Optional Files",
-                                   "Select optional files to generate.",
-                                   [ map { $$_{'name'} } @optional_files ],
-                                   [ map { $$_{'name'} } grep { defined $$_{'preselected'} and $$_{'preselected'} eq "true" } @optional_files ] );
-
-foreach my $selected_file (@$selected_files)
+if (@optional_files)
 {
-    push @files, grep { $$_{'name'} eq $selected_file } @optional_files;
+    my $selected_files = UI::CheckList("Optional Files",
+                                       "Select optional files to generate.",
+                                       [ map { $$_{'name'} } @optional_files ],
+                                       [ map { $$_{'name'} } grep { defined $$_{'preselected'} and $$_{'preselected'} eq "true" } @optional_files ] );
+
+    foreach my $selected_file (@$selected_files)
+    {
+        push @files, grep { $$_{'name'} eq $selected_file } @optional_files;
+    }
 }
 
 unless (@files)
