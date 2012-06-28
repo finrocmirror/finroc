@@ -178,7 +178,8 @@ foreach my $directory (sort keys %directories)
 
     INFOMSG sprintf " [%s] %s\n", $progress, $directory_name;
 
-    Status $directory, defined GetCommandLineOption "local-modifications-only", defined GetCommandLineOption "incoming", $username, $password;
+    my $status = Status $directory, defined GetCommandLineOption "local-modifications-only", defined GetCommandLineOption "incoming", $username, $password;
+    INFOMSG $status unless $status eq "Unmanaged";
 }
 
 

@@ -107,6 +107,7 @@ sub Update($$$)
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;
+    ERRORMSG "Command failed!\n" if $?;
     return "Modified working copy" unless $output eq "";
 
     $command = sprintf "hg %s --cwd \"%s\" out -q", $credentials, $directory;
@@ -132,8 +133,6 @@ sub Status($$$$$)
 {
     my ($directory, $local_modifications_only, $incoming, $username, $password) = @_;
 
-    my $result = "";
-
     my $pull_path = GetPath $directory, "default";
     my $push_path = GetPath $directory, "default-push";
     $push_path = $pull_path unless defined $push_path;
@@ -144,9 +143,7 @@ sub Status($$$$$)
 
         my $command = sprintf "hg %s --cwd \"%s\" in", $credentials, $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
-        my $output = join "", `$command`;
-        DEBUGMSG $output;
-        $result .= sprintf "%sIncoming changesets:\n\n%s\n", ($result ne "" ? "\n" : ""), join "\n", grep { /^(changeset|user|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
+        system $command;
     }
 
     if (defined $push_path and not $local_modifications_only)
@@ -155,9 +152,7 @@ sub Status($$$$$)
 
         my $command = sprintf "hg %s --cwd \"%s\" out", $credentials, $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
-        my $output = join "", `$command`;
-        DEBUGMSG $output;
-        $result .= sprintf "%sOutgoing changesets:\n\n%s\n", ($result ne "" ? "\n" : ""), join "\n", grep { /^(changeset|date|summary)\:/ or /^$/ } split "\n", $output unless $?;
+        system $command;
     }
 
     my $command = sprintf "hg --cwd \"%s\" st", $directory;
@@ -165,9 +160,8 @@ sub Status($$$$$)
     my $output = join "", `$command`;
     DEBUGMSG $output;
     ERRORMSG "Command failed!\n" if $?;
-    $result .= sprintf "%sLocal modifications:\n%s", ($result ne "" ? "\n" : ""), $output unless $output eq "";
 
-    return $result;
+    return $output;
 }
 
 sub IsOnDefaultBranch($)

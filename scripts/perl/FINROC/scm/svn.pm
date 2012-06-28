@@ -88,8 +88,7 @@ sub Status($$$$$)
     DEBUGMSG $output;
     ERRORMSG "Command failed!\n" if $?;
 
-    return sprintf "Local modifications:\n%s\n", $output unless $output eq "";
-    return "";
+    return $output;
 }
 
 sub IsOnDefaultBranch($)

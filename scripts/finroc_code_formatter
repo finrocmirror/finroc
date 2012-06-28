@@ -102,7 +102,7 @@ sub CollectModifiedFiles()
 
     DEBUGMSG sprintf "Collecting only modified files in '%s'...\n", $directory;
 
-    foreach my $line (split "\n", Status $directory, 1, 0)
+    foreach my $line (split "\n", Status $directory, 1, 0,  undef, undef)
     {
         $line =~ s/\s+(\+\s+)?/ /;
         my ($status, $filename) = split " ", $line;
