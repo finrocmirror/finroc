@@ -81,7 +81,6 @@ sub Checkout($$$$)
     my $target_base = $target;
     $target_base =~ s/\/[^\/]*$//;
     DEBUGMSG sprintf "Creating directory '%s'\n", $target_base;
-    system "mkdir -p $target_base";
     ERRORMSG "Command failed!\n" if $?;
 
     my $command = sprintf "hg %s clone %s \"%s\"", $credentials, $url, $target;

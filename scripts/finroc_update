@@ -32,7 +32,6 @@ use strict;
 
 use Env '$FINROC_HOME';
 use Data::Dumper;
-use Switch;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
