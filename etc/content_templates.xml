@@ -101,7 +101,7 @@
         <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
       </type>
       <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/senso_control_module.h.template"/>
+        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/sense_control_module.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.hpp.template" optional="true"/>
       </type>
@@ -136,7 +136,7 @@
         <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
       </type>
       <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/senso_control_module.h.template"/>
+        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/sense_control_module.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.hpp.template" optional="true"/>
       </type>
@@ -177,7 +177,7 @@
         <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
       </type>
       <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/senso_control_module.h.template"/>
+        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/sense_control_module.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.hpp.template" optional="true"/>
       </type>
