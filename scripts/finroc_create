@@ -115,6 +115,10 @@ foreach my $language (keys %{$$content_templates{'language'}})
                 foreach my $type (keys %{$$content_templates_extension{'section'}{$section}{'type'}})
                 {
                     ${$$content_templates{'content'}{$language}{'section'}{$section}{'type'}}{$type} = ${$$content_templates_extension{'section'}{$section}{'type'}}{$type};
+                    foreach my $file (@{$$content_templates_extension{'section'}{$section}{'type'}{$type}{'file'}})
+                    {
+                        $$file{'template'} = sprintf "%s/etc/content_templates/%s", $plugin, $$file{'template'};
+                    }
                 }
                 foreach my $replace (keys %{$$content_templates_extension{'section'}{$section}{'replace'}})
                 {

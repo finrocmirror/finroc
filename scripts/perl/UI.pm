@@ -264,7 +264,7 @@ sub SelectSubFolder($)
 
         return $parent if $folder eq "\bSelect";
 
-        if ($folder eq "0")
+        if ($folder == 0)
         {
             $subfolder = dirname $subfolder;
             $subfolder = "" if $subfolder eq ".";
