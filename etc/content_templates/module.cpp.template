@@ -56,7 +56,7 @@ core::tStandardCreateModuleAction<m%%NAME%%> m%%NAME%%::cCREATE_ACTION("%%NAME%%
 //----------------------------------------------------------------------
 m%%NAME%%::m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name)
   : tModule(parent, name),
-    some_value(0.0)
+    some_value( Values should be initialized here )
 {}
 
 //----------------------------------------------------------------------
@@ -66,11 +66,33 @@ m%%NAME%%::~m%%NAME%%()
 {}
 
 //----------------------------------------------------------------------
+// m%%NAME%% ParametersChanged
+//----------------------------------------------------------------------
+void m%%NAME%%::ParametersChanged()
+{
+  if (this->parameter.HasChanged())
+  {
+    do something
+  }
+}
+
+//----------------------------------------------------------------------
 // m%%NAME%% Update
 //----------------------------------------------------------------------
 void m%%NAME%%::Update()
 {
   this->some_value = 2 * this->some_value;
+}
+
+//----------------------------------------------------------------------
+// m%%NAME%% EvaluateStaticParameters
+//----------------------------------------------------------------------
+void m%%NAME%%::EvaluateStaticParameters()
+{
+  if (this->static_parameter.HasChanged())
+  {
+    do something
+  }
 }
 
 //----------------------------------------------------------------------

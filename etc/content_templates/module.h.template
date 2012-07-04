@@ -58,6 +58,10 @@ class m%%NAME%% : public core::structure::tModule
 //----------------------------------------------------------------------
 public:
 
+  tStaticParameter<double> static_parameter;
+  
+  tParameter<double> parameter;
+
   tInput<double> input_signal_1;
   tInput<double> input_signal_2;
 
@@ -73,12 +77,12 @@ public:
 
   ~m%%NAME%%();
 
-  void SomeMethod();
-
 //----------------------------------------------------------------------
 // Protected methods
 //----------------------------------------------------------------------
 protected:
+
+  virtual void ParametersChanged();
 
   virtual void Update();
 
@@ -88,7 +92,9 @@ protected:
 private:
 
   double some_value;
-
+  
+  virtual void EvaluateStaticParameters();
+  
 };
 
 //----------------------------------------------------------------------

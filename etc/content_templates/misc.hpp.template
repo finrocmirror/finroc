@@ -50,7 +50,9 @@
 //----------------------------------------------------------------------
 template <>
 void SomeFunction()
-{}
+{
+  Implement this function which acts as an example or delete it and write your own
+}
 
 //----------------------------------------------------------------------
 // End of namespace declaration

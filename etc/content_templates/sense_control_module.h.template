@@ -77,12 +77,12 @@ public:
 
   ~m%%NAME%%();
 
-  void SomeMethod();
-
 //----------------------------------------------------------------------
 // Protected methods
 //----------------------------------------------------------------------
 protected:
+
+  virtual void ParametersChanged();
 
   virtual void Control();
 
@@ -94,6 +94,8 @@ protected:
 private:
 
   double some_value;
+
+  virtual void EvaluateStaticParameters();
 
 };
 

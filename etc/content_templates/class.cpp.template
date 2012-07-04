@@ -54,7 +54,7 @@
 // t%%NAME%% constructors
 //----------------------------------------------------------------------
 t%%NAME%%::t%%NAME%%()
-  : some_value(0.0)
+  : some_value( Values should be initialized here )
 {}
 
 //----------------------------------------------------------------------
@@ -67,7 +67,10 @@ t%%NAME%%::~t%%NAME%%()
 // t%%NAME%% SomeMethod
 //----------------------------------------------------------------------
 void t%%NAME%%::SomeMethod()
-{}
+{
+  This is an example for a method that might somhow use this->some_value.
+  Delete both if you do not use it.
+}
 
 //----------------------------------------------------------------------
 // End of namespace declaration
