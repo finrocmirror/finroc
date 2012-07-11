@@ -58,15 +58,19 @@ class m%%NAME%% : public core::structure::tSenseControlModule
 //----------------------------------------------------------------------
 public:
 
-  tControllerInput<double> ci_signal_1;
-  tControllerInput<double> ci_signal_2;
+  tStaticParameter<double> static_parameter_1;   Example for a static parameter. Replace or delete it!
+  
+  tParameter<double> parameter_1;   Example for a runtime parameter. Replace or delete it!
 
-  tControllerOutput<double> co_signal_3;
-
-  tSensorInput<double> si_signal_1;
+  tSensorInput<double> si_signal_1;   Example for sensor input ports. Replace or delete them!
   tSensorInput<double> si_signal_2;
 
-  tSensorOutput<double> so_signal_3;
+  tSensorOutput<double> so_signal_1;   Examples for sensor output ports. Replace or delete them!
+
+  tControllerInput<double> ci_signal_1;   Example for controller input ports. Replace or delete them!
+  tControllerInput<double> ci_signal_2;
+
+  tControllerOutput<double> co_signal_1;   Examples for controller output ports. Replace or delete them!
 
 //----------------------------------------------------------------------
 // Public methods and typedefs
@@ -75,27 +79,22 @@ public:
 
   m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%");
 
-  ~m%%NAME%%();
-
-//----------------------------------------------------------------------
-// Protected methods
-//----------------------------------------------------------------------
-protected:
-
-  virtual void ParametersChanged();
-
-  virtual void Control();
-
-  virtual void Sense();
+  ~m%%NAME%%();   You need this destructor if you allocated memory on the heap that must be free'd. Delete otherwise!
 
 //----------------------------------------------------------------------
 // Private fields and methods
 //----------------------------------------------------------------------
 private:
 
-  double some_value;
+  Here is the right place for your variables. Replace this line by your declarations!
 
-  virtual void EvaluateStaticParameters();
+  virtual void EvaluateStaticParameters();   Might be needed to process static parameters. Delete otherwise!
+
+  virtual void EvaluateParameters();   Might be needed to react to changes in parameters independent from Update() calls. Delete otherwise!
+
+  virtual void Sense();
+
+  virtual void Control();
 
 };
 

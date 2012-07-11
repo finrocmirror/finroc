@@ -53,9 +53,9 @@
 //----------------------------------------------------------------------
 // SomeFunction
 //----------------------------------------------------------------------
-void SomeFunction()
+void SomeExampleFunction()
 {
-  Implement this function which acts as an example or delete it and write your own
+  This is an example for a function. Replace it by your own functions!
 }
 
 //----------------------------------------------------------------------

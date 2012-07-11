@@ -54,9 +54,9 @@ core::tStandardCreateModuleAction<m%%NAME%%> m%%NAME%%::cCREATE_ACTION("%%NAME%%
 //----------------------------------------------------------------------
 // m%%NAME%% constructor
 //----------------------------------------------------------------------
-m%%NAME%%::m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name)
-  : tSenseControlModule(parent, name),
-    some_value( Values should be initialized here )
+m%%NAME%%::m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name) :
+  tSenseControlModule(parent, name),
+  If you have some member variables, please initialize them here. Especially built-in types (like pointers!). Delete this line otherwise!
 {}
 
 //----------------------------------------------------------------------
@@ -66,22 +66,22 @@ m%%NAME%%::~m%%NAME%%()
 {}
 
 //----------------------------------------------------------------------
-// m%%NAME%% ParametersChanged
+// m%%NAME%% EvaluateStaticParameters
 //----------------------------------------------------------------------
-void m%%NAME%%::ParametersChanged()
+void m%%NAME%%::EvaluateStaticParameters()
 {
-  if (this->parameter.HasChanged())
+  if (this->static_parameter_1.HasChanged())
   {
-    do something
+    As this static parameter has changed, do something with its value!
   }
 }
 
 //----------------------------------------------------------------------
-// m%%NAME%% Control
+// m%%NAME%% EvaluateParameters
 //----------------------------------------------------------------------
-void m%%NAME%%::Control()
+void m%%NAME%%::EvaluateParameters()
 {
-  this->some_value = 2 * this->some_value;
+  If this method is called, at least on of your parameters has changed. However, each can be checked using its .HasChanged() method.
 }
 
 //----------------------------------------------------------------------
@@ -89,18 +89,31 @@ void m%%NAME%%::Control()
 //----------------------------------------------------------------------
 void m%%NAME%%::Sense()
 {
-  this->some_value = 2 * this->some_value;
+  if (this->SensorInputChanged())
+  {
+    At least one of your sensor input ports has changed. Do something useful with its data.
+    However, using the .HasChanged() method on each port you can check in more detail.
+  }
+  
+  Do something each cycle independent from changing ports.
+  
+  this->so_signal_1.Publish(some meaningful value); can be used to publish data via your sensor output ports.
 }
 
 //----------------------------------------------------------------------
-// m%%NAME%% EvaluateStaticParameters
+// m%%NAME%% Control
 //----------------------------------------------------------------------
-void m%%NAME%%::EvaluateStaticParameters()
+void m%%NAME%%::Control()
 {
-  if (this->static_parameter.HasChanged())
+  if (this->ControllerInputChanged())
   {
-    do something
+    At least one of your controller input ports has changed. Do something useful with its data.
+    However, using the .HasChanged() method on each port you can check in more detail.
   }
+  
+  Do something each cycle independent from changing ports.
+  
+  this->co_signal_1.Publish(some meaningful value); can be used to publish data via your sensor output ports.
 }
 
 //----------------------------------------------------------------------

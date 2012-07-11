@@ -57,16 +57,16 @@ public:
 
   t%%NAME%%();
 
-  ~t%%NAME%%();
+  ~t%%NAME%%();   You need this destructor if you allocated memory on the heap that must be free'd. Delete otherwise!
 
-  void SomeMethod();
+  Here is the right place for your public methods. Replace this line by your declarations!
 
 //----------------------------------------------------------------------
 // Private fields and methods
 //----------------------------------------------------------------------
 private:
 
-  double some_value;
+  Here is the right place for your variables. Replace this line by your declarations!
 
 };
 

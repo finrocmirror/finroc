@@ -58,14 +58,14 @@ class m%%NAME%% : public core::structure::tModule
 //----------------------------------------------------------------------
 public:
 
-  tStaticParameter<double> static_parameter;
+  tStaticParameter<double> static_parameter_1;   Example for a static parameter. Replace or delete it!
   
-  tParameter<double> parameter;
+  tParameter<double> parameter_1;   Example for a runtime parameter. Replace or delete it!
 
-  tInput<double> input_signal_1;
+  tInput<double> input_signal_1;   Example for input ports. Replace or delete them!
   tInput<double> input_signal_2;
 
-  tOutput<double> output_signal_1;
+  tOutput<double> output_signal_1;   Examples for output ports. Replace or delete them!
   tOutput<double> output_signal_2;
 
 //----------------------------------------------------------------------
@@ -75,26 +75,21 @@ public:
 
   m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%");
 
-  ~m%%NAME%%();
-
-//----------------------------------------------------------------------
-// Protected methods
-//----------------------------------------------------------------------
-protected:
-
-  virtual void ParametersChanged();
-
-  virtual void Update();
+  ~m%%NAME%%();   You need this destructor if you allocated memory on the heap that must be free'd. Delete otherwise!
 
 //----------------------------------------------------------------------
 // Private fields and methods
 //----------------------------------------------------------------------
 private:
 
-  double some_value;
-  
-  virtual void EvaluateStaticParameters();
-  
+  Here is the right place for your variables. Replace this line by your declarations!
+
+  virtual void EvaluateStaticParameters();   Might be needed to process static parameters. Delete otherwise!
+
+  virtual void EvaluateParameters();   Might be needed to react to changes in parameters independent from Update() calls. Delete otherwise!
+
+  virtual void Update();
+
 };
 
 //----------------------------------------------------------------------

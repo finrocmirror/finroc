@@ -53,8 +53,8 @@
 //----------------------------------------------------------------------
 // t%%NAME%% constructors
 //----------------------------------------------------------------------
-t%%NAME%%::t%%NAME%%()
-  : some_value( Values should be initialized here )
+t%%NAME%%::t%%NAME%%() :
+  If you have some member variables, please initialize them here. Especially built-in types (like pointers!). Delete this line otherwise!
 {}
 
 //----------------------------------------------------------------------
@@ -64,12 +64,11 @@ t%%NAME%%::~t%%NAME%%()
 {}
 
 //----------------------------------------------------------------------
-// t%%NAME%% SomeMethod
+// t%%NAME%% SomeExampleMethod
 //----------------------------------------------------------------------
-void t%%NAME%%::SomeMethod()
+void t%%NAME%%::SomeExampleMethod()
 {
-  This is an example for a method that might somhow use this->some_value.
-  Delete both if you do not use it.
+  This is an example for a method. Replace it by your own methods!
 }
 
 //----------------------------------------------------------------------

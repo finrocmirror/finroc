@@ -67,7 +67,9 @@ public:
 public:
 
   g%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%",
-    %%INDENT_ONE_NAME%%const finroc::util::tString &structure_config_file = __FILE__".xml");
+    %%INDENT_ONE_NAME%%const util::tString &structure_config_file = __FILE__".xml");
+
+  ~g%%NAME%%();   You need this destructor if you allocated memory on the heap that must be free'd. Delete otherwise!
 
 };
 

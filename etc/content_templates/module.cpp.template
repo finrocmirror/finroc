@@ -54,9 +54,9 @@ core::tStandardCreateModuleAction<m%%NAME%%> m%%NAME%%::cCREATE_ACTION("%%NAME%%
 //----------------------------------------------------------------------
 // m%%NAME%% constructor
 //----------------------------------------------------------------------
-m%%NAME%%::m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name)
-  : tModule(parent, name),
-    some_value( Values should be initialized here )
+m%%NAME%%::m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name) :
+  tModule(parent, name),
+  If you have some member variables, please initialize them here. Especially built-in types (like pointers!). Delete this line otherwise!
 {}
 
 //----------------------------------------------------------------------
@@ -66,14 +66,22 @@ m%%NAME%%::~m%%NAME%%()
 {}
 
 //----------------------------------------------------------------------
-// m%%NAME%% ParametersChanged
+// m%%NAME%% EvaluateStaticParameters
 //----------------------------------------------------------------------
-void m%%NAME%%::ParametersChanged()
+void m%%NAME%%::EvaluateStaticParameters()
 {
-  if (this->parameter.HasChanged())
+  if (this->static_parameter_1.HasChanged())
   {
-    do something
+    As this static parameter has changed, do something with its value!
   }
+}
+
+//----------------------------------------------------------------------
+// m%%NAME%% EvaluateParameters
+//----------------------------------------------------------------------
+void m%%NAME%%::EvaluateParameters()
+{
+  If this method is called, at least on of your parameters has changed. However, each can be checked using its .HasChanged() method.
 }
 
 //----------------------------------------------------------------------
@@ -81,18 +89,15 @@ void m%%NAME%%::ParametersChanged()
 //----------------------------------------------------------------------
 void m%%NAME%%::Update()
 {
-  this->some_value = 2 * this->some_value;
-}
-
-//----------------------------------------------------------------------
-// m%%NAME%% EvaluateStaticParameters
-//----------------------------------------------------------------------
-void m%%NAME%%::EvaluateStaticParameters()
-{
-  if (this->static_parameter.HasChanged())
+  if (this->InputChanged())
   {
-    do something
+    At least one of your input ports has changed. Do something useful with its data.
+    However, using the .HasChanged() method on each port you can check in more detail.
   }
+  
+  Do something each cycle independent from changing ports.
+  
+  this->output_signal_1.Publish(some meaningful value); can be used to publish data via your output ports.
 }
 
 //----------------------------------------------------------------------
