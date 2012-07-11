@@ -135,13 +135,13 @@ sub AddSubtreeRepositoryRoot()
 
 AddDirectory "$FINROC_HOME/make_builder";
 
-map { chomp; AddDirectory $_ } `find "$FINROC_HOME/sources" -maxdepth 4 -name "core" 2> /dev/null`;
+map { chomp; AddDirectory $_ } `find -L "$FINROC_HOME/sources" -maxdepth 4 -name "core" 2> /dev/null`;
 
 my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
 
 foreach my $class (@classes)
 {
-    foreach my $base (map { chomp; $_ } `find "$FINROC_HOME/sources" -name "$class" 2> /dev/null`)
+    foreach my $base (map { chomp; $_ } `find -L "$FINROC_HOME/sources" -name "$class" 2> /dev/null`)
     {
         map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls "$base"`;
     }
