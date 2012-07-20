@@ -69,7 +69,17 @@ public:
   g%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%",
     %%INDENT_ONE_NAME%%const util::tString &structure_config_file = __FILE__".xml");
 
-  ~g%%NAME%%();   You need this destructor if you allocated memory on the heap that must be free'd. Delete otherwise!
+//----------------------------------------------------------------------
+// Private fields and methods
+//----------------------------------------------------------------------
+private:
+
+  /*! Destructor
+   *
+   * The destructor of modules is declared private to avoid accidental deletion. Deleting
+   * modules is already handled by the framework.
+   */
+  ~g%%NAME%%();
 
 };
 

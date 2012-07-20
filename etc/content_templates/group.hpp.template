@@ -56,8 +56,15 @@ core::tStandardCreateModuleAction<g%%NAME%%<>> g%%NAME%%<>::cCREATE_ACTION("%%NA
 //----------------------------------------------------------------------
 template <>
 g%%NAME%%<>::g%%NAME%%(core::tFrameworkElement *parent, const util::tString &name,
-       %%INDENT_TWO_NAMES%%const util::tString &structure_config_file)
-  : tGroup(parent, name, structure_config_file)
+       %%INDENT_TWO_NAMES%%const util::tString &structure_config_file) :
+  tGroup(parent, name, structure_config_file)
+{}
+
+//----------------------------------------------------------------------
+// g%%NAME%% destructor
+//----------------------------------------------------------------------
+template <>
+g%%NAME%%<>::~g%%NAME%%()
 {}
 
 //----------------------------------------------------------------------

@@ -75,14 +75,19 @@ public:
 
   m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%");
 
-  ~m%%NAME%%();   You need this destructor if you allocated memory on the heap that must be free'd. Delete otherwise!
-
 //----------------------------------------------------------------------
 // Private fields and methods
 //----------------------------------------------------------------------
 private:
 
   Here is the right place for your variables. Replace this line by your declarations!
+
+  /*! Destructor
+   *
+   * The destructor of modules is declared private to avoid accidental deletion. Deleting
+   * modules is already handled by the framework.
+   */
+  ~m%%NAME%%();
 
   virtual void EvaluateStaticParameters();   Might be needed to process static parameters. Delete otherwise!
 
