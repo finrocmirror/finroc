@@ -149,7 +149,7 @@ foreach my $directory (sort keys %directories)
 INFOMSG "Checking for new dependencies...\n";
 if (@check_dependencies)
 {
-    my $check_dependencies = join " ", grep { defined and `finroc_search $_ 2>/dev/null`} @check_dependencies;
+    my $check_dependencies = join " ", grep { defined and `finroc_search '^$_\$' 2>/dev/null`} @check_dependencies;
     my $credentials = "";
     $credentials .= sprintf " --username '%s'", $username if defined $username;
     $credentials .= sprintf " --password '%s'", $password if defined $password;
