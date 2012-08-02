@@ -40,7 +40,7 @@
       "finroc::".join("::", split /\//, eval { my $v = $folder; $v =~ s/^(libraries|projects|plugins)\///; $v })
     </replace>
     <replace key="INCLUDE_HPP">
-      (grep { $$_{'extension'} eq "hpp" } @files) ? "\n#include \"$folder/$filename.h\"\n" : "\n"
+      (grep { $$_{'extension'} eq "hpp" } @files) ? "\n#include \"$folder/$filename.hpp\"\n" : "\n"
     </replace>
   </language>
   <language name="Java" folder="sources/java" description="Mostly used in user interfaces"/>
