@@ -52,7 +52,7 @@ my $content_templates = XMLin("$FINROC_HOME/etc/content_templates.xml",
                                            'type' => 'name',
                                            'content' => 'language',
                                            'replace' => 'key'},
-                              ForceArray => [ 'file', 'replace' ]);
+                              ForceArray => [ 'file', 'replace', 'type' ]);
 
 sub FixMultiLineXMLEntry($)
 {
@@ -108,7 +108,7 @@ foreach my $language (keys %{$$content_templates{'language'}})
                                                                  'type' => 'name',
                                                                  'content' => 'language',
                                                                  'replace' => 'key'},
-                                                    ForceArray => [ 'file', 'replace' ]);
+                                                    ForceArray => [ 'file', 'replace', 'type' ]);
 
             foreach my $section (keys %{$$content_templates_extension{'section'}})
             {
