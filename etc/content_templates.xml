@@ -58,6 +58,9 @@
       </type>
     </section>
     <section name="Finroc Plugins" folder="plugins">
+      <type name="Part" description="Finroc Part (For test programs)" format="UpperCamelCase" filename="qq(p$name)">
+        <file name="Implementation File" extension="cpp" template="$FINROC_HOME/etc/content_templates/part.cpp.template"/>
+      </type>
       <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
         <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/module.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/module.cpp.template" optional="true" preselected="true"/>
@@ -80,6 +83,9 @@
       </type>
     </section>
     <section name="Finroc Libraries" folder="libraries">
+      <type name="Part" description="Finroc Part (For test programs)" format="UpperCamelCase" filename="qq(p$name)">
+        <file name="Implementation File" extension="cpp" template="$FINROC_HOME/etc/content_templates/part.cpp.template"/>
+      </type>
       <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
         <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/module.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/module.cpp.template" optional="true" preselected="true"/>
