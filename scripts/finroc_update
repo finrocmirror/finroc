@@ -102,6 +102,15 @@ foreach my $class (@classes)
     }
 }
 
+AddDirectory "$FINROC_HOME/resources/simvis3d/abstract_objects";
+
+@classes = ( "decoration", "environments", "humans", "robots", "sensors" );
+foreach my $class (@classes)
+{
+    my $base = sprintf "$FINROC_HOME/resources/simvis3d/%s", $class;
+    map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls "$base" 2> /dev/null`;
+}
+
 AddDirectory "$FINROC_HOME";
 
 
