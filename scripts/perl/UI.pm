@@ -68,9 +68,9 @@ sub Message($$)
     my ($title, $text) = @_;
 
     $dialog->msgbox(
-	title => " $title ",
-	text => $text,
-	height => HeightFromText $text) or Abort;
+        title => " $title ",
+        text => $text,
+        height => HeightFromText $text) or Abort;
 }
 
 sub InputText($$$$)
@@ -83,8 +83,8 @@ sub InputText($$$$)
             title => " $title ",
             text => $text,
             entry => $default,
-	    height => HeightFromText $text);
-	$dialog->state eq "OK" or Abort;
+            height => HeightFromText $text);
+        $dialog->state eq "OK" or Abort;
 
         utf8::decode $input;
         utf8::upgrade $input;
@@ -238,9 +238,9 @@ sub YesNo($$)
     my ($title, $text) = @_;
 
     return $dialog->yesno(
-	title => $title,
-	text => $text,
-	height => HeightFromText $text);
+        title => $title,
+        text => $text,
+        height => HeightFromText $text);
 }
 
 sub SelectSubFolder($)
@@ -253,7 +253,7 @@ sub SelectSubFolder($)
         my $parent = $base.(length $subfolder ? "/$subfolder" : "");
         my @folders = sort map { chomp; basename $_ } `find -L "$parent" -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
         my %options = ( "\bSelect" => ".",
-			"\bNew folder" => "" );
+                        "\bNew folder" => "" );
         $options{"0"} = ".." if length $subfolder;
         my $counter = 1;
         map { $options{$counter++} = $_ } @folders;
