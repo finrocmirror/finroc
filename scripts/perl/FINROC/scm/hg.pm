@@ -40,11 +40,11 @@ use UI;
 
 END
 {
+    local $?;
     my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
     chdir $FINROC_HOME;
     system "scripts/tools/update_hg_hooks";
     chdir $working_directory;
-    exit ErrorOccurred;
 }
 
 sub CredentialsForCommandLine($$$)
