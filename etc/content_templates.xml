@@ -21,7 +21,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
   </license>
-  <language name="C++" folder="sources/cpp" description="E.g. backend or actual robot control">
+  <language name="C++" folder="cpp" description="E.g. backend or actual robot control">
     <replace key="SENTINEL">
       my $result = "$folder/$filename";
       $result =~ s/\//__/g;
@@ -43,103 +43,103 @@
       (grep { $$_{'extension'} eq "hpp" } @files) ? "\n#include \"$folder/$filename.hpp\"\n" : "\n"
     </replace>
   </language>
-  <language name="Java" folder="sources/java" description="Mostly used in user interfaces"/>
+  <language name="Java" folder="java" description="Mostly used in user interfaces"/>
   <content language="C++">
     <section name="Finroc Core" folder="core" members_as_subfolders="false">
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/class.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/class.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/class.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="class.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="class.hpp.template" optional="true"/>
       </type>
       <type name="Declarations, Functions, Utilities" description="Non-OOP component" format="lower_case_with_underscore">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/misc.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/misc.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="misc.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
       </type>
     </section>
     <section name="Finroc Plugins" folder="plugins">
       <type name="Part" description="Finroc Part (For test programs)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="$FINROC_HOME/etc/content_templates/part.cpp.template"/>
+        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
       </type>
       <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/module.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="module.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
       </type>
       <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/group.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="group.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
       </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/class.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/class.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/class.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="class.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="class.hpp.template" optional="true"/>
       </type>
       <type name="Declarations, Functions, Utilities" description="Non-OOP component" format="lower_case_with_underscore">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/misc.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/misc.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="misc.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
       </type>
     </section>
     <section name="Finroc Libraries" folder="libraries">
       <type name="Part" description="Finroc Part (For test programs)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="$FINROC_HOME/etc/content_templates/part.cpp.template"/>
+        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
       </type>
       <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/module.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="module.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
       </type>
       <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/group.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="group.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
       </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/class.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/class.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/class.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="class.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="class.hpp.template" optional="true"/>
       </type>
       <type name="Declarations, Functions, Utilities" description="Non-OOP component" format="lower_case_with_underscore">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/misc.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/misc.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="misc.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
       </type>
       <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/sense_control_module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="sense_control_module.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="sense_control_module.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="sense_control_module.hpp.template" optional="true"/>
       </type>
     </section>
     <section name="Finroc Projects" folder="projects">
       <type name="Part" description="Finroc Part (Executable)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="$FINROC_HOME/etc/content_templates/part.cpp.template"/>
+        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
       </type>
       <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/module.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="module.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
       </type>
       <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/group.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="group.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
       </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/class.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/class.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/class.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="class.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="class.hpp.template" optional="true"/>
       </type>
       <type name="Declarations, Functions, Utilities" description="Non-OOP component" format="lower_case_with_underscore">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/misc.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/misc.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="misc.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
       </type>
       <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/sense_control_module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="sense_control_module.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="sense_control_module.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="sense_control_module.hpp.template" optional="true"/>
       </type>
       <replace key="MODULE_HEADER_PATH">
         "$folder/m$name.h"
@@ -150,44 +150,44 @@
     </section>
     <section name="Finroc Tools" folder="tools">
       <type name="Part" description="Finroc Part (Executable)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="$FINROC_HOME/etc/content_templates/part.cpp.template"/>
+        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
       </type>
       <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/module.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="module.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
       </type>
       <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/group.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="group.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
       </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/class.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/class.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/class.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="class.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="class.hpp.template" optional="true"/>
       </type>
       <type name="Declarations, Functions, Utilities" description="Non-OOP component" format="lower_case_with_underscore">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/misc.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/misc.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="misc.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
       </type>
       <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/sense_control_module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/sense_control_module.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="sense_control_module.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="sense_control_module.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="sense_control_module.hpp.template" optional="true"/>
       </type>
     </section>
     <section name="RRLib" folder="rrlib">
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/class.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/class.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/class.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="class.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="class.hpp.template" optional="true"/>
       </type>
       <type name="Declarations, Functions, Utilities" description="Non-OOP component" format="lower_case_with_underscore">
-        <file name="Header File" extension="h" template="$FINROC_HOME/etc/content_templates/misc.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="$FINROC_HOME/etc/content_templates/misc.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="$FINROC_HOME/etc/content_templates/misc.hpp.template" optional="true"/>
+        <file name="Header File" extension="h" template="misc.h.template"/>
+        <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
+        <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
       </type>
       <replace key="INTRO">
         "You received this file as part of RRLib\nRobotics Research Library"

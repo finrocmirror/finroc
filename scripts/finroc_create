@@ -45,8 +45,16 @@ use FINROC::getopt;
 use FINROC::sources;
 use FINROC::components;
 
+my $config_file;
+foreach my $file ("$FINROC_HOME/etc/content_templates.xml", "/usr/share/finroc/content_templates.xml")
+{
+    next unless -f $file;
+    $config_file = $file;
+    last;
+}
+ERRORMSG "Config file not found\n" unless defined $config_file;
 
-my $content_templates = XMLin("$FINROC_HOME/etc/content_templates.xml",
+my $content_templates = XMLin($config_file,
                               KeyAttr => { 'language' => 'name',
                                            'section' => 'name',
                                            'type' => 'name',
@@ -88,27 +96,68 @@ foreach (keys %{$$content_templates{'content'}})
     ERRORMSG "Language $_ not declared. Content templates are not reachable.\n", unless exists $$content_templates{'language'}{$_};
 }
 
+my $content_templates_folder = sprintf "%s/content_templates", dirname $config_file;
+foreach my $language (keys %{$$content_templates{'content'}})
+{
+    foreach my $section (keys %{$$content_templates{'content'}{$language}{'section'}})
+    {
+        foreach my $type (keys %{$$content_templates{'content'}{$language}{'section'}{$section}{'type'}})
+        {
+            foreach my $file (@{$$content_templates{'content'}{$language}{'section'}{$section}{'type'}{$type}{'file'}})
+            {
+                if (defined $$file{'template'})
+                {
+                    $$file{'template'} = sprintf "%s/%s", $content_templates_folder, $$file{'template'};
+                    WARNMSG sprintf "Configured template file '%s' does not exist.\n", $$file{'template'} unless -f $$file{'template'};
+                }
+            }
+        }
+    }
+}
+
 # look for plugins that might extend our configuration
 foreach my $language (keys %{$$content_templates{'language'}})
 {
-    my $language_folder = sprintf "$FINROC_HOME/%s", ${$$content_templates{'language'}}{$language}{'folder'};
+    my $local_language_folder = sprintf "$FINROC_HOME/sources/%s", ${$$content_templates{'language'}}{$language}{'folder'};
 
-    my $plugins_folder = sprintf "%s/plugins", $language_folder;
-    $plugins_folder = sprintf "%s/org/finroc/plugins", $language_folder if $language eq "Java";
+    my $local_plugins_folder = sprintf "%s/plugins", $local_language_folder;
+    $local_plugins_folder = sprintf "%s/org/finroc/plugins", $local_language_folder if $language eq "Java";
 
-    next unless -d $plugins_folder;
+    my $global_plugins_folder = sprintf "/usr/share/finroc/%s", ${$$content_templates{'language'}}{$language}{'folder'};
 
-    foreach my $plugin (map { chomp; $_ } `find "$plugins_folder" -mindepth 1 -maxdepth 1 -type d`)
+    my @plugins;
+    if (-d $global_plugins_folder)
     {
-        my $content_templates_extension_file = sprintf "%s/etc/content_templates.xml", $plugin;
-        if (-e $content_templates_extension_file)
+        foreach my $plugin (map { chomp ; $_ } `ls $global_plugins_folder`)
         {
+            my $global = sprintf "%s/%s", $global_plugins_folder, $plugin;
+            my $local = sprintf "%s/%s", $local_plugins_folder, $plugin;
+            push @plugins, $global unless -d $local;
+        }
+    }
+    if (-d $local_plugins_folder)
+    {
+        foreach my $plugin (map { chomp ; $_ } `ls $local_plugins_folder`)
+        {
+            my $local = sprintf "%s/%s", $local_plugins_folder, $plugin;
+            push @plugins, "$local/etc";
+        }
+    }
+
+    foreach my $plugin (@plugins)
+    {
+        my $content_templates_extension_file = sprintf "%s/content_templates.xml", $plugin;
+        if (-f $content_templates_extension_file)
+        {
+            print "$content_templates_extension_file\n";
             my $content_templates_extension = XMLin($content_templates_extension_file,
                                                     KeyAttr => { 'section' => 'name',
                                                                  'type' => 'name',
                                                                  'content' => 'language',
                                                                  'replace' => 'key'},
                                                     ForceArray => [ 'file', 'replace', 'type' ]);
+
+            my $content_templates_folder = sprintf "%s/content_templates", dirname $content_templates_extension_file;
 
             foreach my $section (keys %{$$content_templates_extension{'section'}})
             {
@@ -117,7 +166,8 @@ foreach my $language (keys %{$$content_templates{'language'}})
                     ${$$content_templates{'content'}{$language}{'section'}{$section}{'type'}}{$type} = ${$$content_templates_extension{'section'}{$section}{'type'}}{$type};
                     foreach my $file (@{$$content_templates_extension{'section'}{$section}{'type'}{$type}{'file'}})
                     {
-                        $$file{'template'} = sprintf "%s/etc/content_templates/%s", $plugin, $$file{'template'};
+                        $$file{'template'} = sprintf "%s/%s", $content_templates_folder, $$file{'template'};
+                        WARNMSG sprintf "Configured template file '%s' does not exist.\n", $$file{'template'} unless -f $$file{'template'};
                     }
                 }
                 foreach my $replace (keys %{$$content_templates_extension{'section'}{$section}{'replace'}})
@@ -128,6 +178,8 @@ foreach my $language (keys %{$$content_templates{'language'}})
         }
     }
 }
+
+
 
 #print Dumper $content_templates;
 
