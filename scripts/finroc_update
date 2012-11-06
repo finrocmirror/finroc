@@ -39,6 +39,7 @@ use FINROC::getopt;
 use FINROC::sources;
 use FINROC::scm;
 use FINROC::components;
+use FINROC::utilities;
 
 ############################
 ##  Command line options  ##
@@ -79,39 +80,7 @@ if (defined $username and not defined $password)
 ##  Search components  ##
 #########################
 
-my %directories;
-sub AddDirectory($)
-{
-    my ($directory) = @_;
-    return unless -d $directory;
-
-    $directories{$directory} = 1;
-}
-
-AddDirectory "$FINROC_HOME/make_builder";
-
-map { chomp; AddDirectory $_ } `find -L "$FINROC_HOME/sources" -maxdepth 4 -name "core" 2> /dev/null`;
-
-my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
-
-foreach my $class (@classes)
-{
-    foreach my $base (map { chomp; $_ } `find -L "$FINROC_HOME/sources" -name "$class" 2> /dev/null`)
-    {
-        map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls "$base"`;
-    }
-}
-
-AddDirectory "$FINROC_HOME/resources/simvis3d/abstract_objects";
-
-@classes = ( "decoration", "environments", "humans", "robots", "sensors" );
-foreach my $class (@classes)
-{
-    my $base = sprintf "$FINROC_HOME/resources/simvis3d/%s", $class;
-    map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls "$base" 2> /dev/null`;
-}
-
-AddDirectory "$FINROC_HOME";
+my %directories = FindWorkingCopyBaseFolders;
 
 
 
@@ -125,17 +94,9 @@ my @modified;
 my @outgoing;
 my @check_dependencies;
 
-my $i = 0;
-my $format_string = sprintf "%%%dd/%d", length "".scalar keys %directories, scalar keys %directories;
-foreach my $directory (sort keys %directories)
+ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
 {
-    my $progress = sprintf $format_string, ++$i, scalar keys %directories;
-
-    my $directory_name = $directory;
-    $directory_name =~ s/$FINROC_HOME/\$FINROC_HOME/;
-
-    INFOMSG sprintf " [%s] %s\n", $progress, $directory_name;
-    
+    my ($directory) = @_;
     my $result = Update $directory, $username, $password;
 
     push @check_dependencies, GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
@@ -143,11 +104,11 @@ foreach my $directory (sort keys %directories)
     INFOMSG "$result\n" if $result eq "Updated";
     WARNMSG "$result\n" if grep { $result eq $_ } ( "Conflicts", "Modified working copy", "Outgoing changesets" );
 
-    push @updated, $directory_name if $result eq "Updated";
-    push @conflicts, $directory_name if $result eq "Conflicts";
-    push @modified, $directory_name if $result eq "Modified working copy";
-    push @outgoing, $directory_name if $result eq "Outgoing changesets";
-}
+    push @updated, EscapeFinrocHome $directory if $result eq "Updated";
+    push @conflicts, EscapeFinrocHome $directory if $result eq "Conflicts";
+    push @modified, EscapeFinrocHome $directory if $result eq "Modified working copy";
+    push @outgoing, EscapeFinrocHome $directory if $result eq "Outgoing changesets";
+};
 
 
 

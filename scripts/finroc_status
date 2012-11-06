@@ -39,6 +39,7 @@ use FINROC::getopt;
 use FINROC::sources;
 use FINROC::scm;
 use FINROC::components;
+use FINROC::utilities;
 
 ############################
 ##  Command line options  ##
@@ -103,15 +104,7 @@ if (defined $username and not defined $password)
 ##  Search components  ##
 #########################
 
-my %directories;
-sub AddDirectory($)
-{
-    my ($directory) = @_;
-    return unless -d $directory;
-    return if defined $root and $root ne substr $directory, 0, length $root;
-
-    $directories{$directory} = 1;
-}
+my %directories = FindWorkingCopyBaseFolders $root;
 
 sub AddSubtreeRepositoryRoot()
 {
@@ -133,22 +126,6 @@ sub AddSubtreeRepositoryRoot()
     $directories{"$FINROC_HOME"} = 1;
 }
 
-AddDirectory "$FINROC_HOME/make_builder";
-
-map { chomp; AddDirectory $_ } `find -L "$FINROC_HOME/sources" -maxdepth 4 -name "core" 2> /dev/null`;
-
-my @classes = ( "rrlib", "libraries", "tools", "plugins", "projects" );
-
-foreach my $class (@classes)
-{
-    foreach my $base (map { chomp; $_ } `find -L "$FINROC_HOME/sources" -name "$class" 2> /dev/null`)
-    {
-        map { chomp; AddDirectory sprintf "%s/%s", $base, $_ } `ls "$base"`;
-    }
-}
-
-AddDirectory "$FINROC_HOME";
-
 AddSubtreeRepositoryRoot;
 
 
@@ -167,20 +144,12 @@ if (GetCommandLineOption "check")
     exit 0;
 }
 
-my $i = 0;
-my $format_string = sprintf "%%%dd/%d", length "".scalar keys %directories, scalar keys %directories;
-foreach my $directory (sort keys %directories)
+ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
 {
-    my $progress = sprintf $format_string, ++$i, scalar keys %directories;
-
-    my $directory_name = $directory;
-    $directory_name =~ s/$FINROC_HOME/\$FINROC_HOME/;
-
-    INFOMSG sprintf " [%s] %s\n", $progress, $directory_name;
-
+    my ($directory) = @_;
     my $status = Status $directory, defined GetCommandLineOption "local-modifications-only", defined GetCommandLineOption "incoming", $username, $password;
     INFOMSG $status unless $status eq "Unmanaged";
-}
+};
 
 
 
