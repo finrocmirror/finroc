@@ -102,9 +102,11 @@ foreach my $target (@targets)
 }
 
 my $global_hostname = ${$$sync_config{'hostname'}}{'content'};
+my $global_port = ${$$sync_config{'username'}}{'port'};
 my $global_username = ${$$sync_config{'username'}}{'content'};
 
 DEBUGMSG sprintf "Global hostname set to '%s'.\n", $global_hostname if defined $global_hostname;
+DEBUGMSG sprintf "Global port set to '%s'.\n", $global_port if defined $global_port;
 DEBUGMSG sprintf "Global username set to '%s'.\n", $global_username if defined $global_username;
 
 my $global_bin = ${$$sync_config{'directories'}}{'bin'}{'content'};
@@ -121,9 +123,9 @@ DEBUGMSG sprintf "Global etc target directory set to '%s'.\n", $global_etc if de
 #  Transferfunction for file lists  #
 #####################################
 
-sub Transfer($$$$$)
+sub Transfer($$$$$$)
 {
-    my ($hostname, $username, $directory, $sub_directory, $files) = @_;
+    my ($hostname, $port, $username, $directory, $sub_directory, $files) = @_;
 
     $directory = "" unless defined $directory;    
     $directory .= "/" if $directory ne "";
@@ -133,6 +135,7 @@ sub Transfer($$$$$)
 
     my $rsync_options = "-avP";
     $rsync_options .= "n" if defined GetCommandLineOption "simulate";
+    $rsync_options .= sprintf " --rsh='ssh -p %d'", $port if defined $port;
 
     my $command = sprintf "rsync %s --exclude=.svn --rsync-path='mkdir -p %s && rsync' %s %s%s%s", $rsync_options, $directory, $files, $username, $hostname, $directory;
     DEBUGMSG sprintf "command = '%s'\n", $command;
@@ -160,11 +163,14 @@ foreach my $target (@{$$sync_config{'target'}})
     DEBUGMSG sprintf "target:\n%s\n", Dumper \%target;
 
     my $hostname = $target{'hostname'}{'content'};
+    my $port = $target{'hostname'}{'port'};
     my $username = $target{'username'}{'content'};
     $hostname = $global_hostname unless defined $hostname;
+    $port = $global_port unless defined $port;
     $username = $global_username unless defined $username;
 
     DEBUGMSG sprintf "hostname = '%s'.\n", $hostname if defined $hostname;
+    DEBUGMSG sprintf "port = '%d'.\n", $port if defined $port;
     DEBUGMSG sprintf "username = '%s'.\n", $username if defined $username;
 
     unless ($check_host->ping($hostname))
@@ -206,11 +212,11 @@ foreach my $target (@{$$sync_config{'target'}})
             }
         }
 
-        Transfer $hostname, $username, $bin, $$transfer_block{'subdir'}, join " ", @binaries if @binaries;
+        Transfer $hostname, $port, $username, $bin, $$transfer_block{'subdir'}, join " ", @binaries if @binaries;
     }
 
     my %seen;
-    Transfer $hostname, $username, $lib, undef, join " ", grep { !$seen{$_}++ } @libraries if @libraries;
+    Transfer $hostname, $port, $username, $lib, undef, join " ", grep { !$seen{$_}++ } @libraries if @libraries;
 
     foreach my $transfer_block ((@{$target{'config'}}, @{$$sync_config{'config'}}))
     {
@@ -223,7 +229,7 @@ foreach my $target (@{$$sync_config{'target'}})
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
         my @files = split " ", $$transfer_block{'content'};
 
-        Transfer $hostname, $username, $etc, $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
+        Transfer $hostname, $port, $username, $etc, $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
     }
 
     foreach my $transfer_block ((@{$target{'misc'}}, @{$$sync_config{'misc'}}))
@@ -236,7 +242,7 @@ foreach my $target (@{$$sync_config{'target'}})
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
         my @files = split " ", $$transfer_block{'content'};
 
-        Transfer $hostname, $username, "", $$transfer_block{'subdir'}, join " ", map { "\"$prefix$_\"" } @files if @files;
+        Transfer $hostname, $port, $username, "", $$transfer_block{'subdir'}, join " ", map { "\"$prefix$_\"" } @files if @files;
     }
 
     INFOMSG "Done.\n";
