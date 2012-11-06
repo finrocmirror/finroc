@@ -268,11 +268,16 @@ if (keys %extra_components and not defined GetCommandLineOption "yes")
 ##  Checkout components  ##
 ###########################
 
+my $i = 0;
+my $format_string = sprintf "%%%dd/%d", length "".scalar keys %mandatory_components, scalar keys %mandatory_components;
 foreach my $component_name (sort keys %mandatory_components)
 {
+    my $progress = sprintf $format_string, ++$i, scalar keys %mandatory_components;
+
     my %component = %{$mandatory_components{$component_name}};
 
     DEBUGMSG sprintf "About to checkout component '%s' from '%s'\n", $component_name, $component{'url'};
+    INFOMSG sprintf " [%s] \$FINROC_HOME/%s\n", $progress, $component{'target'};
 
     Checkout $component{'url'}, "$FINROC_HOME/$component{'target'}", $username, $password;
 }
