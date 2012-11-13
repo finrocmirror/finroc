@@ -154,4 +154,3 @@ ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
 
 
 exit 0;
-    

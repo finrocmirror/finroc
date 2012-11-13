@@ -225,7 +225,7 @@ ParseCommandLine [ "output:s", "frame:s" ], sub {
 
 UI::InitializeDialog "Finroc";
 
-my $base_folder = $FINROC_HOME;
+my $base_folder = "$FINROC_HOME/sources";
 
 sub UpdateBaseFolder($)
 {
@@ -310,7 +310,6 @@ unless (defined $$sections{$section}{'members_as_subfolders'} and $$sections{$se
                           [ map { chomp; basename $_ } `find -L "$base_folder" -mindepth 1 -maxdepth 1 -type d -a ! -name ".*"` ]);
     $base_folder .= "/$member";
 }
-
 
 ##############
 ##  Folder  ##
