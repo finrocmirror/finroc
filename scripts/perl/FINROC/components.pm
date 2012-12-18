@@ -56,8 +56,15 @@ sub ComponentInfo($)
 
     if ($directory =~ s/^rrlib_simvis3d_resources_//)
     {
+        $directory =~ s/^decoration_furniture_/decoration\/furniture\//;
+        $directory =~ s/^decoration_obstacles_/decoration\/obstacles\//;
+        $directory =~ s/^decoration_plants_/decoration\/plants\//;
         $directory =~ s/^environments_/environments\//;
+        $directory =~ s/^humans_/humans\//;
         $directory =~ s/^robots_/robots\//;
+        $directory =~ s/^sensors_distance_/sensors\/distance\//;
+        $directory =~ s/^sensors_image_/sensors\/image\//;
+        $directory =~ s/^sensors_temperature_/sensors\/temperature\//;
 
         $directory = sprintf "../../resources/simvis3d/%s", $directory;
     }
