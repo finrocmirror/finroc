@@ -37,12 +37,13 @@ use Env '$FINROC_HOME';
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
+use FINROC::scm;
 
 
 sub AddDirectory($$$)
 {
     my ($directories, $directory, $prefix) = @_;
-    return unless -d $directory;
+    return unless -d $directory and IsWorkingCopyRoot $directory;
     return if defined $prefix and $prefix ne substr $directory, 0, length $prefix;
 
     $$directories{$directory} = 1;
@@ -78,7 +79,7 @@ sub FindWorkingCopyBaseFolders
     }
 
     AddDirectory \%directories, "$FINROC_HOME", $common_prefix;
-    
+
     return %directories;
 }
 

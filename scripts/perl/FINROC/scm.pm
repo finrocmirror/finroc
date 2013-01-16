@@ -28,7 +28,7 @@
 package FINROC::scm;
 use Exporter;
 @ISA = qw/Exporter/;
-@EXPORT = qw/Checkout Update Status IsOnDefaultBranch ParentDateUTCTimestamp/;
+@EXPORT = qw/Checkout Update Status IsOnDefaultBranch ParentDateUTCTimestamp IsWorkingCopyRoot/;
 
 
 use strict;
@@ -147,6 +147,21 @@ sub ParentDateUTCTimestamp($)
     return $result;
 }
 
+sub IsWorkingCopyRoot($)
+{
+    my ($directory) = @_;
+    
+    my $scm_name = GetSCMNameOfWorkingCopy $directory;
+
+    return 0 unless $scm_name;
+    $directory = sprintf "'%s'", $directory;
+
+    my $result;
+    eval sprintf "\$result = FINROC::scm::%s::IsWorkingCopyRoot(%s)", $scm_name, $directory;
+    ERRORMSG $@ if $@;
+
+    return $result;
+}
 
 
 1;

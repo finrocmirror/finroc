@@ -184,6 +184,11 @@ sub ParentDateUTCTimestamp($)
     return int join "", map { /^(.*)((-|\+).*)$/ ? $1 + $2 : $_ } `$command`;
 }
 
+sub IsWorkingCopyRoot($)
+{
+    my ($directory) = @_;
+    return -d "$directory/.hg";
+}
 
 
 1;

@@ -111,6 +111,18 @@ sub ParentDateUTCTimestamp($)
     return int parsedate ${XMLin join "", `$command`}{'entry'}{'commit'}{'date'};
 }
 
+sub IsWorkingCopyRoot($)
+{
+    my ($directory) = @_;
+
+    my $parent_directory = "$directory/..";
+    return 1 unless -d "$parent_directory/.svn";
+
+    my $command = sprintf "svn info --xml \"%s\"", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+
+    return ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'repository'}{'uuid'} ne ${XMLin join "", map { chomp; $_ } `$command/..`}{'entry'}{'repository'}{'uuid'};
+}
 
 
 1;
