@@ -13,6 +13,8 @@ resources
 # build directories
 export
 build
+documentation/cpp/html
+documentation/java/html
 
 # make_builder
 .makeBuilderCache
