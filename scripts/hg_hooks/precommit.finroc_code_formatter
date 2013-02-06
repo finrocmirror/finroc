@@ -62,6 +62,7 @@ fi
 # check changed files
 for FILE in `hg status --added --modified --no-status`
 do
+    [ -f $FILE ] || continue
     TEMP_FILE=`echo $FILE | sed -re "s/\.([^.]+)$/.hg_hook_formatted.\1/"`
     [[ "$TEMP_FILE" == "$FILE" ]] && TEMP_FILE="$FILE.hg_hook_formatted"
     cp $FILE $TEMP_FILE
