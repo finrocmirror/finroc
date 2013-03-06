@@ -62,17 +62,22 @@ fi
 # check changed files
 for FILE in `hg status --added --modified --no-status`
 do
-    [ -f $FILE ] || continue
-    TEMP_FILE=`echo $FILE | sed -re "s/\.([^.]+)$/.hg_hook_formatted.\1/"`
-    [[ "$TEMP_FILE" == "$FILE" ]] && TEMP_FILE="$FILE.hg_hook_formatted"
-    cp $FILE $TEMP_FILE
-    finroc_code_formatter -f $TEMP_FILE &> /dev/null
+    [ -f "$FILE" ] || continue
+
+    BASENAME=$(basename "$FILE")
+    DIRNAME=$(dirname "$FILE")
+    TEMP_BASENAME=`echo "$BASENAME" | sed -re "s/\.([^.]+)$/.hg_hook_formatted.\1/"`
+    [[ "$TEMP_BASENAME" == "$BASENAME" ]] && TEMP_BASENAME="$BASENAME.hg_hook_formatted"
+    TEMP_FILE="$DIRNAME/$TEMP_BASENAME"
+
+    cp "$FILE" "$TEMP_FILE"
+    finroc_code_formatter -f "$TEMP_FILE" &> /dev/null
     if [ $? -ne 0 ] ; then
-        finroc_code_formatter -f $TEMP_FILE
+        finroc_code_formatter -f "$TEMP_FILE"
         echo "Could not run finroc_code_formatter!" 1>&2
         exit 1
     fi
-    diff --brief $FILE $TEMP_FILE &> /dev/null
+    diff --brief "$FILE" "$TEMP_FILE" &> /dev/null
     if [ $? -ne 0 ] ; then
         echo 1>&2
         echo "Commits to the central repository are only allowed for source" 1>&2
@@ -83,11 +88,11 @@ do
         echo "Please run finroc_code_formatter and recompile." 1>&2
         echo 1>&2
         echo "Diff output for $FILE:" 1>&2
-        diff $FILE $TEMP_FILE 1>&2
-        rm $TEMP_FILE
+        diff "$FILE" "$TEMP_FILE" 1>&2
+        rm "$TEMP_FILE"
         exit 1
     fi
-    rm $TEMP_FILE
+    rm "$TEMP_FILE"
 done
 
 exit 0
