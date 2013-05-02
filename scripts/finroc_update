@@ -51,7 +51,7 @@ SetHelp undef,
     "-p <password>, --password=<password>" => "use <password> to get access to repositories"
 }, undef;
 
-ParseCommandLine [ "optional=s", "username=s", "password=s" ], undef;
+ParseCommandLine [ "username=s", "password=s" ], undef;
 
 
 
