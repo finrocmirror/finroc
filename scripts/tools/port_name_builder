@@ -45,13 +45,13 @@ print "\n * using finroc_port_name_builder.";
 print "\n * This code is released under the same license as the source files.\n */\n\n";
 
 # includes, namespace
-print "#include \"core/structure/tStructureElementRegister.h\"\n\n";
-print "using finroc::core::structure::tStructureElementRegister;\n\n";
+print "#include \"plugins/structure/internal/register.h\"\n\n";
+print "using namespace finroc::structure::internal;\n\n";
 print "namespace finroc\n{\nnamespace generated\n{\n\n";
 
 # generate code for names
 print "static int InitializePortNames()\n{\n";
-print "  std::vector<util::tString> names;\n";
+print "  std::vector<std::string> names;\n";
 foreach my $class (@$classes)
 {
     printf "\n  // class %s\n", $class->{name};
@@ -79,7 +79,7 @@ foreach my $class (@$classes)
         }
     }
 
-    printf "  tStructureElementRegister::AddPortNamesForModuleType(\"%s\", names);\n", $class->{name};
+    printf "  AddPortNamesForModuleType(\"%s\", names);\n", $class->{name};
 }
 print "\n  return 0;\n";
 print "}\n\n";
