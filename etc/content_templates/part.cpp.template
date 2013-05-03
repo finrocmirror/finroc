@@ -20,7 +20,7 @@
  *
  */
 //----------------------------------------------------------------------
-#include "core/default_main_wrapper.h"
+#include "plugins/structure/default_main_wrapper.h"
 
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")
@@ -65,7 +65,7 @@ void StartUp()
 //----------------------------------------------------------------------
 // InitMainGroup
 //----------------------------------------------------------------------
-void InitMainGroup(finroc::core::tThreadContainer *main_thread, std::vector<char *> remaining_args)
+void InitMainGroup(finroc::structure::tThreadContainer *main_thread, std::vector<char *> remaining_args)
 {
 
   new %%NAMESPACE%%::m%%NAME%%(main_thread);

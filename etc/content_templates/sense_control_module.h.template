@@ -23,7 +23,7 @@
 #ifndef %%SENTINEL%%
 #define %%SENTINEL%%
 
-#include "core/structure/tSenseControlModule.h"
+#include "plugins/structure/tSenseControlModule.h"
 
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")
@@ -49,9 +49,8 @@
 /*!
  * %%DESCRIPTION%%
  */
-class m%%NAME%% : public core::structure::tSenseControlModule
+class m%%NAME%% : public structure::tSenseControlModule
 {
-  static core::tStandardCreateModuleAction<m%%NAME%%> cCREATE_ACTION;
 
 //----------------------------------------------------------------------
 // Ports (These are the only variables that may be declared public)
@@ -77,7 +76,7 @@ public:
 //----------------------------------------------------------------------
 public:
 
-  m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%");
+  m%%NAME%%(core::tFrameworkElement *parent, const std::string &name = "%%NAME%%");
 
 //----------------------------------------------------------------------
 // Private fields and methods
@@ -93,9 +92,9 @@ private:
    */
   ~m%%NAME%%();
 
-  virtual void EvaluateStaticParameters();   Might be needed to process static parameters. Delete otherwise!
+  virtual void OnStaticParameterChange();   Might be needed to process static parameters. Delete otherwise!
 
-  virtual void EvaluateParameters();   Might be needed to react to changes in parameters independent from Update() calls. Delete otherwise!
+  virtual void OnParameterChange();   Might be needed to react to changes in parameters independent from Update() calls. Delete otherwise!
 
   virtual void Sense();
 

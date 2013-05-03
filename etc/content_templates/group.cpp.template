@@ -45,7 +45,7 @@
 //----------------------------------------------------------------------
 // Const values
 //----------------------------------------------------------------------
-core::tStandardCreateModuleAction<g%%NAME%%> g%%NAME%%::cCREATE_ACTION("%%NAME%%");
+static runtime_construction::tStandardCreateModuleAction<g%%NAME%%> cCREATE_ACTION_FOR_G%%NAME_IN_UPPER_CASE%%("%%NAME%%");
 
 //----------------------------------------------------------------------
 // Implementation
@@ -54,8 +54,8 @@ core::tStandardCreateModuleAction<g%%NAME%%> g%%NAME%%::cCREATE_ACTION("%%NAME%%
 //----------------------------------------------------------------------
 // g%%NAME%% constructor
 //----------------------------------------------------------------------
-g%%NAME%%::g%%NAME%%(core::tFrameworkElement *parent, const util::tString &name,
-     %%INDENT_TWO_NAMES%%const util::tString &structure_config_file) :
+g%%NAME%%::g%%NAME%%(core::tFrameworkElement *parent, const std::string &name,
+     %%INDENT_TWO_NAMES%%const std::string &structure_config_file) :
   tGroup(parent, name, structure_config_file)
 {}
 

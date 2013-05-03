@@ -45,7 +45,7 @@
 //----------------------------------------------------------------------
 // Const values
 //----------------------------------------------------------------------
-core::tStandardCreateModuleAction<m%%NAME%%> m%%NAME%%::cCREATE_ACTION("%%NAME%%");
+runtime_construction::tStandardCreateModuleAction<m%%NAME%%> cCREATE_ACTION_FOR_M%%NAME_IN_UPPER_CASE%%("%%NAME%%");
 
 //----------------------------------------------------------------------
 // Implementation
@@ -54,7 +54,7 @@ core::tStandardCreateModuleAction<m%%NAME%%> m%%NAME%%::cCREATE_ACTION("%%NAME%%
 //----------------------------------------------------------------------
 // m%%NAME%% constructor
 //----------------------------------------------------------------------
-m%%NAME%%::m%%NAME%%(core::tFrameworkElement *parent, const util::tString &name) :
+m%%NAME%%::m%%NAME%%(core::tFrameworkElement *parent, const std::string &name) :
   tModule(parent, name),
   If you have some member variables, please initialize them here. Especially built-in types (like pointers!). Delete this line otherwise!
 {}
@@ -68,7 +68,7 @@ m%%NAME%%::~m%%NAME%%()
 //----------------------------------------------------------------------
 // m%%NAME%% EvaluateStaticParameters
 //----------------------------------------------------------------------
-void m%%NAME%%::EvaluateStaticParameters()
+void m%%NAME%%::OnStaticParameterChange()
 {
   if (this->static_parameter_1.HasChanged())
   {
@@ -79,7 +79,7 @@ void m%%NAME%%::EvaluateStaticParameters()
 //----------------------------------------------------------------------
 // m%%NAME%% EvaluateParameters
 //----------------------------------------------------------------------
-void m%%NAME%%::EvaluateParameters()
+void m%%NAME%%::OnParameterChange()
 {
   If this method is called, at least on of your parameters has changed. However, each can be checked using its .HasChanged() method.
 }

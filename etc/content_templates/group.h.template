@@ -23,12 +23,11 @@
 #ifndef %%SENTINEL%%
 #define %%SENTINEL%%
 
-#include "core/structure/tGroup.h"
+#include "plugins/structure/tGroup.h"
 
 //----------------------------------------------------------------------
 // External includes (system with <>, local with "")
 //----------------------------------------------------------------------
-#include "core/finstructable/tFinstructableGroup.h"
 
 //----------------------------------------------------------------------
 // Internal includes with ""
@@ -50,24 +49,23 @@
 /*!
  * %%DESCRIPTION%%
  */
-class g%%NAME%% : public core::structure::tGroup
+class g%%NAME%% : public structure::tGroup
 {
-  static core::tStandardCreateModuleAction<g%%NAME%%> cCREATE_ACTION;
 
 //----------------------------------------------------------------------
 // Ports (These are the only variables that may be declared public)
 //----------------------------------------------------------------------
 public:
 
-  tControllerInput<> ci_signal_1;
+  tControllerInput<double> ci_signal_1;
 
 //----------------------------------------------------------------------
 // Public methods and typedefs
 //----------------------------------------------------------------------
 public:
 
-  g%%NAME%%(core::tFrameworkElement *parent, const util::tString &name = "%%NAME%%",
-    %%INDENT_ONE_NAME%%const util::tString &structure_config_file = __FILE__".xml");
+  g%%NAME%%(core::tFrameworkElement *parent, const std::string &name = "%%NAME%%",
+    %%INDENT_ONE_NAME%%const std::string &structure_config_file = __FILE__".xml");
 
 //----------------------------------------------------------------------
 // Private fields and methods
