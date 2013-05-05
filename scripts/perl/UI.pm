@@ -264,13 +264,6 @@ sub SelectSubFolder($)
 
         return $parent if $folder eq "\bSelect";
 
-        if ($folder == 0)
-        {
-            $subfolder = dirname $subfolder;
-            $subfolder = "" if $subfolder eq ".";
-            next;
-        }
-
         if ($folder eq "\bNew folder")
         {
             my $new_folder = InputText("Create new folder", "$parent", undef, undef);
