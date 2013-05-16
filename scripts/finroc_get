@@ -168,6 +168,7 @@ sub FixImplicitDependencies()
     {
         AddComponent "make_builder", \%mandatory_components, 0;
         AddComponent sprintf("finroc_tools_gui%s", defined $1 ? $1 : ""), \%mandatory_components, 0 if $component_name =~ /^finroc_tools_gui_[^-]+(-\S+)?/;
+        AddComponent "rrlib_simvis3d_jni", \%mandatory_components, 0 if $component_name eq "finroc_tools_gui_plugins_simvis3d-java";
     }
 }
 
