@@ -66,7 +66,7 @@ m%%NAME%%::~m%%NAME%%()
 {}
 
 //----------------------------------------------------------------------
-// m%%NAME%% EvaluateStaticParameters
+// m%%NAME%% OnStaticParameterChange
 //----------------------------------------------------------------------
 void m%%NAME%%::OnStaticParameterChange()
 {
@@ -77,7 +77,7 @@ void m%%NAME%%::OnStaticParameterChange()
 }
 
 //----------------------------------------------------------------------
-// m%%NAME%% EvaluateParameters
+// m%%NAME%% OnParameterChange
 //----------------------------------------------------------------------
 void m%%NAME%%::OnParameterChange()
 {

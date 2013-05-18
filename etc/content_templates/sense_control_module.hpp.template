@@ -66,7 +66,7 @@ m%%NAME%%<>::~m%%NAME%%()
 {}
 
 //----------------------------------------------------------------------
-// m%%NAME%% EvaluateStaticParameters
+// m%%NAME%% OnStaticParameterChange
 //----------------------------------------------------------------------
 template <>
 void m%%NAME%%<>::OnStaticParameterChange()
@@ -78,7 +78,7 @@ void m%%NAME%%<>::OnStaticParameterChange()
 }
 
 //----------------------------------------------------------------------
-// m%%NAME%% EvaluateParameters
+// m%%NAME%% OnParameterChange
 //----------------------------------------------------------------------
 template <>
 void m%%NAME%%<>::OnParameterChange()
