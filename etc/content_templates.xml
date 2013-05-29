@@ -61,16 +61,6 @@
       <type name="Part" description="Finroc Part (For test programs)" format="UpperCamelCase" filename="qq(p$name)">
         <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
       </type>
-      <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
-      </type>
-      <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
-      </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
         <file name="Header File" extension="h" template="class.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
@@ -83,19 +73,6 @@
       </type>
     </section>
     <section name="Finroc Libraries" folder="libraries">
-      <type name="Part" description="Finroc Part (For test programs)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
-      </type>
-      <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
-      </type>
-      <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
-      </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
         <file name="Header File" extension="h" template="class.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
@@ -105,27 +82,9 @@
         <file name="Header File" extension="h" template="misc.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
-      </type>
-      <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="sense_control_module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="sense_control_module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="sense_control_module.hpp.template" optional="true"/>
       </type>
     </section>
     <section name="Finroc Projects" folder="projects">
-      <type name="Part" description="Finroc Part (Executable)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
-      </type>
-      <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
-      </type>
-      <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
-      </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
         <file name="Header File" extension="h" template="class.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
@@ -135,11 +94,6 @@
         <file name="Header File" extension="h" template="misc.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
-      </type>
-      <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="sense_control_module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="sense_control_module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="sense_control_module.hpp.template" optional="true"/>
       </type>
       <replace key="MODULE_HEADER_PATH">
         "$folder/m$name.h"
@@ -149,19 +103,6 @@
       </replace>
     </section>
     <section name="Finroc Tools" folder="tools">
-      <type name="Part" description="Finroc Part (Executable)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
-      </type>
-      <type name="Module" description="Finroc Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="module.hpp.template" optional="true"/>
-      </type>
-      <type name="Group" description="Finroc Group (C++)" format="UpperCamelCase" filename="qq(g$name)">
-        <file name="Header File" extension="h" template="group.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="group.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="group.hpp.template" optional="true"/>
-      </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
         <file name="Header File" extension="h" template="class.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
@@ -171,11 +112,6 @@
         <file name="Header File" extension="h" template="misc.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
-      </type>
-      <type name="SenseControlModule" description="Finroc Sense &amp; Control Module" format="UpperCamelCase" filename="qq(m$name)">
-        <file name="Header File" extension="h" template="sense_control_module.h.template"/>
-        <file name="Implementation File (cpp)" extension="cpp" template="sense_control_module.cpp.template" optional="true" preselected="true"/>
-        <file name="Implementation File (hpp)" extension="hpp" template="sense_control_module.hpp.template" optional="true"/>
       </type>
     </section>
     <section name="RRLib" folder="rrlib">
