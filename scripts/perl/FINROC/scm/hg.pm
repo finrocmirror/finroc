@@ -147,13 +147,16 @@ sub Status($$$$$)
     my $push_path = GetPath $directory, "default-push";
     $push_path = $pull_path unless defined $push_path;
 
+    my $headline = 0;
     if (defined $pull_path and $incoming)
     {
         my $credentials = CredentialsForCommandLine $pull_path, $username, $password;
 
         my $command = sprintf "hg %s --cwd \"%s\" in -b \$(hg --cwd \"%s\" branch)", $credentials, $directory, $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
+        INFOMSG " Incoming changes:\n";
         system $command;
+        $headline = 1;
     }
 
     if (defined $push_path and not $local_modifications_only)
@@ -162,7 +165,9 @@ sub Status($$$$$)
 
         my $command = sprintf "hg %s --cwd \"%s\" out", $credentials, $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
+        INFOMSG " Outgoing changes:\n";
         system $command;
+        $headline = 1;
     }
 
     my $command = sprintf "hg --cwd \"%s\" st", $directory;
@@ -171,6 +176,7 @@ sub Status($$$$$)
     DEBUGMSG $output;
     ERRORMSG "Command failed!\n" if $?;
 
+    $output = " Status of working directory:\n".$output."\n" if $output and $headline;
     return $output;
 }
 
