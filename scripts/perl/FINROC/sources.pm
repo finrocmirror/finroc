@@ -59,28 +59,27 @@ sub GetAllComponents()
         my $offline_source = $source;
         $offline_source =~ s/[\:\/]/./g;
 
-        my $xml_content = "";
-        if (-f "$FINROC_HOME/.offline/$offline_source.xml" and time < ${[stat _]}[9] + 10)
+        if (not -f "$FINROC_HOME/.offline/$offline_source.xml" or time > ${[stat _]}[9] + 10)
         {
-            $xml_content = join "", `cat "$FINROC_HOME/.offline/$offline_source.xml" 2> /dev/null`;
-        }
-        else
-        {
-            my $command = sprintf "curl -fsk %s.xml", $source;
+            my $cache = "$FINROC_HOME/.offline/$offline_source.xml";
+            DEBUGMSG "Updating component information: $source\n";
+            my $command = sprintf "curl -fsk --connect-timeout 5 --create-dirs -o %s %s.xml", $cache, $source;
             DEBUGMSG sprintf "Executing '%s'\n", $command;
-            $xml_content = join "", `$command`;        
-            if ($? == 0)
+            system $command;
+            if ($? != 0)
             {
-                mkdir "$FINROC_HOME/.offline" unless -d "$FINROC_HOME/.offline";
-                open OFFLINE, ">$FINROC_HOME/.offline/$offline_source.xml" or ERRORMSG "Could not open offline file to write: $!\n";
-                print OFFLINE $xml_content;
-                close OFFLINE;
+                WARNMSG sprintf "%sCould not download component list for %s\n", $pad_before_first_warning, $source;
+                $pad_before_first_warning = "";
+                next unless -f "$cache";
+                system "touch $cache";
             }
         }
 
+        my $xml_content = join "", `cat "$FINROC_HOME/.offline/$offline_source.xml" 2> /dev/null`;
+
         if ($xml_content eq "")
         {
-            WARNMSG sprintf "%sNo components found at %s\n", $pad_before_first_warning, $source;
+            WARNMSG sprintf "%sNo components found for %s\n", $pad_before_first_warning, $source;
             $pad_before_first_warning = "";
             next;
         }
