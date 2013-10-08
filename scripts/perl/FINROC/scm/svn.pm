@@ -48,11 +48,11 @@ sub CredentialsForCommandLine($$)
     return $credentials;
 }
 
-sub Checkout($$$$)
+sub Checkout($$$$$)
 {
-    my ($url, $target, $username, $password) = @_;
+    my ($url, $branch, $target, $username, $password) = @_;
 
-    $url .= "/trunk";
+    $url .= sprintf "/%s", $branch;
 
     my $credentials = CredentialsForCommandLine $username, $password;
 

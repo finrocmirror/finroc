@@ -55,23 +55,20 @@ sub GetSCMNameOfWorkingCopy($)
     return $scm_name;
 }
 
-sub Checkout($$$$)
+sub Checkout($$$$$$)
 {
-    my ($url, $target, $username, $password) = @_;
+    my ($scm_name, $url, $branch, $target, $username, $password) = @_;
 
     ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $target if -f $target;
     ERRORMSG sprintf "'%s' already exists\n", $target if -e $target;
 
-    my $scm_name = @{[ reverse split "/", $url ]}[1];
-
-    ERRORMSG sprintf "Could not determine source code management system for URL '%s'!\n", $url unless defined $scm_name and $scm_name ne "";
-
     $url = sprintf "'%s'", $url;
+    $branch = sprintf "'%s'", $branch;
     $target = sprintf "'%s'", $target;
     $username = defined $username ? sprintf "'%s'", $username : "undef";
     $password = defined $password ? sprintf "'%s'", $password : "undef";
 
-    eval sprintf "FINROC::scm::%s::Checkout(%s, %s, %s, %s)", $scm_name, $url, $target, $username, $password;
+    eval sprintf "FINROC::scm::%s::Checkout(%s, %s, %s, %s, %s)", $scm_name, $url, $branch, $target, $username, $password;
     ERRORMSG $@ if $@;
 }
 

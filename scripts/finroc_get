@@ -128,7 +128,7 @@ sub AddComponent($$$)
 
     my %component = GetComponent $component_name;
 
-    $$list{$component_name} = { 'url' => $component{'url'}, 'target' => ${ComponentInfo $component_name}{'directory'}, 'disk_usage' => $component{'disk_usage'} };
+    $$list{$component_name} = { 'scm' => $component{'scm'}, 'url' => $component{'url'}, 'branch' => $component{'branch'}, 'target' => ${ComponentInfo $component_name}{'directory'}, 'disk_usage' => $component{'disk_usage'} };
     ${$$list{$component_name}}{'installed'} = -d "$FINROC_HOME/${$$list{$component_name}}{'target'}";
     unless ($force)
     {
@@ -279,7 +279,8 @@ ForEachWithProgress [ sort keys %mandatory_components ], sub
     my ($component_name) = @_;
     my %component = %{$mandatory_components{$component_name}};
     DEBUGMSG sprintf "About to checkout component '%s' from '%s'\n", $component_name, $component{'url'};
-    Checkout $component{'url'}, "$FINROC_HOME/$component{'target'}", $username, $password;
+    DEBUGMSG sprintf "Component data:\n%s", Dumper \%component;
+    Checkout $component{'scm'}, $component{'url'}, $component{'branch'}, "$FINROC_HOME/$component{'target'}", $username, $password;
 };
 
 

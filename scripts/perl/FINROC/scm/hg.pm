@@ -70,12 +70,10 @@ sub GetPath($$)
     return $output ne "" ? $output : undef;
 }
 
-sub Checkout($$$$)
+sub Checkout($$$$$)
 {
-    my ($url, $target, $username, $password) = @_;
+    my ($url, $branch, $target, $username, $password) = @_;
     
-    my $branch = "default";
-
     my $credentials = CredentialsForCommandLine $url, $username, $password;
 
     my $target_base = $target;
@@ -83,10 +81,19 @@ sub Checkout($$$$)
     DEBUGMSG sprintf "Creating directory '%s'\n", $target_base;
     ERRORMSG "Command failed!\n" if $?;
 
-    my $command = sprintf "hg %s clone %s \"%s\"", $credentials, $url, $target;
+    my $command = sprintf "hg %s clone -U %s \"%s\"", $credentials, $url, $target;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
+    INFOMSG sprintf "updating to branch %s\n", $branch;
+    $command = sprintf "hg --cwd \"%s\" up %s", $target, $branch;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    system $command;
+    if ($?)
+    {
+        system "rm -rf \"$target\"";
+        ERRORMSG "Command failed!\n";
+    }
 }
 
 sub Update($$$)
