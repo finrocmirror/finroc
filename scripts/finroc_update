@@ -101,7 +101,7 @@ ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
 
     push @check_dependencies, GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
     
-    INFOMSG "$result\n" if $result eq "Updated";
+    INFOMSG "Updated\n" if $result eq "Updated";
     WARNMSG "$result\n" if grep { $result eq $_ } ( "Conflicts", "Modified working copy", "Outgoing changesets" );
 
     push @updated, EscapeFinrocHome $directory if $result eq "Updated";

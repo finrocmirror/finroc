@@ -38,9 +38,12 @@ use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 use UI;
 
+my $incoming_bundle = sprintf "/tmp/.finroc_incoming_%s.bundle", $$;
+
 END
 {
     local $?;
+    unlink $incoming_bundle;
     my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
     chdir $FINROC_HOME;
     system "scripts/tools/update_hg_hooks";
@@ -105,7 +108,7 @@ sub Update($$$)
 
     my $credentials = CredentialsForCommandLine $default_path, $username, $password;
 
-    my $command = sprintf "hg %s --cwd \"%s\" in -q", $credentials, $directory;
+    my $command = sprintf "hg %s --cwd \"%s\" in -b \$(hg --cwd \"%s\" branch) --bundle \"%s\" -q", $credentials, $directory, $directory, $incoming_bundle;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     return "Up to date" if $?;
@@ -122,7 +125,7 @@ sub Update($$$)
     system $command;
     return "Outgoing changesets" unless $?;
 
-    $command = sprintf "hg %s --cwd \"%s\" pull -q", $credentials, $directory;
+    $command = sprintf "hg %s --cwd \"%s\" pull %s -q", $credentials, $directory, $incoming_bundle;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
@@ -148,7 +151,7 @@ sub Status($$$$$)
     {
         my $credentials = CredentialsForCommandLine $pull_path, $username, $password;
 
-        my $command = sprintf "hg %s --cwd \"%s\" in", $credentials, $directory;
+        my $command = sprintf "hg %s --cwd \"%s\" in -b \$(hg --cwd \"%s\" branch)", $credentials, $directory, $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
         system $command;
     }
