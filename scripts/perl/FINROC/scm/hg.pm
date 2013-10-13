@@ -38,12 +38,9 @@ use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 use UI;
 
-my $incoming_bundle = sprintf "/tmp/.finroc_incoming_%s.bundle", $$;
-
 END
 {
     local $?;
-    unlink $incoming_bundle;
     my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
     chdir $FINROC_HOME;
     system "scripts/tools/update_hg_hooks";
@@ -108,33 +105,35 @@ sub Update($$$)
 
     my $credentials = CredentialsForCommandLine $default_path, $username, $password;
 
-    my $command = sprintf "hg %s --cwd \"%s\" in -b \$(hg --cwd \"%s\" branch) --bundle \"%s\" -q", $credentials, $directory, $directory, $incoming_bundle;
+    my $command = sprintf "hg %s --cwd \"%s\" pull -q", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    return "Up to date" if $?;
+    ERRORMSG "Command failed!\n" if $?;
 
-    $command = sprintf "hg --cwd \"%s\" st -q", $directory;
+    $command = sprintf "hg --cwd \"%s\" heads \$(hg --cwd \"%s\" branch) --template '{rev}\\n'", $directory, $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my @heads = map { chomp; int($_) } `$command`;
+    DEBUGMSG sprintf "%s\n", join "\n", @heads;
+    ERRORMSG "Command failed!\n" if $?;
+
+    $command = sprintf "hg --cwd \"%s\" parent --template '{rev}\\n'", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $parent = int(`$command`);
+    DEBUGMSG "$parent\n";
+    ERRORMSG "Command failed!\n" if $?;
+
+    if (@heads > 1)
+    {
+        return "Multiple heads";
+    }
+
+    return "Up to date" if $parent eq $heads[0];
+
+    $command = sprintf "hg --cwd \"%s\" update -c -q 2> /dev/null", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;
-    ERRORMSG "Command failed!\n" if $?;
-    return "Modified working copy" unless $output eq "";
-
-    $command = sprintf "hg %s --cwd \"%s\" out -q", $credentials, $directory;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-    system $command;
-    return "Outgoing changesets" unless $?;
-
-    $command = sprintf "hg %s --cwd \"%s\" pull %s -q", $credentials, $directory, $incoming_bundle;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-    system $command;
-    ERRORMSG "Command failed!\n" if $?;
-
-    $command = sprintf "hg --cwd \"%s\" update", $directory;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-    $output = join "", `$command`;
-    DEBUGMSG $output;
-    return "Conflicts" if $?;
+    return "Uncommitted changes" if $?;
 
     return "Updated";
 }

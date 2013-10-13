@@ -91,7 +91,7 @@ my %directories = FindWorkingCopyBaseFolders;
 my @updated;
 my @conflicts;
 my @modified;
-my @outgoing;
+my @heads;
 my @check_dependencies;
 
 ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
@@ -100,14 +100,14 @@ ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
     my $result = Update $directory, $username, $password;
 
     push @check_dependencies, GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
-    
+
     INFOMSG "Updated\n" if $result eq "Updated";
-    WARNMSG "$result\n" if grep { $result eq $_ } ( "Conflicts", "Modified working copy", "Outgoing changesets" );
+    WARNMSG "$result\n" if grep { $result eq $_ } ( "Conflicts", "Uncommitted changes", "Multiple heads" );
 
     push @updated, EscapeFinrocHome $directory if $result eq "Updated";
     push @conflicts, EscapeFinrocHome $directory if $result eq "Conflicts";
-    push @modified, EscapeFinrocHome $directory if $result eq "Modified working copy";
-    push @outgoing, EscapeFinrocHome $directory if $result eq "Outgoing changesets";
+    push @modified, EscapeFinrocHome $directory if $result eq "Uncommitted changes";
+    push @heads, EscapeFinrocHome $directory if $result eq "Multiple heads";
 };
 
 
@@ -131,9 +131,9 @@ INFOMSG "Done.\n";
 
 
 INFOMSG sprintf "The following directories were successfully updated:\n  %s\n", join " ", @updated if @updated;
-WARNMSG sprintf "The following directories have incoming changesets but need manual processing due to local modifications:\n  %s\n", join " ", @modified if @modified;
-WARNMSG sprintf "The following directories have incoming changesets but need manual processing due to outgoing changesets (e.g. rebase or merge):\n  %s\n", join " ", @outgoing if @outgoing;
 WARNMSG sprintf "The following directories have conflicts that must be manually resolved:\n  %s\n", join " ", @conflicts if @conflicts;
+WARNMSG sprintf "The following directories have uncommitted changes and need manual processing:\n  %s\n", join " ", @modified if @modified;
+WARNMSG sprintf "The following directories have multiple heads on the current branch and need manual processing:\n  %s\n", join " ", @heads if @heads;
 
 
 
