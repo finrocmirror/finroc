@@ -28,7 +28,7 @@
 package FINROC::scm;
 use Exporter;
 @ISA = qw/Exporter/;
-@EXPORT = qw/Checkout Update Status IsOnDefaultBranch ParentDateUTCTimestamp IsWorkingCopyRoot/;
+@EXPORT = qw/GetDefaultBranch Checkout Update Status IsOnDefaultBranch IsWorkingCopyRoot/;
 
 
 use strict;
@@ -42,7 +42,7 @@ use FINROC::messages;
 use FINROC::scm::hg;
 use FINROC::scm::svn;
 
-sub GetSCMNameOfWorkingCopy($)
+sub GetSCMNameFromWorkingCopy($)
 {
     my ($directory) = @_;
 
@@ -55,12 +55,24 @@ sub GetSCMNameOfWorkingCopy($)
     return $scm_name;
 }
 
+sub GetDefaultBranch($)
+{
+    my ($scm_name) = @_;
+    my $result;
+    eval sprintf "\$result = FINROC::scm::%s::GetDefaultBranch()", $scm_name;
+    ERRORMSG $@ if $@;
+    return $result;
+}
+
 sub Checkout($$$$$$)
 {
     my ($scm_name, $url, $branch, $target, $username, $password) = @_;
 
     ERRORMSG sprintf "'%s' should be used for working copy but is a file\n", $target if -f $target;
     ERRORMSG sprintf "'%s' already exists\n", $target if -e $target;
+
+    $branch = GetDefaultBranch($scm_name) unless defined $branch;
+    die unless $branch;
 
     $url = sprintf "'%s'", $url;
     $branch = sprintf "'%s'", $branch;
@@ -76,7 +88,7 @@ sub Update($$$)
 {
     my ($directory, $username, $password) = @_;
 
-    my $scm_name = GetSCMNameOfWorkingCopy $directory;
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
 
     return "Update source not defined" unless defined $scm_name;
 
@@ -95,7 +107,7 @@ sub Status($$$$$)
 {
     my ($directory, $local_modifications_only, $incoming, $username, $password) = @_;
 
-    my $scm_name = GetSCMNameOfWorkingCopy $directory;
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
 
     return "Unmanaged" unless defined $scm_name;
 
@@ -110,12 +122,48 @@ sub Status($$$$$)
     return $result;
 }
 
+sub GetBranches($$$)
+{
+    my ($directory, $username, $password) = @_;
+
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
+    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
+
+    $directory = sprintf "'%s'", $directory;
+    $username = defined $username ? sprintf "'%s'", $username : "undef";
+    $password = defined $password ? sprintf "'%s'", $password : "undef";
+
+    my @result;
+    eval sprintf "\@result = FINROC::scm::%s::GetBranches(%s, %s, %s)", $scm_name, $directory, $username, $password;
+    ERRORMSG $@ if $@;
+
+    return @result;
+}
+
+sub SwitchBranch($$$$)
+{
+    my ($directory, $branch, $username, $password) = @_;
+
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
+    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
+
+    $branch = GetDefaultBranch($scm_name) unless defined $branch;
+    die unless $branch;
+
+    $directory = sprintf "'%s'", $directory;
+    $branch = sprintf "'%s'", $branch;
+    $username = defined $username ? sprintf "'%s'", $username : "undef";
+    $password = defined $password ? sprintf "'%s'", $password : "undef";
+
+    eval sprintf "FINROC::scm::%s::SwitchBranch(%s, %s, %s, %s)", $scm_name, $directory, $branch, $username, $password;
+    ERRORMSG $@ if $@;
+}
+
 sub IsOnDefaultBranch($)
 {
     my ($directory) = @_;
 
-    my $scm_name = GetSCMNameOfWorkingCopy $directory;
-
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
     ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
 
     $directory = sprintf "'%s'", $directory;
@@ -127,28 +175,11 @@ sub IsOnDefaultBranch($)
     return $result;
 }
 
-sub ParentDateUTCTimestamp($)
-{
-    my ($directory) = @_;
-
-    my $scm_name = GetSCMNameOfWorkingCopy $directory;
-
-    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
-
-    $directory = sprintf "'%s'", $directory;
-
-    my $result;
-    eval sprintf "\$result = FINROC::scm::%s::ParentDateUTCTimestamp(%s)", $scm_name, $directory;
-    ERRORMSG $@ if $@;
-
-    return $result;
-}
-
 sub IsWorkingCopyRoot($)
 {
     my ($directory) = @_;
-    
-    my $scm_name = GetSCMNameOfWorkingCopy $directory;
+
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
 
     return 0 unless $scm_name;
     $directory = sprintf "'%s'", $directory;
@@ -160,5 +191,20 @@ sub IsWorkingCopyRoot($)
     return $result;
 }
 
+sub GetManifestFromWorkingCopy($)
+{
+    my ($directory) = @_;
+
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
+    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
+
+    $directory = sprintf "'%s'", $directory;
+
+    my $result;
+    eval sprintf "\$result = FINROC::scm::%s::GetManifestFromWorkingCopy(%s)", $scm_name, $directory;
+    ERRORMSG $@ if $@;
+
+    return $result;
+}
 
 1;

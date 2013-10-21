@@ -48,6 +48,11 @@ sub CredentialsForCommandLine($$)
     return $credentials;
 }
 
+sub GetDefaultBranch()
+{
+    return "trunk";
+}
+
 sub Checkout($$$$$)
 {
     my ($url, $branch, $target, $username, $password) = @_;
@@ -102,16 +107,6 @@ sub IsOnDefaultBranch($)
     return ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'url'} =~ /trunk$/;
 }
 
-sub ParentDateUTCTimestamp($)
-{
-    my ($directory) = @_;
-
-    my $command = sprintf "svn info --xml \"%s\"", $directory;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-
-    return int parsedate ${XMLin join "", `$command`}{'entry'}{'commit'}{'date'};
-}
-
 sub IsWorkingCopyRoot($)
 {
     my ($directory) = @_;
@@ -125,5 +120,20 @@ sub IsWorkingCopyRoot($)
     return ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'repository'}{'uuid'} ne ${XMLin join "", map { chomp; $_ } `$command/..`}{'entry'}{'repository'}{'uuid'};
 }
 
+sub GetManifestFromWorkingCopy($)
+{
+    my ($directory) = @_;
+
+    my $scm_name = GetSCMNameFromWorkingCopy $directory;
+    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
+
+    $directory = sprintf "'%s'", $directory;
+
+    my @result;
+    eval sprintf "\@result = FINROC::scm::%s::GetManifestFromWorkingCopy(%s)", $scm_name, $directory;
+    ERRORMSG $@ if $@;
+
+    return @result;
+}
 
 1;

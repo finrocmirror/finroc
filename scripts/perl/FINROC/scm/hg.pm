@@ -54,26 +54,31 @@ sub CredentialsForCommandLine($$$)
     my $credentials = "";
     $credentials .= sprintf " --config auth.finroc.prefix='%s'", $url if defined $username or defined $password;
     $credentials .= sprintf " --config auth.finroc.username='%s'", $username if defined $username;
-    $credentials .= sprintf " --config auth.finroc.password='%s'", $password if defined $password;    
+    $credentials .= sprintf " --config auth.finroc.password='%s'", $password if defined $password;
 
-    return $credentials;    
+    return $credentials;
 }
 
 sub GetPath($$)
 {
     my ($directory, $path_alias) = @_;
-    
+
     my $command = sprintf "hg --cwd \"%s\" path %s", $directory, $path_alias;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", map { chomp; $_ } `$command 2> /dev/null`;
-    DEBUGMSG $output;
+    DEBUGMSG "$output\n";
     return $output ne "" ? $output : undef;
+}
+
+sub GetDefaultBranch()
+{
+    return "default";
 }
 
 sub Checkout($$$$$)
 {
     my ($url, $branch, $target, $username, $password) = @_;
-    
+
     my $credentials = CredentialsForCommandLine $url, $username, $password;
 
     my $target_base = $target;
@@ -85,8 +90,7 @@ sub Checkout($$$$$)
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
-    INFOMSG sprintf "updating to branch %s\n", $branch;
-    $command = sprintf "hg --cwd \"%s\" up %s", $target, $branch;
+    $command = sprintf "hg --cwd \"%s\" up %s -q", $target, $branch;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     if ($?)
@@ -179,6 +183,30 @@ sub Status($$$$$)
     return $output;
 }
 
+sub GetBranches($$$)
+{
+    my ($directory, $username, $password) = @_;
+
+    my $command = sprintf "hg --cwd \"%s\" branches", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my @output = map { ${[ split " ", $_ ]}[0] } `$command`;
+    ERRORMSG "Command failed!\n" if $?;
+
+    return @output;
+}
+
+sub SwitchBranch($$$$)
+{
+    my ($directory, $branch, $username, $password) = @_;
+
+    my $command = sprintf "hg --cwd \"%s\" branch %s > /dev/null 2>&1 || hg --cwd \"%s\" update -c %s -q 2> /dev/null", $directory, $branch, $directory, $branch;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    system $command;
+    ERRORMSG "Command failed!\n" if $?;
+
+    Update $directory, $username, $password;
+}
+
 sub IsOnDefaultBranch($)
 {
     my ($directory) = @_;
@@ -189,21 +217,23 @@ sub IsOnDefaultBranch($)
     return "default" eq join "", map { chomp; $_ } `$command`;
 }
 
-sub ParentDateUTCTimestamp($)
-{
-    my ($directory) = @_;
-
-    my $command = sprintf "hg --cwd \"%s\" parent --template '{date}'", $directory;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-
-    return int join "", map { /^(.*)((-|\+).*)$/ ? $1 + $2 : $_ } `$command`;
-}
-
 sub IsWorkingCopyRoot($)
 {
     my ($directory) = @_;
     return -d "$directory/.hg";
 }
 
+sub GetManifestFromWorkingCopy($)
+{
+    my ($directory) = @_;
+
+    my $result;
+    my $command = sprintf "hg --cwd \"%s\" manifest 2> /dev/null", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    $result = join " ", sort map { chomp; $_ } `$command`;
+    ERRORMSG "Command failed!\n" if $?;
+
+    return $result;
+}
 
 1;
