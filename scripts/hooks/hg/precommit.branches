@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+
+# You received this file as part of Finroc
+# A framework for intelligent robot control
+# 
+# Copyright (C) Finroc GbR (finroc.org)
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# 
+#----------------------------------------------------------------------
+# \file    precommit.branches
+# 
+# \author  Tobias Foehst
+# 
+# \date    2013-10-21
+# 
+# This hook checks if a named branch will be created.
+#----------------------------------------------------------------------
+
+use Env 'HG_PARENT1';
+use Env 'HG_PARENT2';
+
+my $branch = join "", map { chomp; $_ } `hg branch`;
+my @branches;
+push @branches, `hg log --template {branch} -r $HG_PARENT1` if $HG_PARENT1;
+push @branches, `hg log --template {branch} -r $HG_PARENT2` if $HG_PARENT2;
+
+exit 0 if grep { $branch eq $_ } @branches;
+
+print STDERR "\n";
+print STDERR "Creating a new named branch is not allowed as these are reserved for\n";
+print STDERR "official releases. Please consider bookmarks or personal clones for\n";
+print STDERR "temporary development branches.\n";
+print STDERR "\n";
+
+exit 1
