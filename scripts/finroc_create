@@ -62,17 +62,17 @@ my $content_templates = XMLin($config_file,
                                            'replace' => 'key'},
                               ForceArray => [ 'file', 'replace', 'type' ]);
 
-sub FixMultiLineXMLEntry($)
+sub FixMultiLineXMLEntry($$)
 {
-    my ($key) = @_;
-    $$content_templates{$key} = join "\n", map { s/^\s+//; $_ } split /\n/, $$content_templates{$key};
-    $$content_templates{$key} =~ s/^\s//;
-    $$content_templates{$key} =~ s/\s$//;
+    my ($hash, $key) = @_;
+    $$hash{$key} = join "\n", map { s/^\s+//; $_ } split /\n/, $$hash{$key};
+    $$hash{$key} =~ s/^\s//;
+    $$hash{$key} =~ s/\s$//;
 }
 
-FixMultiLineXMLEntry "intro";
-FixMultiLineXMLEntry "copyright";
-FixMultiLineXMLEntry "license";
+FixMultiLineXMLEntry $content_templates, "intro";
+FixMultiLineXMLEntry $content_templates, "copyright";
+map { FixMultiLineXMLEntry $$content_templates{licenses}, $_ } keys %{$$content_templates{licenses}};
 
 # Stupid ForceArray does not work again... Workaround: reorganize structure
 if (exists ${$$content_templates{'content'}}{'language'})
@@ -182,7 +182,6 @@ foreach my $language (keys %{$$content_templates{'language'}})
 
 
 #print Dumper $content_templates;
-
 #exit;
 
 
@@ -312,6 +311,15 @@ unless (defined $$sections{$section}{'members_as_subfolders'} and $$sections{$se
 }
 
 
+###############
+##  LICENSE  ##
+###############
+
+my @license = map { chomp; s/.*LICENSE\.//; lc $_ } `ls $base_folder/LICENSE.* 2> /dev/null`;
+ERRORMSG "There is a problem with the license information in this folder, that must be solved first.\n" if scalar @license > 1;
+my $license = $license[0] || "gpl-2.0";
+
+
 ##############
 ##  Folder  ##
 ##############
@@ -391,9 +399,10 @@ while (1)
     printf "Too short! Please give a serious description of your new %s.\n", lc $type;
 }
 
+
 ##############
 ##  AUTHOR  ##
-#############
+##############
 
 my $author = ${[ split ",", ${[split ":", join "", map { chomp; $_ } `getent passwd \$USER`]}[4] ]}[0];
 $author = FINROC::UI::InputText("Author's full name", undef, '\S+( \S+)+', $author);
@@ -412,16 +421,16 @@ foreach (@files)
 }
 
 
-my %common_replacements = ( 'INTRO' => q("$$content_templates{'intro'}"),
-                            'LICENSE' => q("$$content_templates{'license'}"),
-                            'COPYRIGHT' => q("$$content_templates{'copyright'}"),
+my %common_replacements = ( 'INTRO' => q("$$content_templates{intro}"),
+                            'LICENSE' => q("$$content_templates{licenses}{$license}"),
+                            'COPYRIGHT' => q("$$content_templates{copyright}"),
                             'AUTHOR' => q("$author"),
                             'DATE' => strftime("\"%Y-%m-%d\"", localtime time),
                             'NAME' => q("$name"),
                             'NAME_IN_UPPER_CASE' => q(uc $name),
 #                            'SHORT_DESCRIPTION' => $short_description,
                             'DESCRIPTION' => q("$description"),
-                            'FILE' => q("$folder/$filename.$$file{'extension'}"),
+                            'FILE' => q("$folder/$filename.$$file{extension}"),
                             'INDENT_ONE_NAME' => q(" " x length $name),
                             'INDENT_TWO_NAMES' => q(" " x (2 * length $name)),
     );
