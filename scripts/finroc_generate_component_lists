@@ -2,23 +2,23 @@
 
 # You received this file as part of Finroc
 # A framework for intelligent robot control
-# 
+#
 # Copyright (C) Finroc GbR (finroc.org)
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-# 
+#
 #----------------------------------------------------------------------
 # \file    finroc_get
 #
@@ -207,19 +207,19 @@ foreach my $distribution (keys $config{distributions})
             foreach my $pattern (@{$include_patterns})
             {
                 next if grep { exists $$pattern{$_} && $$component{$_} !~ qr/^$$pattern{$_}$/ } keys %{$pattern};
-                $include = 1; 
+                $include = 1;
             }
             foreach my $pattern (@{$exclude_patterns})
             {
                 next if grep { exists $$pattern{$_} && $$component{$_} !~ qr/^$$pattern{$_}$/ } keys %{$pattern};
-                $include = 0; 
+                $include = 0;
             }
             next unless $include;
 
             next if exists $output{$$component{name}} && $$component{branch} ne FINROC::scm::GetDefaultBranch($$component{scm});
 
             $output{$$component{name}} = $component;
-            map { $output{$$component{name}}{$_} = join " ", grep { exists $$categories{$category}{possible_dependencies}{$_} } split " ", $$component{$_} } ('dependencies', 'optional_dependencies'); 
+            map { $output{$$component{name}}{$_} = join " ", grep { exists $$categories{$category}{possible_dependencies}{$_} } split " ", $$component{$_} } ('dependencies', 'optional_dependencies');
         }
 
         next unless %output;

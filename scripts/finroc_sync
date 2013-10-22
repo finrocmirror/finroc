@@ -2,23 +2,23 @@
 
 # You received this file as part of Finroc
 # A framework for intelligent robot control
-# 
+#
 # Copyright (C) Finroc GbR (finroc.org)
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-# 
+#
 #----------------------------------------------------------------------
 # \file    finroc_sync
 #
@@ -127,7 +127,7 @@ sub Transfer($$$$$$)
 {
     my ($hostname, $port, $username, $directory, $sub_directory, $files) = @_;
 
-    $directory = "" unless defined $directory;    
+    $directory = "" unless defined $directory;
     $directory .= "/" if $directory ne "";
     $directory .= $sub_directory if defined $sub_directory;
     $username .= "@" if defined $username;
@@ -195,7 +195,7 @@ foreach my $target (@{$$sync_config{'target'}})
     {
         my @binaries;
         DEBUGMSG Dumper \$transfer_block;
-        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
+        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
         foreach my $source (split " ", $$transfer_block{'content'})
         {
 #            my $binary = $source =~ /\// ? $source : sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
@@ -226,7 +226,7 @@ foreach my $target (@{$$sync_config{'target'}})
         $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
         $prefix = sprintf "$FINROC_PROJECT_HOME/etc/%s", $prefix unless $prefix =~ /^\//;
 
-        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
+        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
         my @files = split " ", $$transfer_block{'content'};
 
         Transfer $hostname, $port, $username, $etc, $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
@@ -239,7 +239,7 @@ foreach my $target (@{$$sync_config{'target'}})
         my $prefix = "";
         $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
 
-        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'}; 
+        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
         my @files = split " ", $$transfer_block{'content'};
 
         Transfer $hostname, $port, $username, "", $$transfer_block{'subdir'}, join " ", map { "\"$prefix$_\"" } @files if @files;
