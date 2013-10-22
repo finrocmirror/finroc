@@ -36,7 +36,6 @@ use open qw(:std :utf8);
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
-use UI;
 
 END
 {

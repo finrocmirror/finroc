@@ -39,7 +39,7 @@ use POSIX qw(strftime);
 use open qw(:std :utf8);
 
 use lib "$FINROC_HOME/scripts/perl";
-use UI;
+use FINROC::UI;
 use FINROC::messages;
 use FINROC::getopt;
 use FINROC::sources;
@@ -108,7 +108,7 @@ foreach my $language (keys %{$$content_templates{'content'}})
                 if (defined $$file{'template'})
                 {
                     $$file{'template'} = sprintf "%s/%s", $content_templates_folder, $$file{'template'};
-                    WARNMSG sprintf "Configured template file '%s' does not exist.\n", $$file{'template'} unless -f $$file{'template'};
+                    ERRORMSG sprintf "Configured template file '%s' does not exist.\n", $$file{'template'} unless -f $$file{'template'};
                 }
             }
         }
@@ -167,7 +167,7 @@ foreach my $language (keys %{$$content_templates{'language'}})
                     foreach my $file (@{$$content_templates_extension{'section'}{$section}{'type'}{$type}{'file'}})
                     {
                         $$file{'template'} = sprintf "%s/%s", $content_templates_folder, $$file{'template'};
-                        WARNMSG sprintf "Configured template file '%s' does not exist.\n", $$file{'template'} unless -f $$file{'template'};
+                        ERRORMSG sprintf "Configured template file '%s' does not exist.\n", $$file{'template'} unless -f $$file{'template'};
                     }
                 }
                 foreach my $replace (keys %{$$content_templates_extension{'section'}{$section}{'replace'}})
@@ -223,7 +223,7 @@ ParseCommandLine [ "output:s", "frame:s" ], sub {
 ##  Setup dialog  ##
 ####################
 
-UI::InitializeDialog "Finroc";
+FINROC::UI::InitializeDialog "Finroc";
 
 my $base_folder = "$FINROC_HOME/sources";
 
@@ -239,9 +239,9 @@ sub UpdateBaseFolder($)
 ############################
 
 my $languages = $$content_templates{'language'};
-my $language = UI::Menu("Programming Language",
-                        undef,
-                        { map { ( $_ => $$languages{$_}{'description'} ) } keys %$languages });
+my $language = FINROC::UI::Menu("Programming Language",
+                                undef,
+                                { map { ( $_ => $$languages{$_}{'description'} ) } keys %$languages });
 
 UpdateBaseFolder $$languages{$language};
 
@@ -253,9 +253,9 @@ my $language_folder = $base_folder;
 ###############
 
 my $sections = $$content_templates{'content'}{$language}{'section'};
-my $section = UI::Menu("Section",
-                       undef,
-                       [ keys %$sections ]);
+my $section = FINROC::UI::Menu("Section",
+                               undef,
+                               [ keys %$sections ]);
 
 UpdateBaseFolder $$sections{$section};
 
@@ -265,9 +265,9 @@ UpdateBaseFolder $$sections{$section};
 ####################
 
 my $types = $$content_templates{'content'}{$language}{'section'}{$section}{'type'};
-my $type = UI::Menu("Content Type",
-                    undef,
-                    { map { ( $_ => $$types{$_}{'description'} ) } keys %$types });
+my $type = FINROC::UI::Menu("Content Type",
+                            undef,
+                            { map { ( $_ => $$types{$_}{'description'} ) } keys %$types });
 
 UpdateBaseFolder $$types{$type};
 
@@ -281,10 +281,10 @@ my @files = grep { not defined $$_{'optional'} or $$_{'optional'} eq "false" } @
 
 if (@optional_files)
 {
-    my $selected_files = UI::CheckList("Optional Files",
-                                       "Select optional files to generate.",
-                                       [ map { $$_{'name'} } @optional_files ],
-                                       [ map { $$_{'name'} } grep { defined $$_{'preselected'} and $$_{'preselected'} eq "true" } @optional_files ] );
+    my $selected_files = FINROC::UI::CheckList("Optional Files",
+                                               "Select optional files to generate.",
+                                               [ map { $$_{'name'} } @optional_files ],
+                                               [ map { $$_{'name'} } grep { defined $$_{'preselected'} and $$_{'preselected'} eq "true" } @optional_files ] );
 
     foreach my $selected_file (@$selected_files)
     {
@@ -305,17 +305,18 @@ unless (@files)
 
 unless (defined $$sections{$section}{'members_as_subfolders'} and $$sections{$section}{'members_as_subfolders'} eq "false")
 {
-    my $member = UI::Menu("Member",
-                          undef,
-                          [ map { chomp; basename $_ } `find -L "$base_folder" -mindepth 1 -maxdepth 1 -type d -a ! -name ".*"` ]);
+    my $member = FINROC::UI::Menu("Member",
+                                  undef,
+                                  [ map { chomp; basename $_ } `find -L "$base_folder" -mindepth 1 -maxdepth 1 -type d -a ! -name ".*"` ]);
     $base_folder .= "/$member";
 }
+
 
 ##############
 ##  Folder  ##
 ##############
 
-my $folder = UI::SelectSubFolder $base_folder;
+my $folder = FINROC::UI::SelectSubFolder $base_folder;
 $folder = substr $folder, 1 + length $language_folder;
 
 
@@ -360,10 +361,10 @@ sub BreaksUpperCaseWithUnderscore($)
 my $name;
 while (1)
 {
-    $name = UI::InputText("Name",
-                          sprintf("Enter name of new %s. (%s)", lc $type, $$types{$type}{'format'}),
-                          '\S+',
-                          undef);
+    $name = FINROC::UI::InputText("Name",
+                                  sprintf("Enter name of new %s. (%s)", lc $type, $$types{$type}{'format'}),
+                                  '\S+',
+                                  undef);
     unless (length $name < 3)
     {
         last if $$types{$type}{'format'} eq "UpperCamelCase" and not BreaksUpperCamelCase $name;
@@ -395,7 +396,7 @@ while (1)
 #############
 
 my $author = ${[ split ",", ${[split ":", join "", map { chomp; $_ } `getent passwd \$USER`]}[4] ]}[0];
-$author = UI::InputText("Author's full name", undef, '\S+( \S+)+', $author);
+$author = FINROC::UI::InputText("Author's full name", undef, '\S+( \S+)+', $author);
 
 
 #############

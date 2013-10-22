@@ -25,15 +25,16 @@
 # \date    2011-10-26
 #
 #----------------------------------------------------------------------
-package UI;
+package FINROC::UI;
 
 use strict;
 
 use UI::Dialog::Console;
 use Switch;
 use File::Basename;
+use File::Path;
 
-my $WIDTH = 80;
+my $WIDTH = 72;
 my $HEIGHT = 24;
 
 my $dialog;
@@ -123,8 +124,6 @@ sub Menu($$$)
         }
         else { die "Options must be either a list or hash reference"; }
     }
-
-    printf "%d\n", length($text) / 72;
 
     my $selection = $dialog->menu(
         title => " $title ",
@@ -254,9 +253,10 @@ sub SelectSubFolder($)
         my @folders = sort map { chomp; basename $_ } `find -L "$parent" -mindepth 1 -maxdepth 1 -type d -a ! -name ".*" -a ! -name "etc"`;
         my %options = ( "\bSelect" => ".",
                         "\bNew folder" => "" );
-        $options{"0"} = ".." if length $subfolder;
+        $options{0} = ".." if length $subfolder;
+        my $fmt = sprintf "%%0%dd", length sprintf "%d", int @folders;
         my $counter = 1;
-        map { $options{$counter++} = $_ } @folders;
+        map { $options{sprintf $fmt, $counter++} = $_ } @folders;
 
         my $folder = Menu("Select Folder",
                           $parent,
@@ -269,9 +269,17 @@ sub SelectSubFolder($)
             my $new_folder = InputText("Create new folder", "$parent", undef, undef);
             if ($new_folder)
             {
-                mkdir "$parent/$new_folder" or die "Could not create new folder: $!";
-                $subfolder .= "$new_folder";
+                mkpath("$parent/$new_folder", 0, 0755) or die "Could not create new folder: $!";
+                $subfolder .= (length $subfolder ? "/" : "").$new_folder;
             }
+            next;
+        }
+
+        if ($folder eq " ")
+        {
+            my $new_subfolder = $subfolder;
+            $new_subfolder =~ s/\/[^\/]+$//;
+            $subfolder = $new_subfolder eq $subfolder ? "" : $new_subfolder;
             next;
         }
 

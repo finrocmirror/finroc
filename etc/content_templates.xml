@@ -58,9 +58,6 @@
       </type>
     </section>
     <section name="Finroc Plugins" folder="plugins">
-      <type name="Part" description="Finroc Part (For test programs)" format="UpperCamelCase" filename="qq(p$name)">
-        <file name="Implementation File" extension="cpp" template="part.cpp.template"/>
-      </type>
       <type name="Class" description="Arbitrary Class (OOP)" format="UpperCamelCase" filename="qq(t$name)">
         <file name="Header File" extension="h" template="class.h.template"/>
         <file name="Implementation File (cpp)" extension="cpp" template="class.cpp.template" optional="true" preselected="true"/>
