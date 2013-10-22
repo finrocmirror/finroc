@@ -66,7 +66,7 @@ sub GetAllComponents()
             my $command = sprintf "curl -fsk --connect-timeout 5 --create-dirs -o %s %s.xml", $cache, $source;
             DEBUGMSG sprintf "Executing '%s'\n", $command;
             system $command;
-            if ($? != 0)
+            if ($?)
             {
                 WARNMSG sprintf "%sCould not download component list for %s\n", $pad_before_first_warning, $source;
                 $pad_before_first_warning = "";
@@ -148,9 +148,10 @@ foreach my $source (map { chomp; $_ } `cat "$sources_list_filename"`)
 
     next unless $source ne "";
 
-    my ($prefix, @group) = split " ", $source;
-    push @group, "main" unless @group;
-    map { $source_to_rank_map{sprintf "%s/%s", $prefix, $_} = $rank; } @group;
+    my ($prefix, $distribution, @categories) = split " ", $source;
+    ERRORMSG sprintf "Distribution not specified in '%s'!\n", $sources_list_filename unless $distribution;
+    ERRORMSG sprintf "No category specified in '%s'!\n", $sources_list_filename unless @categories;
+    map { $source_to_rank_map{join "/", $prefix, $distribution, $_} = $rank; } @categories;
     $rank++;
 }
 

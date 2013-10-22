@@ -45,7 +45,7 @@ use FINROC::utilities;
 ##  Command line options  ##
 ############################
 
-SetHelp "<repository_list>",
+SetHelp "<component_list>",
 {
     "-o [yes|no], --optional=[yes|no]" => "get optional dependencies? - default: ask",
     "-u <username>, --username=<username>" => "use <username> to get access to repositories",
@@ -62,7 +62,7 @@ ParseCommandLine [ "optional=s", "username=s", "password=s", "yes" ], sub
 };
 
 # non-optional arguments
-ERRORMSG sprintf "<repository_list> not specified. Use %s --help for more information.\n", ScriptName unless defined $ARGV[0];
+ERRORMSG sprintf "<component_list> not specified. Use %s --help for more information.\n", ScriptName unless defined $ARGV[0];
 
 # default values if not set
 AssignCommandLineOptionDefaultValue "optional", "ask";
