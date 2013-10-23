@@ -18,14 +18,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #----------------------------------------------------------------------
-# \file    getopt.pm
+# \file    cpp.pm
 #
 # \author  Tobias Foehst
 #
 # \date    2010-06-30
 #
 #----------------------------------------------------------------------
-package dependencies::java;
+package FINROC::dependencies::java;
 
 use strict;
 

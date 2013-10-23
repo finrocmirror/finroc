@@ -89,6 +89,9 @@ sub Checkout($$$$$)
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
+
+    return if int(`hg --cwd "$target" tip --template '{rev}'`) == -1;
+
     $command = sprintf "hg --cwd \"%s\" up %s -q", $target, $branch;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
