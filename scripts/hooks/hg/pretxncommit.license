@@ -20,7 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #----------------------------------------------------------------------
-# \file    precommit.license
+# \file    pretxncommit.license
 #
 # \author  Tobias Foehst
 #
@@ -29,7 +29,7 @@
 # This hook protects the license information in a repository.
 #----------------------------------------------------------------------
 
-LICENSE=$(hg status --added --modified --removed --no-status | grep -Ei '^(.+/)?license(\.[^/])?')
+LICENSE=$(hg status --added --modified --removed --no-status --change $HG_NODE | grep -Ei '^(.+/)?license(\.[^/])?')
 if [ -n "$LICENSE" ] ; then
     echo 1>&2
     echo "Found illegal modification in protected files that my not be added," 1>&2
