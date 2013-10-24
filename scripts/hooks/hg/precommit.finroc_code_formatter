@@ -75,6 +75,7 @@ do
     if [ $? -ne 0 ] ; then
         finroc_code_formatter -f "$TEMP_FILE"
         echo "Could not run finroc_code_formatter!" 1>&2
+        rm "$TEMP_FILE"
         exit 1
     fi
     diff --brief "$FILE" "$TEMP_FILE" &> /dev/null
