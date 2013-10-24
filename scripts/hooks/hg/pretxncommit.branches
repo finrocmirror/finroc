@@ -20,7 +20,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #----------------------------------------------------------------------
-# \file    precommit.branches
+# \file    pretxncommit.branches
 #
 # \author  Tobias Foehst
 #
@@ -29,10 +29,11 @@
 # This hook checks if a named branch will be created.
 #----------------------------------------------------------------------
 
+use Env 'HG_NODE';
 use Env 'HG_PARENT1';
 use Env 'HG_PARENT2';
 
-my $branch = join "", map { chomp; $_ } `hg branch`;
+my $branch = `hg log --template {branch} -r $HG_NODE`;
 my @branches;
 push @branches, `hg log --template {branch} -r $HG_PARENT1` if $HG_PARENT1;
 push @branches, `hg log --template {branch} -r $HG_PARENT2` if $HG_PARENT2;
