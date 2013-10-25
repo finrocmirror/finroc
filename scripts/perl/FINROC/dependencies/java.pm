@@ -42,7 +42,7 @@ sub ProcessSourceFiles($$$)
 
     return unless @files;
 
-    my $command = sprintf "cat \"%s\"", join " ", @files;
+    my $command = sprintf "cat %s", join " ", @files;
 
     my $multiline_comment_started = 0;
     my $multiline_comment_active = 0;

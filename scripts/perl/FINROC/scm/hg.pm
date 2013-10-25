@@ -80,11 +80,6 @@ sub Checkout($$$$$)
 
     my $credentials = CredentialsForCommandLine $url, $username, $password;
 
-    my $target_base = $target;
-    $target_base =~ s/\/[^\/]*$//;
-    DEBUGMSG sprintf "Creating directory '%s'\n", $target_base;
-    ERRORMSG "Command failed!\n" if $?;
-
     my $command = sprintf "hg %s clone -U %s \"%s\"", $credentials, $url, $target;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
