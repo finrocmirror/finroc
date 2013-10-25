@@ -229,7 +229,7 @@ sub DependenciesFromWorkingCopy($$)
         ProcessTargets $$make{testprogram}, $directory, $language, \@optional, \@optional;
     }
 
-    my @finroc_files = map { chomp; $_ } `find \"$working_copy\" -iname "*.finroc"`;
+    my @finroc_files = map { chomp; $_ } `find \"$working_copy\" -iname "*.finroc" -a ! -iname "license.finroc"`;
     ProcessFinrocFiles \@finroc_files, \@mandatory;
     @finroc_files = map { chomp; $_ } `find \"$working_copy\" -iname "*.xml"`;
     ProcessFinrocFiles \@finroc_files, \@mandatory;
