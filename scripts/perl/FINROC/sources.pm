@@ -63,7 +63,7 @@ sub GetAllComponents()
         {
             my $cache = "$FINROC_HOME/.offline/$offline_source.xml";
             DEBUGMSG "Updating component information: $source\n";
-            my $command = sprintf "curl -fsk --connect-timeout 5 --create-dirs -o %s %s.xml", $cache, $source;
+            my $command = sprintf "curl -fsk --connect-timeout 5 --create-dirs -o \"%s\" %s.xml", $cache, $source;
             DEBUGMSG sprintf "Executing '%s'\n", $command;
             system $command;
             if ($?)

@@ -38,8 +38,8 @@ if [ -z "$FINROC_HOME" ] ; then
         echo "Could not determine \$FINROC_HOME." 1>&2
         exit 1
     else
-        if [ -f $1/scripts/setenv ] ; then
-            cd $1
+        if [ -f "$1/scripts/setenv" ] ; then
+            cd "$1"
             source scripts/setenv &> /dev/null
             cd - &> /dev/null
         fi
