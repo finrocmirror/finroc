@@ -99,7 +99,7 @@ ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
     my ($directory) = @_;
     my $result = Update $directory, $username, $password;
 
-    push @check_dependencies, GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
+    push @check_dependencies, grep { $_ } GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
 
     INFOMSG "Updated\n" if $result eq "Updated";
     WARNMSG "$result\n" if grep { $result eq $_ } ( "Conflicts", "Uncommitted changes", "Multiple heads" );
@@ -116,17 +116,17 @@ ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
 ##  Check for new dependencies  ##
 ##################################
 
-INFOMSG "Checking for new dependencies...\n";
 if (@check_dependencies)
 {
+    INFOMSG "Checking for new dependencies...\n";
     my $check_dependencies = join " ", grep { defined and `finroc_search '^$_\$' 2>/dev/null`} @check_dependencies;
     my $credentials = "";
     $credentials .= sprintf " --username '%s'", $username if defined $username;
     $credentials .= sprintf " --password '%s'", $password if defined $password;
     DEBUGMSG sprintf "Executing '%s'\n", "finroc_get -o no -y $credentials $check_dependencies";
     system "finroc_get -o no -y $credentials $check_dependencies";
+    INFOMSG "Done.\n";
 }
-INFOMSG "Done.\n";
 
 
 
