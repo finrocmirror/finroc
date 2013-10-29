@@ -93,6 +93,7 @@ foreach my $hg_directory (@hg_directories)
     $hooks{"precommit.finroc_code_formatter"} = sprintf "\"%s/scripts/hooks/hg/precommit.finroc_code_formatter\" %s", $FINROC_HOME, $FINROC_HOME;
     $hooks{"pretxncommit.license"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.license\"", $FINROC_HOME;
     $hooks{"pretxncommit.branches"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.branches\"", $FINROC_HOME;
+    $hooks{"pretxncommit.merges"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.merges\"", $FINROC_HOME;
     $hooks{"pretxncommit.author"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.author\"", $FINROC_HOME;
 
     DEBUGMSG $content;

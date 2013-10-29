@@ -1,0 +1,57 @@
+#!/usr/bin/perl -w
+
+# You received this file as part of Finroc
+# A framework for intelligent robot control
+#
+# Copyright (C) Finroc GbR (finroc.org)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#----------------------------------------------------------------------
+# \file    pretxncommit.merges
+#
+# \author  Tobias Foehst
+#
+# \date    2013-10-29
+#
+# This hook denies back-merges from newer into older branches.
+#----------------------------------------------------------------------
+
+use Env 'HG_NODE';
+use Env 'HG_PARENT1';
+use Env 'HG_PARENT2';
+
+my $branch = `hg log --template {branch} -r $HG_NODE`;
+my @branches;
+push @branches, `hg log --template {branch} -r $HG_PARENT1` if $HG_PARENT1;
+push @branches, `hg log --template {branch} -r $HG_PARENT2` if $HG_PARENT2;
+
+exit 0 if scalar @branches == 1;
+
+exit 0 if $branch eq "default";
+
+foreach my $parent (@branches)
+{
+    next if $parent eq $branch;
+    if ($parent eq "default" || $parent > $branch)
+    {
+        print STDERR "\n";
+        print STDERR "Illegal back-merge from $parent into $branch.\n";
+        print STDERR "\n";
+        exit 1;
+    }
+}
+
+exit 0;
