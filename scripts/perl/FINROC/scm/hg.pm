@@ -224,10 +224,9 @@ sub GetManifestFromWorkingCopy($)
 {
     my ($directory) = @_;
 
-    my $result;
     my $command = sprintf "hg --cwd \"%s\" manifest 2> /dev/null", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    $result = join " ", sort map { chomp; $_ } `$command`;
+    my $result = join " ", sort map { chomp; $_ } `$command`;
     ERRORMSG "Command failed!\n" if $?;
 
     return $result;

@@ -61,7 +61,7 @@ sub Checkout($$$$$)
 
     my $credentials = CredentialsForCommandLine $username, $password;
 
-    my $command = sprintf "svn co --ignore-externals %s \"%s\" \"%s\"", $credentials, $url, $target;
+    my $command = sprintf "svn co --ignore-externals -q %s \"%s\" \"%s\"", $credentials, $url, $target;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
@@ -96,6 +96,45 @@ sub Status($$$$$)
     return $output;
 }
 
+sub GetBranches($$$)
+{
+    my ($directory, $username, $password) = @_;
+
+    my $credentials = CredentialsForCommandLine $username, $password;
+
+    my $command = sprintf "svn info --xml \"%s\"", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $root = ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'repository'}{'root'};
+    ERRORMSG "Command failed!\n" if $?;
+
+    $command = sprintf "svn list %s \"%s/branches\"", $credentials, $root;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my @output = map { chomp; s/\/$//; $_ } `$command`;
+    ERRORMSG "Command failed!\n" if $?;
+
+    push @output, 'trunk';
+    return @output;
+}
+
+sub SwitchBranch($$$$)
+{
+    my ($directory, $branch, $username, $password) = @_;
+
+    $branch = sprintf "branches/%s", $branch unless $branch eq "trunk";
+
+    my $credentials = CredentialsForCommandLine $username, $password;
+
+    my $command = sprintf "svn info --xml \"%s\"", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $root = ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'repository'}{'root'};
+    ERRORMSG "Command failed!\n" if $?;
+
+    $command = sprintf "svn switch -q %s \"%s/%s\" \"%s\"", $credentials, $root, $branch, $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    system $command;
+    ERRORMSG "Command failed!\n" if $?;
+}
+
 sub IsOnDefaultBranch($)
 {
     my ($directory) = @_;
@@ -123,16 +162,12 @@ sub GetManifestFromWorkingCopy($)
 {
     my ($directory) = @_;
 
-    my $scm_name = GetSCMNameFromWorkingCopy $directory;
-    ERRORMSG sprintf "Could not determine source control management system in '%s'!\n", $directory unless defined $scm_name and $scm_name ne "";
+    my $command = sprintf "svn list -R \"%s\"", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $result = join " ", sort grep { /[^\/]$/ } map { chomp; $_ } `$command`;
+    ERRORMSG "Command failed!\n" if $?;
 
-    $directory = sprintf "'%s'", $directory;
-
-    my @result;
-    eval sprintf "\@result = FINROC::scm::%s::GetManifestFromWorkingCopy(%s)", $scm_name, $directory;
-    ERRORMSG $@ if $@;
-
-    return @result;
+    return $result;
 }
 
 1;
