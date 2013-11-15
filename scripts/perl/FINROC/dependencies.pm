@@ -141,24 +141,30 @@ sub ProcessFinrocFiles($$)
 
     foreach (@$files)
     {
-        my $xml = XMLin($_,
-                        KeepRoot => 1,
-                        ForceArray => [ 'parameter', 'element' ],
-                        ContentKey => '-content',
-                        GroupTags => { parameters => 'parameter' },
-                        NormalizeSpace => 2);
+        my $xml = eval { XMLin($_,
+                               KeepRoot => 1,
+                               ForceArray => [ 'parameter', 'element' ],
+                               ContentKey => '-content',
+                               GroupTags => { parameters => 'parameter' },
+                               NormalizeSpace => 2) };
+
+        if ($@)
+        {
+            WARNMSG sprintf "Skipping malformed xml file '%s'.\n", $_;
+            next;
+        }
 
         next unless exists $$xml{FinstructableGroup};
 
         foreach my $dependency (grep { $_ } split /,| /, $$xml{FinstructableGroup}{dependencies})
         {
-        while ($dependency)
-        {
-        push @$mandatory, $dependency;
-        my $dependency_old = $dependency;
-        $dependency =~ s/(finroc|rrlib)_[^_]+$//;
-        last if $dependency eq $dependency_old;
-        }
+            while ($dependency)
+            {
+                push @$mandatory, $dependency;
+                my $dependency_old = $dependency;
+                $dependency =~ s/(finroc|rrlib)_[^_]+$//;
+                last if $dependency eq $dependency_old;
+            }
         }
 
         foreach my $element (keys %{$$xml{FinstructableGroup}{element}})
@@ -177,9 +183,16 @@ sub ProcessSimVis3DResourceFiles($$)
 
     foreach my $file (@$files)
     {
-        my $descr = XMLin($file,
-                          KeyAttr => [],
-                          ForceArray => [ "part", "element" ]);
+        my $descr = eval { XMLin($file,
+                                 KeyAttr => [],
+                                 ForceArray => [ "part", "element" ]) };
+
+        if ($@)
+        {
+            WARNMSG sprintf "Skipping malformed xml file '%s'.\n", $_;
+            next;
+        }
+
         foreach (@{$$descr{part}})
         {
             push @$mandatory, DependencyFromSimVis3DResourceFile $$_{file};
@@ -213,11 +226,17 @@ sub DependenciesFromWorkingCopy($$)
     {
         my $directory = dirname $_;
 
-        my $make = XMLin($_,
-                         KeyAttr => [],
-                         ForceArray => [ "rrlib", "unittest", "testprogram", "finroclibrary", "finrocplugin", "finrocprogram" ],
-                         ForceContent => [ "sources" ],
-                         NormalizeSpace => 2);
+        my $make = eval { XMLin($_,
+                                KeyAttr => [],
+                                ForceArray => [ "rrlib", "unittest", "testprogram", "finroclibrary", "finrocplugin", "finrocprogram" ],
+                                ForceContent => [ "sources" ],
+                                NormalizeSpace => 2) };
+
+        if ($@)
+        {
+            WARNMSG sprintf "Skipping malformed xml file '%s'.\n", $_;
+            next;
+        }
 
         ProcessTargets $$make{rrlib}, $directory, $language, \@mandatory, \@optional if $repository_type eq "rrlib";
         if ($repository_type eq "finroc")
