@@ -32,7 +32,7 @@
 LICENSE=$(hg status --added --modified --removed --no-status --change $HG_NODE | grep -Ei '^(.+/)?license(\.[^/])?')
 if [ -n "$LICENSE" ] ; then
     echo 1>&2
-    echo "Found illegal modification in protected files that my not be added," 1>&2
+    echo "Found illegal modification in protected files that may not be added," 1>&2
     echo "removed or modified:" 1>&2
     echo $LICENSE 1>&2
     echo 1>&2
