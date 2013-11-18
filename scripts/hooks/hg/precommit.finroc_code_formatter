@@ -81,8 +81,8 @@ do
     diff --brief "$FILE" "$TEMP_FILE" &> /dev/null
     if [ $? -ne 0 ] ; then
         echo 1>&2
-        echo "Commits to the central repository are only allowed for source" 1>&2
-        echo "files meeting its standards on formatting and indentation." 1>&2
+        echo "Commits to this repository are only allowed for source files" 1>&2
+        echo "meeting the project's standards on formatting and indentation." 1>&2
         echo "Format checking has failed for at least one file modified in" 1>&2
         echo "your changeset: ${FILE}." 1>&2
         echo 1>&2
