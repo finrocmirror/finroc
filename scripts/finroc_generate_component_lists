@@ -162,26 +162,41 @@ foreach my $repository (@repositories)
 
     my @branches = FINROC::scm::GetBranches $working_copy, undef, undef;
 
-    foreach my $branch (@branches)
+    if (@branches)
     {
-        FINROC::scm::SwitchBranch $working_copy, $branch, undef, undef;
+        foreach my $branch (@branches)
+        {
+            FINROC::scm::SwitchBranch $working_copy, $branch, undef, undef;
 
-        my $license = join "", map { chomp;$_ } lc basename `ls \"$working_copy\"/LICENSE.* 2> /dev/null` || "none";
-        $license =~ s/^license.//;
+            my $license = join "", map { chomp;$_ } lc basename `ls \"$working_copy\"/LICENSE.* 2> /dev/null` || "none";
+            $license =~ s/^license.//;
 
-        my %component = ( name => $repository,
-                          scm => $scm,
-                          branch => $branch,
-                          license => $license,
-                          url => sprintf("%s/%s", $config{scm}{$scm}{base_url}, $repository),
-                          manifest => FINROC::scm::GetManifestFromWorkingCopy($working_copy),
-                          disk_usage => join("", map { chomp; $_ } `du -s \"$working_copy\" 2> /dev/null | cut -f1`) );
+            my %component = ( name => $repository,
+                              scm => $scm,
+                              branch => $branch,
+                              license => $license,
+                              url => sprintf("%s/%s", $config{scm}{$scm}{base_url}, $repository),
+                              manifest => FINROC::scm::GetManifestFromWorkingCopy($working_copy),
+                              disk_usage => join("", map { chomp; $_ } `du -s \"$working_copy\" 2> /dev/null | cut -f1`) );
 
-        ($component{dependencies}, $component{optional_dependencies}) = FINROC::dependencies::DependenciesFromWorkingCopy $working_copy, $repository;
+            ($component{dependencies}, $component{optional_dependencies}) = FINROC::dependencies::DependenciesFromWorkingCopy $working_copy, $repository;
 
-        DEBUGMSG Dumper \%component;
+            DEBUGMSG Dumper \%component;
 
-        push @components, \%component;
+            push @components, \%component;
+        }
+    }
+    else
+    {
+        push @components, { name => $repository,
+                            scm => $scm,
+                            branch => FINROC::scm::GetDefaultBranch $scm,
+                            license => "none",
+                            url => sprintf("%s/%s", $config{scm}{$scm}{base_url}, $repository),
+                            manifest => "",
+                            disk_usage => join("", map { chomp; $_ } `du -s \"$working_copy\" 2> /dev/null | cut -f1`),
+                            dependencies => [],
+                            optional_dependencies => [] };
     }
 
     system "rm -rf $working_copy";
