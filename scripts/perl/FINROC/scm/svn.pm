@@ -129,7 +129,7 @@ sub SwitchBranch($$$$)
     my $root = ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'repository'}{'root'};
     ERRORMSG "Command failed!\n" if $?;
 
-    $command = sprintf "svn switch -q %s \"%s/%s\" \"%s\"", $credentials, $root, $branch, $directory;
+    $command = sprintf "svn switch --ignore-externals -q %s \"%s/%s\" \"%s\"", $credentials, $root, $branch, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     ERRORMSG "Command failed!\n" if $?;
