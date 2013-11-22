@@ -113,14 +113,13 @@ sub Update($$$)
 
     $command = sprintf "hg --cwd \"%s\" heads \$(hg --cwd \"%s\" branch) --template '{rev}\\n'", $directory, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my @heads = map { chomp; int($_) } `$command`;
+    my @heads = map { chomp; int($_) } `$command 2> /dev/null`;
     DEBUGMSG sprintf "%s\n", join "\n", @heads;
-    ERRORMSG "Command failed!\n" if $?;
+    return "Up to date" unless @heads;
 
     $command = sprintf "hg --cwd \"%s\" parent --template '{rev}\\n'", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $parent = int(`$command`);
-    DEBUGMSG "$parent\n";
+    my $parent = `$command`;
     ERRORMSG "Command failed!\n" if $?;
 
     if (@heads > 1)
@@ -128,11 +127,11 @@ sub Update($$$)
         return "Multiple heads";
     }
 
-    return "Up to date" if $parent eq $heads[0];
+    return "Up to date" if $parent && int($parent) == $heads[0];
 
-    $command = sprintf "hg --cwd \"%s\" update -c -q 2> /dev/null", $directory;
+    $command = sprintf "hg --cwd \"%s\" update -c -q", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $output = join "", `$command`;
+    my $output = join "", `$command 2> /dev/null`;
     DEBUGMSG $output;
     return "Uncommitted changes" if $?;
 
@@ -196,9 +195,9 @@ sub SwitchBranch($$$$)
 {
     my ($directory, $branch, $username, $password) = @_;
 
-    my $command = sprintf "hg --cwd \"%s\" branch %s > /dev/null 2>&1 || hg --cwd \"%s\" update -c %s -q 2> /dev/null", $directory, $branch, $directory, $branch;
+    my $command = sprintf "hg --cwd \"%s\" branch %s > /dev/null 2>&1 || hg --cwd \"%s\" update -c %s -q", $directory, $branch, $directory, $branch;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    system $command;
+    system "$command 2> /dev/null";
     ERRORMSG "Command failed!\n" if $?;
 
     Update $directory, $username, $password;
@@ -224,9 +223,9 @@ sub GetManifestFromWorkingCopy($)
 {
     my ($directory) = @_;
 
-    my $command = sprintf "hg --cwd \"%s\" manifest 2> /dev/null", $directory;
+    my $command = sprintf "hg --cwd \"%s\" manifest", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $result = join " ", sort map { chomp; $_ } `$command`;
+    my $result = join " ", sort map { chomp; $_ } `$command 2> /dev/null`;
     ERRORMSG "Command failed!\n" if $?;
 
     return $result;
