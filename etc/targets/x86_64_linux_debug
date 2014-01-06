@@ -1,5 +1,5 @@
 CFLAGS=-ggdb -ftrack-macro-expansion=0
-CXXFLAGS=$(CFLAGS) -std=gnu++0x
+CXXFLAGS=$(CFLAGS) -std=c++11
 NVCC_FLAGS=-g -G
 LIBNAME_CUDART=cudart
 LIBNAME_CUFFT=cufft
