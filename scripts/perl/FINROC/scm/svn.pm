@@ -73,10 +73,12 @@ sub Update($$$)
 
     my $credentials = CredentialsForCommandLine $username, $password;
 
-    my $command = sprintf "svn up --ignore-externals --accept postpone -q %s \"%s\"", $credentials, $directory;
+    my $command = sprintf "svn up --ignore-externals --accept postpone %s \"%s\"", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    system $command;
+    my $output = shift [ reverse map { chomp; $_ } `$command` ];
     ERRORMSG "Command failed!\n" if $?;
+
+    return $output unless $output =~ /^At revision/;
 
     return "Up to date";
 }
