@@ -99,12 +99,14 @@ ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
     my ($directory) = @_;
     my $result = Update $directory, $username, $password;
 
+    DEBUGMSG "Result: $result\n";
+
     push @check_dependencies, grep { $_ } GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
 
-    INFOMSG "Updated\n" if $result eq "Updated";
+    INFOMSG "Updated\n" if $result =~ /^Updated/;
     WARNMSG "$result\n" if grep { $result eq $_ } ( "Conflicts", "Uncommitted changes", "Multiple heads" );
 
-    push @updated, EscapeFinrocHome $directory if $result eq "Updated";
+    push @updated, EscapeFinrocHome $directory if $result =~ /^Updated/;
     push @conflicts, EscapeFinrocHome $directory if $result eq "Conflicts";
     push @modified, EscapeFinrocHome $directory if $result eq "Uncommitted changes";
     push @heads, EscapeFinrocHome $directory if $result eq "Multiple heads";
