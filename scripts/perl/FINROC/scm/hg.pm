@@ -109,7 +109,11 @@ sub Update($$$)
     my $command = sprintf "hg %s --cwd \"%s\" pull -q", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    ERRORMSG "Command failed!\n" if $?;
+    if ($?)
+    {
+        WARNMSG "Command failed!\n";
+        return "Up to date";
+    }
 
     $command = sprintf "hg --cwd \"%s\" heads \$(hg --cwd \"%s\" branch) --template '{rev}\\n'", $directory, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;

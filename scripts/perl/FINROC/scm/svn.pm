@@ -76,7 +76,11 @@ sub Update($$$)
     my $command = sprintf "svn up --ignore-externals --accept postpone %s \"%s\"", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = shift [ reverse map { chomp; $_ } `$command` ];
-    ERRORMSG "Command failed!\n" if $?;
+    if ($?)
+    {
+        WARNMSG "Command failed!\n" if $?;
+        return "Up to date";
+    }
 
     return $output unless $output =~ /^At revision/;
 
