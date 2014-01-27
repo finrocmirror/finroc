@@ -128,7 +128,7 @@ foreach my $language (keys %{$$content_templates{'language'}})
     my @plugins;
     if (-d $global_plugins_folder)
     {
-        foreach my $plugin (map { chomp ; $_ } `ls $global_plugins_folder`)
+        foreach my $plugin (map { chomp ; $_ } `ls "$global_plugins_folder"`)
         {
             my $global = sprintf "%s/%s", $global_plugins_folder, $plugin;
             my $local = sprintf "%s/%s", $local_plugins_folder, $plugin;
@@ -137,7 +137,7 @@ foreach my $language (keys %{$$content_templates{'language'}})
     }
     if (-d $local_plugins_folder)
     {
-        foreach my $plugin (map { chomp ; $_ } `ls $local_plugins_folder`)
+        foreach my $plugin (map { chomp ; $_ } `ls "$local_plugins_folder"`)
         {
             my $local = sprintf "%s/%s", $local_plugins_folder, $plugin;
             push @plugins, "$local/etc";
