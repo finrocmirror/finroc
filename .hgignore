@@ -6,15 +6,18 @@ syntax: glob
 .offline
 
 # checkout targets
+debian
+documentation
 make_builder
 sources
 resources
 
+# files created by dpkg-buildpackage
+etc/targets/*_release_dpkg
+
 # build directories
 export
 build
-documentation/cpp/html
-documentation/java/html
 
 # make_builder
 .makeBuilderCache
