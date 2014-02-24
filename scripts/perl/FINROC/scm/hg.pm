@@ -150,15 +150,16 @@ sub Status($$$$$)
     my $push_path = GetPath $directory, "default-push";
     $push_path = $pull_path unless defined $push_path;
 
+    my $output = "";
     my $headline = 0;
     if (defined $pull_path and $incoming)
     {
         my $credentials = CredentialsForCommandLine $pull_path, $username, $password;
 
-        my $command = sprintf "hg %s --cwd \"%s\" in -b \$(hg --cwd \"%s\" branch)", $credentials, $directory, $directory;
+        my $command = sprintf "hg %s --cwd \"%s\" in -b \$(hg --cwd \"%s\" branch) -q --template 'changeset:   {rev}:{node|short}\nuser:        {author}\ndate:        {date|rfc822date}\nsummary:     {desc}\n\n'", $credentials, $directory, $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
-        INFOMSG " Incoming changes:\n";
-        system $command;
+        $output .= join "", `$command`;
+        $output = " Incoming changes:\n".$output if $output;
         $headline = 1;
     }
 
@@ -166,20 +167,23 @@ sub Status($$$$$)
     {
         my $credentials = CredentialsForCommandLine $push_path, $username, $password;
 
-        my $command = sprintf "hg %s --cwd \"%s\" out", $credentials, $directory;
+        my $command = sprintf "hg %s --cwd \"%s\" out -q --template 'changeset:   {rev}:{node|short}\nuser:        {author}\ndate:        {date|rfc822date}\nsummary:     {desc}\n\n'", $credentials, $directory;
         DEBUGMSG sprintf "Executing '%s'\n", $command;
-        INFOMSG " Outgoing changes:\n";
-        system $command;
+        $output .= join "", `$command`;
+        $output = " Outgoing changes:\n".$output if $output;
         $headline = 1;
     }
 
+    $output .= " Status of working directory:\n" if $output and $headline;
+
     my $command = sprintf "hg --cwd \"%s\" st", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $output = join "", `$command`;
+    $output .= join "", `$command`;
     DEBUGMSG $output;
     ERRORMSG "Command failed!\n" if $?;
 
-    $output = " Status of working directory:\n".$output."\n" if $output and $headline;
+    $output .= "\n" if $output and $headline;
+
     return $output;
 }
 
