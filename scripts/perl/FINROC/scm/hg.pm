@@ -97,6 +97,18 @@ sub Checkout($$$$$)
     }
 }
 
+sub GetHeads($)
+{
+    my ($directory) = @_;
+
+    my $command = sprintf "hg --cwd \"%s\" heads \$(hg --cwd \"%s\" branch) --template '{rev}\\n'", $directory, $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my @heads = map { chomp; int($_) } `$command 2> /dev/null`;
+    DEBUGMSG sprintf "%s\n", join "\n", @heads;
+
+    return @heads;
+}
+
 sub Update($$$)
 {
     my ($directory, $username, $password) = @_;
@@ -106,25 +118,28 @@ sub Update($$$)
 
     my $credentials = CredentialsForCommandLine $default_path, $username, $password;
 
-    my $command = sprintf "hg %s --cwd \"%s\" pull -q", $credentials, $directory;
+    my $command = sprintf "hg --cwd \"%s\" parent --template '{rev}\\n'", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $parent = `$command`;
+    ERRORMSG "Command failed!\n" if $?;
+
+    my @heads = GetHeads($directory);
+    my $not_on_head_before_pull = $parent && @heads && ! grep { int($parent) == $_ } @heads;
+
+    $command = sprintf "hg %s --cwd \"%s\" pull -q", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     if ($?)
     {
         WARNMSG "Command failed!\n";
+        return "Not on head" if $not_on_head_before_pull;
         return "Up to date";
     }
 
-    $command = sprintf "hg --cwd \"%s\" heads \$(hg --cwd \"%s\" branch) --template '{rev}\\n'", $directory, $directory;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my @heads = map { chomp; int($_) } `$command 2> /dev/null`;
-    DEBUGMSG sprintf "%s\n", join "\n", @heads;
-    return "Up to date" unless @heads;
+    return "Not on head" if $not_on_head_before_pull;
 
-    $command = sprintf "hg --cwd \"%s\" parent --template '{rev}\\n'", $directory;
-    DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $parent = `$command`;
-    ERRORMSG "Command failed!\n" if $?;
+    @heads = GetHeads($directory);
+    return "Up to date" unless @heads;
 
     if (@heads > 1)
     {
