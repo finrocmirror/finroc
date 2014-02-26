@@ -88,6 +88,7 @@ my %directories = FindWorkingCopyBaseFolders;
 ##  Perform update  ##
 ######################
 
+my @not_on_head;
 my @updated;
 my @conflicts;
 my @modified;
@@ -104,8 +105,9 @@ ForEachWithProgress [ sort keys %directories ], \&EscapeFinrocHome, sub
     push @check_dependencies, grep { $_ } GetComponentNameFromDirectory $directory unless $result eq "Update source not defined";
 
     INFOMSG "Updated\n" if $result =~ /^Updated/;
-    WARNMSG "$result\n" if grep { $result eq $_ } ( "Conflicts", "Uncommitted changes", "Multiple heads" );
+    WARNMSG "$result\n" if grep { $result eq $_ } ( "Not on head", "Conflicts", "Uncommitted changes", "Multiple heads" );
 
+    push @not_on_head, EscapeFinrocHome $directory if $result =~ /^Not on head/;
     push @updated, EscapeFinrocHome $directory if $result =~ /^Updated/;
     push @conflicts, EscapeFinrocHome $directory if $result eq "Conflicts";
     push @modified, EscapeFinrocHome $directory if $result eq "Uncommitted changes";
@@ -133,6 +135,7 @@ if (@check_dependencies)
 
 
 INFOMSG sprintf "The following directories were successfully updated:\n  %s\n", join " ", @updated if @updated;
+WARNMSG sprintf "The following directories were not on the head of their current branch and might need manual processing:\n  %s\n", join " ", @not_on_head if @not_on_head;
 WARNMSG sprintf "The following directories have conflicts that must be manually resolved:\n  %s\n", join " ", @conflicts if @conflicts;
 WARNMSG sprintf "The following directories have uncommitted changes and need manual processing:\n  %s\n", join " ", @modified if @modified;
 WARNMSG sprintf "The following directories have multiple heads on the current branch and need manual processing:\n  %s\n", join " ", @heads if @heads;
