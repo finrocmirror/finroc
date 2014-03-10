@@ -1,0 +1,8 @@
+CFLAGS=-ggdb
+CXXFLAGS=$(CFLAGS) -std=c++11
+NVCC_FLAGS=-g -G
+LIBNAME_CUDART=cudart
+LIBNAME_CUFFT=cufft
+LDFLAGS=-latomic
+CC=clang
+CXX=clang++
