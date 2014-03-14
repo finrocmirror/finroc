@@ -50,10 +50,11 @@ SetHelp "<component_list>",
     "-o [yes|no], --optional=[yes|no]" => "get optional dependencies? - default: ask",
     "-u <username>, --username=<username>" => "use <username> to get access to repositories",
     "-p <password>, --password=<password>" => "use <password> to get access to repositories",
-    "-y, --yes" => "automatic yes to all prompts for non-interactive contexts"
+    "-y, --yes" => "automatic yes to all prompts for non-interactive contexts",
+    "-f, --full-download" => "enforce full download of dependencies even if installed on the system"
 }, undef;
 
-ParseCommandLine [ "optional=s", "username=s", "password=s", "yes" ], sub
+ParseCommandLine [ "optional=s", "username=s", "password=s", "yes", "full-download" ], sub
 {
     if (defined GetCommandLineOption "optional")
     {
@@ -130,10 +131,9 @@ sub AddComponent($$$)
 
     $$list{$component_name} = { 'scm' => $component{'scm'}, 'url' => $component{'url'}, 'branch' => $component{'branch'}, 'target' => ${ComponentInfo $component_name}{'directory'}, 'disk_usage' => $component{'disk_usage'} };
     ${$$list{$component_name}}{'installed'} = -d "$FINROC_HOME/${$$list{$component_name}}{'target'}";
-    unless ($force)
+    unless ($force or defined GetCommandLineOption "full-download")
     {
-        my $release_description = `lsb_release -d`;
-        if ($release_description =~ /(debian|buntu)/i)
+        if (`which dpkg`)
         {
             my $debian_name = $component_name;
             $debian_name =~ s/_/-/g;
