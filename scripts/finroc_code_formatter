@@ -35,6 +35,7 @@
 use strict;
 
 use Env '$FINROC_HOME';
+use File::Basename;
 use Data::Dumper;
 
 use lib "$FINROC_HOME/scripts/perl";
@@ -100,6 +101,10 @@ sub CollectModifiedFiles()
 {
     my $directory = join "", map { chomp; $_ } `pwd`;
 
+    until (IsWorkingCopyRoot $directory || $directory eq "/")
+    {
+        $directory = dirname $directory;
+    }
     DEBUGMSG sprintf "Collecting only modified files in '%s'...\n", $directory;
 
     foreach my $line (split "\n", Status $directory, 1, 0, undef, undef)
