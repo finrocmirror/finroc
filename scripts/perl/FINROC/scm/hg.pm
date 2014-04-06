@@ -30,9 +30,6 @@ package FINROC::scm::hg;
 use strict;
 
 use Env '$FINROC_HOME';
-use Data::Dumper;
-
-use open qw(:std :utf8);
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;

@@ -30,7 +30,7 @@ package FINROC::scm::svn;
 use strict;
 
 use Env '$FINROC_HOME';
-use Data::Dumper;
+
 use XML::Simple;
 
 use lib "$FINROC_HOME/scripts/perl";

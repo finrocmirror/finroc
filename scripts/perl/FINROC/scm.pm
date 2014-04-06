@@ -32,9 +32,12 @@ use Exporter;
 
 
 use strict;
+use open qw(:std :utf8);
 
 use Env '$FINROC_HOME';
-use Data::Dumper;
+
+use Encode;
+$FINROC_HOME = decode_utf8 $FINROC_HOME;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;

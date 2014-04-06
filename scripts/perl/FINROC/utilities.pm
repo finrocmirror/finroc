@@ -34,6 +34,8 @@ use Exporter;
 use strict;
 
 use Env '$FINROC_HOME';
+use Encode;
+$FINROC_HOME = decode_utf8 $FINROC_HOME;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
@@ -46,7 +48,7 @@ sub AddDirectory($$$)
     return unless -d $directory and IsWorkingCopyRoot $directory;
     return if defined $prefix and $prefix ne substr $directory, 0, length $prefix;
 
-    $$directories{$directory} = 1;
+    $$directories{decode_utf8 $directory} = 1;
 }
 
 sub FindWorkingCopyBaseFolders
