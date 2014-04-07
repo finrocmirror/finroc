@@ -32,6 +32,10 @@ use strict;
 
 use Env '$FINROC_HOME';
 use Env '$USER';
+
+use Encode;
+$FINROC_HOME = decode_utf8 $FINROC_HOME;
+
 use XML::Simple;
 use File::Basename;
 use Data::Dumper;
