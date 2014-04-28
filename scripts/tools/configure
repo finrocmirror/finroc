@@ -31,7 +31,6 @@
 use strict;
 
 use Data::Dumper;
-use Config;
 
 use lib "scripts/perl";
 use FINROC::messages;
@@ -93,11 +92,11 @@ $configuration{"architecture"} = "auto" unless defined $configuration{"architect
 $configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
 
 # check target
+my $operating_system = join "", map { chomp; lc $_ } `uname -s`;
 my $architecture = $configuration{"architecture"};
-my $architecture_native = lc $1 if $Config{'archname'} =~ /([^-]+)(-.*)?/;
+my $architecture_native = join "", map { chomp; $_ } `uname -m`;
 $architecture = $architecture_native if $architecture eq "auto";
-my $operating_system = lc $Config{'osname'};
-my $target = sprintf "%s_%s_%s", $architecture, $operating_system, lc $configuration{"mode"};
+my $target = sprintf "%s_%s_%s", $operating_system, $architecture, lc $configuration{"mode"};
 if (defined $configuration{"mode"})
 {
     ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
@@ -185,14 +184,14 @@ SetEnvironment sprintf "export FINROC_PROJECT=%s", $configuration{"project"} if 
 SetEnvironment sprintf "unset FINROC_PROJECT_HOME";
 SetEnvironment sprintf "export FINROC_PROJECT_HOME=\"%s\"", $configuration{"project_home"} if defined $configuration{"project_home"};
 
+# FINROC_OPERATING_SYSTEM
+SetEnvironment sprintf "export FINROC_OPERATING_SYSTEM=%s", $configuration{"operating-system"};
+
 # FINROC_ARCHITECTURE
 SetEnvironment sprintf "export FINROC_ARCHITECTURE=%s", $configuration{"architecture"};
 
 # FINROC_ARCHITECTURE_NATIVE
 SetEnvironment sprintf "export FINROC_ARCHITECTURE_NATIVE=%s", $configuration{"architecture-native"};
-
-# FINROC_OPERATING_SYSTEM
-SetEnvironment sprintf "export FINROC_OPERATING_SYSTEM=%s", $configuration{"operating-system"};
 
 # FINROC_MODE
 SetEnvironment sprintf "export FINROC_MODE=%s", $configuration{"mode"};
