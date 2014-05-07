@@ -22,7 +22,7 @@ build
 # make_builder
 .makeBuilderCache
 libinfo.h
-Makefile
+Makefile.generated
 
 # emacs
 *~

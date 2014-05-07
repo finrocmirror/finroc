@@ -19,9 +19,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-[ -z "$FINROC_HOME" ] && source scripts/setenv ""
-cd "$FINROC_HOME"
-make -C make_builder
-rm Makefile
-[ "x$FINROC_LOCAL" == "xno" ] && USE_SYSTEM_INSTALL=--usesysteminstall
-java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$FINROC_TARGET --report-unmanaged-files $USE_SYSTEM_INSTALL
+echo
+echo === ERROR ===
+
+echo This script\'s functionality was replaced by a Makefile.
+echo Just run make from within your \$FINROC_HOME.
+echo
+
+exit 1

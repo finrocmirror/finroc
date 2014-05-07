@@ -105,3 +105,75 @@ _finroc_sync()
     return 0
 }
 complete -F _finroc_sync finroc_sync
+
+
+
+function abs_path
+{
+    SOURCE="$1"
+    while [ -h "$SOURCE" ] ; do
+        DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+        SOURCE="$(readlink "$SOURCE")"
+        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    echo "$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+}
+
+_finroc_make()
+{
+    local current="${COMP_WORDS[COMP_CWORD]}"
+    local previous="${COMP_WORDS[COMP_CWORD - 1]}"
+
+    # use the original bash-completion for make
+    . /usr/share/bash-completion/completions/make 2> /dev/null
+    _make
+
+    # that also reverted completion back to the original one. override with ours again
+    complete -F _finroc_make make
+
+    # terminate completion if our generated Makefile does not exist
+    [[ -f "$FINROC_HOME/Makefile.generated" ]] || return 0
+
+    # also terminate if $current is empty.
+    # our users must start with at least the first letter to reduce the number of candidates
+    [[ -z ${current} ]] && return 0
+
+    # we do not want to complete additional options or their values
+    [[ ${current} == -* ]] && return 0
+    [[ ${previous} == -* ]] && return 0
+
+    # terminate completion if a directory was specified that is not $FINROC_HOME
+    local MAKE_DIRECTORY
+    for i in `seq 0 ${COMP_CWORD}` ; do
+        if [[ ${COMP_WORDS[$i]} == -@(C|-directory) ]] ; then
+            eval MAKE_DIRECTORY=${COMP_WORDS[$i + 1]}
+	    [[ "$(abs_path "${MAKE_DIRECTORY}/.")" == "${FINROC_HOME}" ]] || return 0
+        fi
+    done
+
+    # terminate completion if a Makefile was specified that is not $FINROC_HOME/Makefile
+    local MAKEFILE
+    for i in `seq 0 ${COMP_CWORD}` ; do
+        if [[ ${COMP_WORDS[$i]} == -@(f|-?(make)file) ]] ; then
+            eval MAKEFILE=${COMP_WORDS[$i + 1]}
+	    MAKEFILE="$(abs_path $(dirname "${MAKEFILE}"))/$(basename ${MAKEFILE})"
+	    [[ "${MAKEFILE}" == "${FINROC_HOME}/Makefile" ]] || return 0
+        fi
+    done
+
+    # terminate completion if run in another folder than $FINROC_HOME unless a folder or Makefile were specified
+    # in that case, these were already checked and completion was terminated if they do not match
+    if [[ "$(abs_path "$(pwd)/.")" != "${FINROC_HOME}" ]] ; then
+        [[ -z ${MAKE_DIRECTORY} ]] && [[ -z ${MAKEFILE} ]] && return 0
+    fi
+
+    # finally, collect targets from generated Makefile and add them to $COMPREPLY
+    GENERATED=( $( make -qpf "$FINROC_HOME/Makefile.generated" 2>/dev/null | \
+        awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ \
+        {split($1,A,/ /);for(i in A)print A[i]}' ) )
+    COMPREPLY+=( $(compgen -W "$(echo ${GENERATED[@]})" -- ${current}) )
+    GENERATED_BUILD=( $(for i in ${GENERATED[@]} ; do echo $i | grep -qv ^clean- && echo build-$i ; done) )
+    COMPREPLY+=( $(compgen -W "$(echo ${GENERATED_BUILD[@]})" -- ${current}) )
+    return 0
+}
+complete -F _finroc_make make
