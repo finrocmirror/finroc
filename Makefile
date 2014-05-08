@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 .PHONY: all libdb makefile build clean
+.NOPARALLEL:
 
 MAKEFILE=Makefile.generated
 DIRECT_BUILD_PREFIX=build-
@@ -29,14 +30,14 @@ libdb:
 
 makefile:
 	$(MAKE) -C make_builder
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$(FINROC_TARGET) --report-unmanaged-files --makefile=$(MAKEFILE)'
+	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET --report-unmanaged-files --makefile=$(MAKEFILE)'
 
 build: $(MAKEFILE)
 	$(MAKE) -f $(MAKEFILE) $(WHAT)
 
 dependency_graph:
 	$(MAKE) -C make_builder
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$(FINROC_TARGET) --report-unmanaged-files --dotfile'
+	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET --report-unmanaged-files --dotfile'
 
 $(MAKEFILE):
 	$(MAKE) makefile
