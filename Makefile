@@ -33,7 +33,7 @@ makefile:
 	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET --report-unmanaged-files --makefile=$(MAKEFILE)'
 
 build: $(MAKEFILE)
-	$(MAKE) -f $(MAKEFILE) $(WHAT)
+	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; $(MAKE) -f $(MAKEFILE) $(WHAT)'
 
 dependency_graph:
 	$(MAKE) -C make_builder
