@@ -18,7 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 .PHONY: all libdb makefile build clean
-.NOPARALLEL:
+.NOTPARALLEL:
 
 MAKEFILE=Makefile.generated
 DIRECT_BUILD_PREFIX=build-
