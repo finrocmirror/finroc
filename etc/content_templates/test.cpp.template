@@ -1,0 +1,95 @@
+//
+// %%INTRO%%
+//
+// Copyright (C) %%COPYRIGHT%%
+//
+// %%LICENSE%%
+//
+//----------------------------------------------------------------------
+/*!\file    %%FILE%%
+ *
+ * \author  %%AUTHOR%%
+ *
+ * \date    %%DATE%%
+ *
+ */
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// External includes (system with <>, local with "")
+//----------------------------------------------------------------------
+#include "rrlib/util/tUnitTestSuite.h"
+
+//----------------------------------------------------------------------
+// Internal includes with ""
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Debugging
+//----------------------------------------------------------------------
+#include <cassert>
+
+//----------------------------------------------------------------------
+// Namespace usage
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Namespace declaration
+//----------------------------------------------------------------------
+%%OPEN_NAMESPACE%%
+
+//----------------------------------------------------------------------
+// Forward declarations / typedefs / enums
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Const values
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// Implementation
+//----------------------------------------------------------------------
+class %%UCC_NAME%% : public util::tUnitTestSuite
+{
+  RRLIB_UNIT_TESTS_BEGIN_SUITE(%%UCC_NAME%%);
+  RRLIB_UNIT_TESTS_ADD_TEST(SomeTest);
+  RRLIB_UNIT_TESTS_ADD_TEST(AnotherTest);
+  RRLIB_UNIT_TESTS_END_SUITE;
+
+private:
+
+  virtual void InitializeTests() override
+  {
+    If you need some class members initialized at the beginning of each test, do it here. Otherwise remove this line or whole method!
+  }
+
+  virtual void CleanUp() override
+  {
+    The same if you must free common resources after each test. Otherwise remove this line or whole method!
+  }
+
+  void SomeTest()
+  {
+    Do some meaningful testing here. Setup some things or use the freshly initialized class members.
+    Do not generate output telling about things that happen. No std::cout, printf or RRLIB_LOG_*
+    Instead use
+    RRLIB_UNIT_TESTS_ASSERT(expression)
+    RRLIB_UNIT_TESTS_EQUALITY(expected, actual)
+    RRLIB_UNIT_TESTS_EQUALITY_DOUBLE(expected, actual, delta)
+    RRLIB_UNIT_TESTS_EXCEPTION(expression, exception_type)
+    or their _MESSAGE-variants with an additional explanation of the test.
+  }
+
+  void AnotherTest()
+  {
+    You can organize your tests topic-wise by using multiple functions. Do not forget to add them at the top of this class!
+  }
+};
+
+RRLIB_UNIT_TESTS_REGISTER_SUITE(%%UCC_NAME%%);
+
+//----------------------------------------------------------------------
+// End of namespace declaration
+//----------------------------------------------------------------------
+}
+}

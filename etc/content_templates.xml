@@ -154,6 +154,9 @@
         <file name="Implementation File (cpp)" extension="cpp" template="misc.cpp.template" optional="true" preselected="true"/>
         <file name="Implementation File (hpp)" extension="hpp" template="misc.hpp.template" optional="true"/>
       </type>
+      <type name="Test" description="Unit Test Suite" format="lower_case_with_underscore" needs_description="false" below_folder="tests">
+        <file name="Implementation File (cpp)" extension="cpp" template="test.cpp.template"/>
+      </type>
       <replace key="INTRO">
         "You received this file as part of RRLib\nRobotics Research Library"
       </replace>
@@ -165,6 +168,9 @@
       </replace>
       <replace key="NAMESPACE">
         join("::", split /\//, $folder)
+      </replace>
+      <replace key="UCC_NAME">
+        join("", map { ucfirst; } split /_/, $name)
       </replace>
     </section>
   </content>

@@ -331,8 +331,15 @@ my $license = $license[0] || "gpl-2.0";
 ##############
 
 my $folder = FINROC::UI::SelectSubFolder $base_folder;
+if (exists $$types{$type}{'below_folder'})
+{
+    while (not grep { $_ eq $$types{$type}{'below_folder'} } split /\//, $folder)
+    {
+        FINROC::UI::Message "Error", sprintf "Must be created below a folder named %s.", $$types{$type}{'below_folder'};
+        $folder = FINROC::UI::SelectSubFolder $base_folder;
+    }
+}
 $folder = substr $folder, 1 + length $language_folder;
-
 
 ############
 ##  Name  ##
@@ -392,17 +399,19 @@ while (1)
 ###################
 ##  Description  ##
 ###################
-
-printf "Describe your new %s %s. Use one empty line to start a new paragraph and ctrl-d when you are done.\n", lc $type, $name;
-my $description;
-while (1)
+my $description = "";
+unless (exists $$types{$type}{'needs_description'} and $$types{$type}{'needs_description'} eq "false")
 {
-    foreach (<STDIN>)
+    printf "Describe your new %s %s. Use one empty line to start a new paragraph and ctrl-d when you are done.\n", lc $type, $name;
+    while (1)
     {
-        $description .= $_;
+        foreach (<STDIN>)
+        {
+            $description .= $_;
+        }
+        last if scalar @{[ split /\s/, $description ]} > 5;
+        printf "Too short! Please give a serious description of your new %s.\n", lc $type;
     }
-    last if scalar @{[ split /\s/, $description ]} > 5;
-    printf "Too short! Please give a serious description of your new %s.\n", lc $type;
 }
 
 
