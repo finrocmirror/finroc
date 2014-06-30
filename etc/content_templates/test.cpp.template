@@ -49,9 +49,9 @@
 //----------------------------------------------------------------------
 // Implementation
 //----------------------------------------------------------------------
-class %%UCC_NAME%% : public util::tUnitTestSuite
+class Test%%UCC_NAME%% : public util::tUnitTestSuite
 {
-  RRLIB_UNIT_TESTS_BEGIN_SUITE(%%UCC_NAME%%);
+  RRLIB_UNIT_TESTS_BEGIN_SUITE(Test%%UCC_NAME%%);
   RRLIB_UNIT_TESTS_ADD_TEST(SomeTest);
   RRLIB_UNIT_TESTS_ADD_TEST(AnotherTest);
   RRLIB_UNIT_TESTS_END_SUITE;
@@ -86,7 +86,7 @@ private:
   }
 };
 
-RRLIB_UNIT_TESTS_REGISTER_SUITE(%%UCC_NAME%%);
+RRLIB_UNIT_TESTS_REGISTER_SUITE(Test%%UCC_NAME%%);
 
 //----------------------------------------------------------------------
 // End of namespace declaration
