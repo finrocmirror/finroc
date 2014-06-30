@@ -49,11 +49,12 @@ SetHelp undef,
 {
     "-p <project>, --project=<project>" => "set project name",
     "-l [<language>], --language=[<language>]" => "programming language",
+    "-o <operating-system>, --operating-system=<operating-system>" => "cross-compiling - default: auto",
     "-a <architecture>, --architecture=<architecture>" => "cross-compiling - default: auto",
     "-m <mode>, --mode=<mode>" => "compile mode - default: debug",
 }, undef;
 
-ParseCommandLine [ "project=s", "language:s", "architecture=s", "mode=s" ], undef;
+ParseCommandLine [ "project=s", "language:s", "operating-system=s", "architecture=s", "mode=s" ], undef;
 
 
 
@@ -83,16 +84,18 @@ foreach my $option (GetCommandLineOptions)
 }
 # cleanup old config values
 delete $configuration{"target"};
-delete $configuration{"operating-system"};
 
 # default values if not set
 $configuration{"project"} = undef unless defined $configuration{"project"} and $configuration{"project"} ne "";
 $configuration{"language"} = undef unless defined $configuration{"language"} and $configuration{"language"} ne "";
+$configuration{"operating-system"} = "auto" unless defined $configuration{"operating-system"} and $configuration{"operating-system"} ne "";
 $configuration{"architecture"} = "auto" unless defined $configuration{"architecture"} and $configuration{"architecture"} ne "";
 $configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
 
 # check target
-my $operating_system = join "", map { chomp; lc $_ } `uname -s`;
+my $operating_system = $configuration{"operating-system"};
+my $operating_system_native = join "", map { chomp; lc $_ } `uname -s`;
+$operating_system = $operating_system_native if $operating_system eq "auto";
 my $architecture = $configuration{"architecture"};
 my $architecture_native = join "", map { chomp; $_ } `uname -m`;
 $architecture = $architecture_native if $architecture eq "auto";
@@ -137,6 +140,7 @@ close CONFIG;
 $configuration{"architecture"} = $architecture;
 $configuration{"architecture-native"} = $architecture_native;
 $configuration{"operating-system"} = $operating_system;
+$configuration{"operating-system-native"} = $operating_system_native;
 $configuration{"target"} = $target;
 use Cwd;
 $configuration{"home"} = getcwd;
@@ -186,6 +190,9 @@ SetEnvironment sprintf "export FINROC_PROJECT_HOME=\"%s\"", $configuration{"proj
 
 # FINROC_OPERATING_SYSTEM
 SetEnvironment sprintf "export FINROC_OPERATING_SYSTEM=%s", $configuration{"operating-system"};
+
+# FINROC_OPERATING_SYSTEM_NATIVE
+SetEnvironment sprintf "export FINROC_OPERATING_SYSTEM_NATIVE=%s", $configuration{"operating-system-native"};
 
 # FINROC_ARCHITECTURE
 SetEnvironment sprintf "export FINROC_ARCHITECTURE=%s", $configuration{"architecture"};
