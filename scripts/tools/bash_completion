@@ -129,7 +129,7 @@ _finroc_make()
     _make
 
     # that also reverted completion back to the original one. override with ours again
-    complete -F _finroc_make make
+    complete -F _finroc_make make gmake gnumake pmake colormake
 
     # terminate completion if our generated Makefile does not exist
     [[ -f "$FINROC_HOME/Makefile.generated" ]] || return 0
@@ -176,4 +176,4 @@ _finroc_make()
     COMPREPLY+=( $(compgen -W "$(echo ${GENERATED_BUILD[@]})" -- ${current}) )
     return 0
 }
-complete -F _finroc_make make
+complete -F _finroc_make make gmake gnumake pmake colormake
