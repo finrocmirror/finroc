@@ -48,14 +48,20 @@ my $config_filename = ".finroc.conf";
 
 SetHelp undef,
 {
-    "-p <project>, --project=<project>" => "set project name",
+    "-p <project>, --project=<project>" => "set project name and according paths",
+    "-r [yes|no], --restrict-components=[yes|no]" => "only use use local rrlib or finroc components - default: no",
     "-l [<language>], --language=[<language>]" => "programming language",
     "-a <architecture>, --architecture=<architecture>" => "cross-compiling - default: auto",
     "-m <mode>, --mode=<mode>" => "compile mode - default: debug",
 }, undef;
 
-ParseCommandLine [ "project=s", "language:s", "architecture=s", "mode=s" ], undef;
-
+ParseCommandLine [ "project=s", "restrict-components:s", "language:s", "architecture=s", "mode=s" ], sub
+{
+    if (defined GetCommandLineOption "restrict-components" and GetCommandLineOption "restrict-components" ne "")
+    {
+        ERRORMSG "Possible values for --restrict-components: yes|no\n" unless GetCommandLineOption("restrict-components") =~ /yes|no/;
+    }
+};
 
 
 ###########################
@@ -88,6 +94,7 @@ delete $configuration{"operating-system"};
 
 # default values if not set
 $configuration{"project"} = undef unless defined $configuration{"project"} and $configuration{"project"} ne "";
+$configuration{"restrict-components"} = undef unless defined $configuration{"restrict-components"} and $configuration{"restrict-components"} ne "";
 $configuration{"language"} = undef unless defined $configuration{"language"} and $configuration{"language"} ne "";
 $configuration{"architecture"} = "auto" unless defined $configuration{"architecture"} and $configuration{"architecture"} ne "";
 $configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
@@ -135,6 +142,9 @@ foreach my $option (keys %configuration)
 close CONFIG;
 
 # additional configuration
+$configuration{"restrict-components"} = "no" unless defined $configuration{"restrict-components"};
+$configuration{"make_builder_flags"} = [ "--report-unmanaged-files" ];
+push @{$configuration{"make_builder_flags"}}, "--local-libs-only" if $configuration{"restrict-components"} eq "yes";
 $configuration{"architecture"} = $architecture;
 $configuration{"architecture-native"} = $architecture_native;
 $configuration{"operating-system"} = $operating_system;
@@ -150,7 +160,7 @@ DEBUGMSG sprintf "prepared for setting environment:\n%s\n", Dumper \%configurati
 ##  Print new settings  ##
 ##########################
 
-sub PrintSetting($$) { INFOMSG sprintf " %-14s %s\n", shift().":", shift; }
+sub PrintSetting($$) { INFOMSG sprintf " %-20s %s\n", shift().":", shift; }
 
 INFOMSG "----------------------------------\n";
 INFOMSG " FINROC Settings\n";
@@ -160,6 +170,7 @@ PrintSetting "Project", defined $configuration{"project"} ? $configuration{"proj
 PrintSetting "Project Home", defined $configuration{"project_home"} ? $configuration{"project_home"} : "<unknown>";
 PrintSetting "Language", defined $configuration{"language"} ? $configuration{"language"} : "<unknown>";
 PrintSetting "Target", $configuration{"target"};
+PrintSetting "Restrict Components", $configuration{"restrict-components"};
 INFOMSG "----------------------------------\n";
 
 
@@ -199,6 +210,9 @@ SetEnvironment sprintf "export FINROC_MODE=%s", $configuration{"mode"};
 
 # FINROC_TARGET
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
+
+# FINROC_MAKE_BUILDER_FLAGS
+SetEnvironment sprintf "export FINROC_MAKE_BUILDER_FLAGS=\"%s\"", join " ", @{$configuration{"make_builder_flags"}};
 
 # RRLIB_SIMVIS3D_RESOURCES
 SetEnvironment sprintf "export RRLIB_SIMVIS3D_RESOURCES=\"%s/resources/simvis3d\":/usr/local/share/rrlib/simvis3d:/usr/share/rrlib/simvis3d", $configuration{"home"};
