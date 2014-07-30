@@ -48,7 +48,6 @@ clean:
 	$(MAKE) -f $(MAKEFILE) clean
 
 %:
-override KEEP_MAKEFILE = $(if $(findstring $(DIRECT_BUILD_PREFIX), $*),yes)
-	@bash -c '[ "$(KEEP_MAKEFILE)" == "yes" ] || rm -f $(MAKEFILE)'
+	@bash -c '[ "$(if $(findstring $(DIRECT_BUILD_PREFIX), $*),yes)" == "yes" ] || rm -f $(MAKEFILE)'
 	@$(MAKE) --no-print-directory build WHAT=$(subst $(DIRECT_BUILD_PREFIX),,$*)
 
