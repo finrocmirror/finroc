@@ -73,7 +73,7 @@ sub FindWorkingCopyBaseFolders
 
     AddDirectory \%directories, "$FINROC_HOME/resources/simvis3d/abstract_objects", $common_prefix;
 
-    @classes = ( "decoration", "environments", "humans", "robots", "sensors" );
+    @classes = ( "decoration/furniture", "decoration/obstacles", "decoration/plants", "environments", "humans", "robots", "sensors/distance", "sensors/image", "sensors/temperature" );
     foreach my $class (@classes)
     {
         my $base = sprintf "$FINROC_HOME/resources/simvis3d/%s", $class;
