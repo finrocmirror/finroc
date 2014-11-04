@@ -26,20 +26,20 @@ DIRECT_BUILD_PREFIX=build-
 all: makefile build
 
 libdb:
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; updatelibdb'
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; updatelibdb'
 
 makefile:
 	$(MAKE) -C make_builder
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET $$FINROC_MAKE_BUILDER_FLAGS --makefile=$(MAKEFILE)'
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET $$FINROC_MAKE_BUILDER_FLAGS --makefile=$(MAKEFILE)'
 
 build: $(MAKEFILE)
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) pre-build-hook'
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) $(WHAT)'
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) post-build-hook'
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) pre-build-hook'
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) $(WHAT)'
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) post-build-hook'
 
 dependency_graph:
 	$(MAKE) -C make_builder
-	@bash -c '[ -z $$FINROC_HOME ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET $$FINROC_MAKE_BUILDER_FLAGS --dotfile'
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET $$FINROC_MAKE_BUILDER_FLAGS --dotfile'
 
 $(MAKEFILE):
 	$(MAKE) makefile
