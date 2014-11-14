@@ -196,10 +196,19 @@ while (keys %optional_components)
     if (keys %optional_components)
     {
         my $candidate_name = @{[ sort keys %optional_components ]}[0];
+	my $already_installed = ${$optional_components{$candidate_name}}{'installed'};
 
-        if (   ${$optional_components{$candidate_name}}{'installed'}
-            or GetCommandLineOption "optional" eq "yes"
-            or (GetCommandLineOption "optional" eq "ask" and (defined GetCommandLineOption "yes" or AskForOptionalComponent $candidate_name)))
+	# only make an optional component mandatory if the dependency can be satisfied
+	my $can_be_satisfied = not grep { !defined ${$optional_components{$_}}{'url'} } $candidate_name;
+
+	if(not $can_be_satisfied) {
+  	    WARNMSG $pad_first_question."Cannot resolve optional dependency $candidate_name (might be contained in a different component list)\n";
+            $pad_first_question = "";
+        }
+
+        if ($already_installed
+            or GetCommandLineOption "optional" eq "yes" and $can_be_satisfied
+            or (GetCommandLineOption "optional" eq "ask" and $can_be_satisfied and (defined GetCommandLineOption "yes" or AskForOptionalComponent $candidate_name)))
         {
             AddComponent $candidate_name, \%mandatory_components, 0;
         }
