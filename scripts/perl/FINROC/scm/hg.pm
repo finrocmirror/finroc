@@ -138,14 +138,9 @@ sub Update($$$)
     @heads = GetHeads($directory);
     return "Up to date" unless @heads;
 
-    if (@heads > 1)
-    {
-        return "Multiple heads";
-    }
-
     return "Up to date" if $parent && int($parent) == $heads[0];
 
-    $command = sprintf "hg --cwd \"%s\" update -c -q", $directory;
+    $command = sprintf "hg --cwd \"%s\" update --rev 'max(descendants(.))' -c -q", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command 2> /dev/null`;
     DEBUGMSG $output;
