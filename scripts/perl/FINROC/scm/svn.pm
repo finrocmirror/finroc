@@ -64,7 +64,7 @@ sub Checkout($$$$$)
     my $command = sprintf "svn co --ignore-externals -q %s \"%s\" \"%s\"", $credentials, $url, $target;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 }
 
 sub Update($$$)
@@ -78,7 +78,7 @@ sub Update($$$)
     my $output = shift [ reverse map { chomp; $_ } `$command` ];
     if ($?)
     {
-        WARNMSG "Command failed!\n" if $?;
+        WARNMSG sprintf "Command failed: %s\n", $command if $?;
         return "Up to date";
     }
 
@@ -97,7 +97,7 @@ sub Status($$$$$)
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $output = join "", `$command`;
     DEBUGMSG $output;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     return $output;
 }
@@ -111,12 +111,12 @@ sub GetBranches($$$)
     my $command = sprintf "svn info --xml \"%s\"", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $root = ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'repository'}{'root'};
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     $command = sprintf "svn list %s \"%s/branches\"", $credentials, $root;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my @output = map { chomp; s/\/$//; $_ } `$command`;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     push @output, 'trunk';
     return @output;
@@ -133,12 +133,12 @@ sub SwitchBranch($$$$)
     my $command = sprintf "svn info --xml \"%s\"", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $root = ${XMLin join "", map { chomp; $_ } `$command`}{'entry'}{'repository'}{'root'};
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     $command = sprintf "svn switch --ignore-externals -q %s \"%s/%s\" \"%s\"", $credentials, $root, $branch, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 }
 
 sub IsOnDefaultBranch($)
@@ -171,7 +171,7 @@ sub GetManifestFromWorkingCopy($)
     my $command = sprintf "svn list -R \"%s\"", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $result = join " ", sort grep { /[^\/]$/ } map { chomp; $_ } `$command`;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     return $result;
 }

@@ -80,7 +80,7 @@ sub Checkout($$$$$)
     my $command = sprintf "hg %s clone -U %s \"%s\"", $credentials, $url, $target;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     return if int(`hg --cwd "$target" tip --template '{rev}'`) == -1;
 
@@ -90,7 +90,7 @@ sub Checkout($$$$$)
     if ($?)
     {
         system "rm -rf \"$target\"";
-        ERRORMSG "Command failed!\n";
+        ERRORMSG sprintf "Command failed: %s\n", $command;
     }
 }
 
@@ -118,7 +118,7 @@ sub Update($$$)
     my $command = sprintf "hg --cwd \"%s\" parent --template '{rev}\\n'", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $parent = `$command`;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     my @heads = GetHeads($directory);
     my $not_on_head_before_pull = $parent && @heads && ! grep { int($parent) == $_ } @heads;
@@ -128,7 +128,7 @@ sub Update($$$)
     system $command;
     if ($?)
     {
-        WARNMSG "Command failed!\n";
+        WARNMSG sprintf "Command failed: %s\n", $command;
         return "Not on head" if $not_on_head_before_pull;
         return "Up to date";
     }
@@ -192,7 +192,7 @@ sub Status($$$$$)
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     $output .= join "", `$command`;
     DEBUGMSG $output;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     $output .= "\n" if $output and $headline;
 
@@ -206,7 +206,7 @@ sub GetBranches($$$)
     my $command = sprintf "hg --cwd \"%s\" branches", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my @output = map { ${[ split " ", $_ ]}[0] } `$command`;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     return @output;
 }
@@ -218,7 +218,7 @@ sub SwitchBranch($$$$)
     my $command = sprintf "hg --cwd \"%s\" branch %s > /dev/null 2>&1 || hg --cwd \"%s\" update -c %s -q", $directory, $branch, $directory, $branch;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system "$command 2> /dev/null";
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     Update $directory, $username, $password;
 }
@@ -246,7 +246,7 @@ sub GetManifestFromWorkingCopy($)
     my $command = sprintf "hg --cwd \"%s\" manifest", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my $result = join " ", sort map { chomp; $_ } `$command 2> /dev/null`;
-    ERRORMSG "Command failed!\n" if $?;
+    ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
     return $result;
 }
