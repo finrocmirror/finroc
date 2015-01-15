@@ -246,8 +246,6 @@ SetEnvironment 'export PATH=$FINROC_PATH:$PATH';
 # LD_LIBRARY_PATH
 my (@ld_library_path, @finroc_ld_library_path, %finroc_ld_library_path_elements);
 push @finroc_ld_library_path, sprintf "%s/export/%s/lib", $configuration{"home"}, $configuration{"target"};
-push @finroc_ld_library_path, sprintf "/usr/lib/gluegen";
-push @finroc_ld_library_path, sprintf "/usr/lib/jogl";
 
 if (exists $ENV{"LD_LIBRARY_PATH"})
 {
