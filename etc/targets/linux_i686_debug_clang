@@ -1,6 +1,6 @@
 CFLAGS=-ggdb
 CXXFLAGS=$(CFLAGS) -std=c++11
-NVCC_FLAGS=-g -G -arch=sm_20
+NVCC_FLAGS=-g -G -arch=sm_20 -std=c++11
 LIBNAME_CUDART=cudart
 LIBNAME_CUFFT=cufft
 LDFLAGS=-latomic
