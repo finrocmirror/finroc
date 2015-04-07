@@ -43,9 +43,13 @@ use FINROC::sources;
 ##  Command line options  ##
 ############################
 
-SetHelp "<search_string>", { "-f, --files" => "search for files only", "-x, --xml" => "produce xml-output" }, undef;
+SetHelp "<search_string>", {
+        "-f, --files" => "search for files only",
+        "-x, --xml" => "produce xml-output",
+        "-n, --names-only" => "only show component names in output"
+	}, undef;
 
-ParseCommandLine [ "files", "xml" ], undef;
+ParseCommandLine [ "files", "xml", "names-only" ], undef;
 
 # non-optional arguments
 ERRORMSG sprintf "<search_string> not specified. Use %s --help for more information.\n", ScriptName unless defined $ARGV[0];
@@ -106,6 +110,11 @@ foreach my $key (sort keys %results)
         printf "    <url>%s</url>\n", $results{$key}{'url'};
         printf "    <source>%s</source>\n", $results{$key}{'source'};
         printf "  </component>\n";
+        next;
+    }
+    if (GetCommandLineOption "names-only")
+    {
+        print $key, "\n";
         next;
     }
     printf $format_string, $key, $results{$key}{'source'}, defined $results{$key}{'description'} ? $results{$key}{'description'} : "<description not given>";
