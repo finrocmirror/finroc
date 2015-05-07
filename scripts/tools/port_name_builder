@@ -63,6 +63,7 @@ foreach my $class (@$classes)
         {
             my $type = $member->{type};
             my @typesplit = split(/</, $type);
+            next if $type =~ /\*$/;
             $type = $typesplit[0]; # remove any template arguments
             $type =~ s/.*::template\s//g; # remove any ...::template
             if ($type eq 'tInput' || $type eq 'tOutput' || $type eq 'tSensorInput' || $type eq 'tSensorOutput' || $type eq 'tControllerInput' || $type eq 'tControllerOutput' || $type eq 'tParameter' || $type eq 'tStaticParameter' || $type eq 'tVisualizationOutput' || $type eq 'tServer' || $type eq 'tClient')
