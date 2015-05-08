@@ -52,10 +52,11 @@ SetHelp undef,
     "-l [<language>], --language=[<language>]" => "programming language",
     "-o <operating-system>, --operating-system=<operating-system>" => "cross-compiling - default: native",
     "-a <architecture>, --architecture=<architecture>" => "cross-compiling - default: native",
+    "-c <path>, --cross-root=<path>" => "cross-compiling - default: <none>",
     "-m <mode>, --mode=<mode>" => "compile mode - default: debug",
 }, undef;
 
-ParseCommandLine [ "project=s", "restrict-components:s", "language:s", "operating-system=s", "architecture=s", "mode=s" ], undef;
+ParseCommandLine [ "project=s", "restrict-components:s", "language:s", "operating-system=s", "architecture=s", "cross-root:s", "mode=s" ], undef;
 {
     if (defined GetCommandLineOption "restrict-components" and GetCommandLineOption "restrict-components" ne "")
     {
@@ -97,6 +98,7 @@ $configuration{"restrict-components"} = undef unless defined $configuration{"res
 $configuration{"language"} = undef unless defined $configuration{"language"} and $configuration{"language"} ne "";
 $configuration{"operating-system"} = "native" unless defined $configuration{"operating-system"} and $configuration{"operating-system"} ne "";
 $configuration{"architecture"} = "native" unless defined $configuration{"architecture"} and $configuration{"architecture"} ne "";
+$configuration{"cross-root"} = undef unless defined $configuration{"cross-root"} and $configuration{"cross-root"} ne "";
 $configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
 
 # backwards compatibility
@@ -110,11 +112,15 @@ $operating_system = $operating_system_native if $operating_system eq "native";
 my $architecture = $configuration{"architecture"};
 my $architecture_native = join "", map { chomp; lc $_ } `uname -m`;
 $architecture = $architecture_native if $architecture eq "native";
-my $target = sprintf "%s_%s_%s", $operating_system, $architecture, lc $configuration{"mode"};
-if (defined $configuration{"mode"})
+my $cross = $operating_system ne $operating_system_native || $architecture ne $architecture_native;
+if ($cross)
 {
-    ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
+    ERRORMSG sprintf "Cross-root not set while cross-compiling for %s_%s!\n", $operating_system, $architecture unless defined $configuration{'cross-root'};
 }
+ERRORMSG sprintf "Cross-root folder `%s' does not exist!\n", $configuration{'cross-root'} unless !defined $configuration{'cross-root'} || -d $configuration{'cross-root'};
+my $target = sprintf "%s_%s_%s", $operating_system, $architecture, lc $configuration{"mode"};
+$target = sprintf "cross_%s", $target if $cross;
+ERRORMSG sprintf "Target `%s' does not exist!\n", $target unless -f sprintf "etc/targets/%s", $target;
 
 # check existence of project
 if (defined $configuration{"project"})
@@ -177,6 +183,7 @@ PrintSetting "Project", defined $configuration{"project"} ? $configuration{"proj
 PrintSetting "Project Home", defined $configuration{"project_home"} ? $configuration{"project_home"} : "<unknown>";
 PrintSetting "Language", defined $configuration{"language"} ? $configuration{"language"} : "<unknown>";
 PrintSetting "Target", $configuration{"target"};
+PrintSetting "Cross Root", $configuration{"cross-root"} if defined $configuration{"cross-root"};
 PrintSetting "Restrict Components", $configuration{"restrict-components"};
 INFOMSG "----------------------------------\n";
 
@@ -217,6 +224,10 @@ SetEnvironment sprintf "export FINROC_ARCHITECTURE_NATIVE=%s", $configuration{"a
 
 # FINROC_MODE
 SetEnvironment sprintf "export FINROC_MODE=%s", $configuration{"mode"};
+
+# FINROC_CROSS_ROOT
+SetEnvironment sprintf "unset FINROC_CROSS_ROOT";
+SetEnvironment sprintf "export FINROC_CROSS_ROOT=%s", $configuration{"cross-root"} if defined $configuration{"cross-root"};
 
 # FINROC_TARGET
 SetEnvironment sprintf "export FINROC_TARGET=%s", $configuration{"target"};
