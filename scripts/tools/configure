@@ -50,8 +50,8 @@ SetHelp undef,
     "-p <project>, --project=<project>" => "set project name and according paths",
     "-r [yes|no], --restrict-components=[yes|no]" => "only use use local rrlib or finroc components - default: no",
     "-l [<language>], --language=[<language>]" => "programming language",
-    "-o <operating-system>, --operating-system=<operating-system>" => "cross-compiling - default: auto",
-    "-a <architecture>, --architecture=<architecture>" => "cross-compiling - default: auto",
+    "-o <operating-system>, --operating-system=<operating-system>" => "cross-compiling - default: native",
+    "-a <architecture>, --architecture=<architecture>" => "cross-compiling - default: native",
     "-m <mode>, --mode=<mode>" => "compile mode - default: debug",
 }, undef;
 
@@ -86,7 +86,7 @@ DEBUGMSG sprintf "configuration from file:\n%s\n", Dumper \%configuration;
 # overwrite settings using command line options
 foreach my $option (GetCommandLineOptions)
 {
-    $configuration{$option} = GetCommandLineOption $option;
+    $configuration{$option} = lc GetCommandLineOption $option;
 }
 # cleanup old config values
 delete $configuration{"target"};
@@ -95,17 +95,21 @@ delete $configuration{"target"};
 $configuration{"project"} = undef unless defined $configuration{"project"} and $configuration{"project"} ne "";
 $configuration{"restrict-components"} = undef unless defined $configuration{"restrict-components"} and $configuration{"restrict-components"} ne "";
 $configuration{"language"} = undef unless defined $configuration{"language"} and $configuration{"language"} ne "";
-$configuration{"operating-system"} = "auto" unless defined $configuration{"operating-system"} and $configuration{"operating-system"} ne "";
-$configuration{"architecture"} = "auto" unless defined $configuration{"architecture"} and $configuration{"architecture"} ne "";
+$configuration{"operating-system"} = "native" unless defined $configuration{"operating-system"} and $configuration{"operating-system"} ne "";
+$configuration{"architecture"} = "native" unless defined $configuration{"architecture"} and $configuration{"architecture"} ne "";
 $configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
+
+# backwards compatibility
+$configuration{"operating-system"} = "native" if $configuration{"operating-system"} eq "auto";
+$configuration{"architecture"} = "native" if $configuration{"architecture"} eq "auto";
 
 # check target
 my $operating_system = $configuration{"operating-system"};
 my $operating_system_native = join "", map { chomp; lc $_ } `uname -s`;
-$operating_system = $operating_system_native if $operating_system eq "auto";
+$operating_system = $operating_system_native if $operating_system eq "native";
 my $architecture = $configuration{"architecture"};
-my $architecture_native = join "", map { chomp; $_ } `uname -m`;
-$architecture = $architecture_native if $architecture eq "auto";
+my $architecture_native = join "", map { chomp; lc $_ } `uname -m`;
+$architecture = $architecture_native if $architecture eq "native";
 my $target = sprintf "%s_%s_%s", $operating_system, $architecture, lc $configuration{"mode"};
 if (defined $configuration{"mode"})
 {
