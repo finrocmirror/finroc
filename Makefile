@@ -23,13 +23,28 @@
 MAKEFILE=Makefile.generated
 DIRECT_BUILD_PREFIX=build-
 
+FINROC_ENVIRONMENT=$(FINROC_OPERATING_SYSTEM)_$(FINROC_ARCHITECTURE)
+FINROC_ENVIRONMENT_NATIVE=$(FINROC_OPERATING_SYSTEM_NATIVE)_$(FINROC_ARCHITECTURE_NATIVE)
+FINROC_CROSS_ROOT?=/undefined_system_root
+
 all: makefile build
 
-libdb:
-	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; updatelibdb'
+libdb: 
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; make_builder/scripts/updatelibdb $(FINROC_ENVIRONMENT_NATIVE)'
+ifneq ($(FINROC_ENVIRONMENT),$(FINROC_ENVIRONMENT_NATIVE))
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; SYSTEM_ROOT=$$FINROC_CROSS_ROOT make_builder/scripts/updatelibdb $(FINROC_ENVIRONMENT)'
+endif
 
-makefile:
-	$(MAKE) -C make_builder
+make_builder/etc/libdb.$(FINROC_ENVIRONMENT_NATIVE): make_builder/etc/libdb.raw 
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; make_builder/scripts/updatelibdb $(FINROC_ENVIRONMENT_NATIVE)'
+
+ifneq ($(FINROC_ENVIRONMENT),$(FINROC_ENVIRONMENT_NATIVE))
+make_builder/etc/libdb.$(FINROC_ENVIRONMENT): make_builder/etc/libdb.raw
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; SYSTEM_ROOT=$$FINROC_CROSS_ROOT make_builder/scripts/updatelibdb $(FINROC_ENVIRONMENT)'
+endif
+
+makefile: make_builder/etc/libdb.$(FINROC_ENVIRONMENT_NATIVE) make_builder/etc/libdb.$(FINROC_ENVIRONMENT)
+	$(MAKE) -C make_builder dist/build.jar
 	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET $$FINROC_MAKE_BUILDER_FLAGS --makefile=$(MAKEFILE)'
 
 build: $(MAKEFILE)
@@ -37,8 +52,8 @@ build: $(MAKEFILE)
 	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) $(WHAT)'
 	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; $(MAKE) --no-print-directory -f $(MAKEFILE) post-build-hook'
 
-dependency_graph:
-	$(MAKE) -C make_builder
+dependency_graph: make_builder/etc/libdb.$(FINROC_ENVIRONMENT_NATIVE) make_builder/etc/libdb.$(FINROC_ENVIRONMENT)
+	$(MAKE) -C make_builder dist/build.jar
 	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; java -jar make_builder/dist/build.jar makebuilder.ext.finroc.FinrocBuilder --build=$$FINROC_TARGET $$FINROC_MAKE_BUILDER_FLAGS --dotfile'
 
 $(MAKEFILE):
