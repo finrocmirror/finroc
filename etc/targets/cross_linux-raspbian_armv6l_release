@@ -1,0 +1,8 @@
+PKG_CONFIG_EXTRA_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
+CFLAGS=-O3 -D NDEBUG -D RRLIB_LOGGING_LESS_OUTPUT -ftrack-macro-expansion=0
+LDFLAGS=-lrt
+CXXFLAGS=$(CFLAGS) -std=c++11
+
+CC=arm-linux-gnueabihf-gcc --sysroot=$(FINROC_CROSS_ROOT)
+CXX=arm-linux-gnueabihf-g++ --sysroot=$(FINROC_CROSS_ROOT)
+LD=arm-linux-gnueabihf-ld --sysroot=$(FINROC_CROSS_ROOT)
