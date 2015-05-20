@@ -36,8 +36,8 @@ use lib "scripts/perl";
 use FINROC::messages;
 use FINROC::getopt;
 
-# config file
 my $config_filename = ".finroc.conf";
+my @lc_options = ("language", "operating-system", "architecture", "mode");
 
 
 
@@ -87,18 +87,18 @@ DEBUGMSG sprintf "configuration from file:\n%s\n", Dumper \%configuration;
 # overwrite settings using command line options
 foreach my $option (GetCommandLineOptions)
 {
-    $configuration{$option} = lc GetCommandLineOption $option;
+    $configuration{$option} = GetCommandLineOption $option;
 }
+map { $configuration{$_} = lc $configuration{$_} } grep { defined $configuration{$_} } @lc_options;
+
 # cleanup old config values
 delete $configuration{"target"};
 
 # default values if not set
-$configuration{"project"} = undef unless defined $configuration{"project"} and $configuration{"project"} ne "";
-$configuration{"restrict-components"} = undef unless defined $configuration{"restrict-components"} and $configuration{"restrict-components"} ne "";
-$configuration{"language"} = undef unless defined $configuration{"language"} and $configuration{"language"} ne "";
-$configuration{"operating-system"} = "native" unless defined $configuration{"operating-system"} and $configuration{"operating-system"} ne "";
-$configuration{"architecture"} = "native" unless defined $configuration{"architecture"} and $configuration{"architecture"} ne "";
-$configuration{"cross-root"} = undef unless defined $configuration{"cross-root"} and $configuration{"cross-root"} ne "";
+my @undef = ("project", "restrict-components", "language", "cross-root");
+my @native = ("operating-system", "architecture");
+map { $configuration{$_} = undef } grep { !(defined $configuration{$_} and $configuration{$_} ne "") } @undef;
+map { $configuration{$_} = "native" } grep { !(defined $configuration{$_} and $configuration{$_} ne "") } @native;
 $configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
 
 # backwards compatibility
