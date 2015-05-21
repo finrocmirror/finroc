@@ -62,6 +62,13 @@ ParseCommandLine [ "project=s", "restrict-components:s", "language:s", "operatin
     {
         ERRORMSG "Possible values for --restrict-components: yes|no\n" unless GetCommandLineOption("restrict-components") =~ /yes|no/;
     }
+    foreach my $option ("operating-system", "mode")
+    {
+        if (defined GetCommandLineOption $option and GetCommandLineOption $option ne "")
+        {
+            ERRORMSG "Charater '_' not allowed in values for --$option!\n" if GetCommandLineOption($option) =~ /_/;
+        }
+    }
 };
 
 
@@ -102,12 +109,14 @@ map { $configuration{$_} = "native" } grep { !(defined $configuration{$_} and $c
 $configuration{"mode"} = "debug" unless defined $configuration{"mode"} and $configuration{"mode"} ne "";
 
 # backwards compatibility
+$configuration{"operating-system"} =~ s/_/-/g;
 $configuration{"operating-system"} = "native" if $configuration{"operating-system"} eq "auto";
 $configuration{"architecture"} = "native" if $configuration{"architecture"} eq "auto";
+$configuration{"mode"} =~ s/_/-/g;
 
 # check target
 my $operating_system = $configuration{"operating-system"};
-my $operating_system_native = join "", map { chomp; lc $_ } `uname -s`;
+my $operating_system_native = join "", map { chomp; s/_/-/g; lc $_ } `uname -s`;
 $operating_system = $operating_system_native if $operating_system eq "native";
 my $architecture = $configuration{"architecture"};
 my $architecture_native = join "", map { chomp; lc $_ } `uname -m`;
