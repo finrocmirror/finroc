@@ -33,12 +33,85 @@ _options()
     local current="${COMP_WORDS[COMP_CWORD]}"
 
     if [[ ${current} == -* ]] ; then
-        local options=$(${COMP_WORDS[0]} -h 2>&1 | grep '  -' | sed -r -e 's%^\s+(-.).+(--.*)%\1 \2 %' -e 's%=% %' | cut -d ' ' -f "1 2")
+        local options=$(${1:-${COMP_WORDS[0]}} -h 2>&1 | grep '  -' | sed -r -e 's%^\s+(-.).+(--.*)%\1 \2 %' -e 's%=% %' | cut -d ' ' -f "1 2")
         COMPREPLY=( $(compgen -W "${options}" -- ${current}) )
         return 0
     fi
     return 1
 }
+
+
+
+_finroc_configure()
+{
+    if [[ ${COMP_WORDS[1]} != scripts/setenv ]] ; then
+        compopt -o default
+        return 0
+    fi
+
+    _options scripts/tools/configure && return 0
+
+    local current="${COMP_WORDS[COMP_CWORD]}"
+    local previous="${COMP_WORDS[COMP_CWORD - 1]}"
+
+    if [[ ${previous} == -@(p|-project) ]] ; then
+        local config_file=.finroc.conf
+        local languages=$(ls sources 2> /dev/null)
+        grep -q language ${config_file} && languages=$(grep language ${config_file} | cut -d\  -f3)
+        for i in `seq 0 ${COMP_CWORD}` ; do
+            if [[ ${COMP_WORDS[$i]} == -@(l|-language) ]] ; then
+                if [[ ${COMP_WORDS[$i + 1]} == -* ]] ; then
+                    languages=$(ls sources 2> /dev/null)
+                else
+                    languages=${COMP_WORDS[$i + 1]}
+                fi
+                break
+            fi
+        done
+
+        local projects
+        for language in ${languages} ; do
+            if [[ ${language} == java ]] ; then
+                projects="${projects} $(ls sources/${language}/org/finroc/projects 2> /dev/null)"
+                continue
+            fi
+            projects="${projects} $(ls sources/${language}/projects 2> /dev/null)"
+        done
+        COMPREPLY=( $(compgen -W "${projects}" -- ${current}) )
+        return 0
+    fi
+
+    if [[ ${previous} == -@(r|-restrict-components) ]] ; then
+        COMPREPLY=( $(compgen -W "yes no" -- ${current}) )
+        return 0
+    fi
+
+    if [[ ${previous} == -@(l|-language) ]] ; then
+        COMPREPLY=( $(compgen -W "$(ls sources 2> /dev/null)" -- ${current}) )
+        return 0
+    fi
+
+    if [[ ${previous} == -@(o|-operating-system) ]] ; then
+        COMPREPLY=( $(compgen -W "native $(ls etc/targets | sed -e 's/^\(cross_\)\?\([^_]\+\).*/\2/')" -- ${current}) )
+        return 0
+    fi
+
+    if [[ ${previous} == -@(a|-architecture) ]] ; then
+        COMPREPLY=( $(compgen -W "native $(ls etc/targets | sed -e 's/^\(cross_\)\?\([^_]\+\)_\(.*\)_[^_]\+$/\3/')" -- ${current}) )
+        return 0
+    fi
+
+    if [[ ${previous} == -@(c|-cross-root) ]] ; then
+        compopt -o dirnames
+        return 0
+    fi
+
+    if [[ ${previous} == -@(m|-mode) ]] ; then
+        COMPREPLY=( $(compgen -W "$(ls etc/targets | sed -e 's/.*_\([^_]\+\)$/\1/')" -- ${current}) )
+        return 0
+    fi
+}
+complete -F _finroc_configure source .
 
 
 
