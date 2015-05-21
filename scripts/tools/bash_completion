@@ -89,15 +89,14 @@ _finroc_sync()
     local current="${COMP_WORDS[COMP_CWORD]}"
     local previous="${COMP_WORDS[COMP_CWORD - 1]}"
 
-    if [[ ${previous} == -c ]] ; then
+    if [[ ${previous} == -@(c|-config) ]] ; then
         compopt -o plusdirs
         COMPREPLY=( $(compgen -f -X '!*.xml' -- ${current}) )
         return 0
     fi
 
     for i in `seq 0 ${COMP_CWORD}` ; do
-        [[ ${COMP_WORDS[$i]} == -l ]] && return 0
-        [[ ${COMP_WORDS[$i]} == --list ]] && return 0
+        [[ ${COMP_WORDS[$i]} == -@(l|-list) ]] && return 0
     done
     local current_command=$(for i in `seq 0 ${COMP_CWORD}` ; do echo -n "${COMP_WORDS[$i]} " ; done)
     local targets=$(${current_command} -l 2> /dev/null | cut -d ' ' -f 1);
