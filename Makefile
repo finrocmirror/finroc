@@ -26,7 +26,7 @@ DIRECT_BUILD_PREFIX=build-
 all: makefile build
 
 libdb:
-	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; make_builder/scripts/updatelibdb $$FINROC_TARGET'
+	@bash -c '[ -z "$$FINROC_HOME" ] && source scripts/setenv ; SYSTEM_ROOT=$$FINROC_CROSS_ROOT make_builder/scripts/updatelibdb $$FINROC_TARGET'
 
 makefile:
 	$(MAKE) -C make_builder dist/build.jar
