@@ -26,24 +26,30 @@
 #
 # \date    2013-10-21
 #
-# This hook checks if a named branch will be created.
+# This hook checks if a newly created named branch is valid.
 #----------------------------------------------------------------------
+
+use strict;
 
 use Env 'HG_NODE';
 use Env 'HG_PARENT1';
-use Env 'HG_PARENT2';
 
 my $branch = `hg log --template {branch} -r $HG_NODE`;
-my @branches;
-push @branches, `hg log --template {branch} -r $HG_PARENT1` if $HG_PARENT1;
-push @branches, `hg log --template {branch} -r $HG_PARENT2` if $HG_PARENT2;
+my $parent_branch = `hg log --template {branch} -r $HG_PARENT1`;
 
-exit 0 if grep { $branch eq $_ } @branches;
+exit 0 if $branch =~ /^\Q$parent_branch\E(\/.+)?$/;
+
+my $suggest = sprintf "%s/%s", $parent_branch, shift @{[ reverse split "/", $branch ]};
 
 print STDERR "\n";
-print STDERR "Creating a new named branch is not allowed as these are reserved for\n";
-print STDERR "official releases. Please consider bookmarks or personal clones for\n";
-print STDERR "temporary development branches.\n";
+print STDERR "Can not create named branch \"$branch\"\n";
+print STDERR "\n";
+print STDERR "Creating new named branches is only allowed when preserving the current\n";
+print STDERR "namespace. For example \"$suggest\".\n";
+print STDERR "Also note that named branches are permanent and mark diverging development\n";
+print STDERR "paths. They are therefore one-way-roads according to Finroc's merge policy.\n";
+print STDERR "Please consider bookmarks or personal clones for temporary development\n";
+print STDERR "branches.\n";
 print STDERR "\n";
 
 exit 1;
