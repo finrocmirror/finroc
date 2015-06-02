@@ -29,6 +29,8 @@
 # This hook ensures full author information in every changeset.
 #----------------------------------------------------------------------
 
+use strict;
+
 use Env 'HG_NODE';
 
 my $author = sprintf "%s", map { chomp; $_ } `hg log -r $HG_NODE --template '{author}'`;
