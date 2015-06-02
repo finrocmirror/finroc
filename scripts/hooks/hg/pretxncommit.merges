@@ -29,29 +29,29 @@
 # This hook denies back-merges from newer into older branches.
 #----------------------------------------------------------------------
 
+use strict;
+
 use Env 'HG_NODE';
 use Env 'HG_PARENT1';
 use Env 'HG_PARENT2';
 
-my $branch = `hg log --template {branch} -r $HG_NODE`;
-my @branches;
-push @branches, `hg log --template {branch} -r $HG_PARENT1` if $HG_PARENT1;
-push @branches, `hg log --template {branch} -r $HG_PARENT2` if $HG_PARENT2;
+exit 0 unless $HG_PARENT2; # not a merge node
 
-exit 0 if scalar @branches == 1;
+my $parent_branch = `hg log --template {branch} -r $HG_PARENT1`;
+my $other_branch = `hg log --template {branch} -r $HG_PARENT2`;
+exit 0 if $parent_branch =~ /^\Q$other_branch\E(\/.+)?$/;
 
-exit 0 if $branch eq "default";
+my ($parent_global, $parent_local) = $parent_branch =~ /^([^\/]+)(.+)?/;
+my ($other_global, $other_local) = $other_branch =~ /^([^\/]+)(.+)?/;
 
-foreach my $parent (@branches)
+if ($parent_global eq "default" || ($other_global ne "default" && $parent_global > $other_global))
 {
-    next if $parent eq $branch;
-    if ($parent eq "default" || $parent > $branch)
-    {
-        print STDERR "\n";
-        print STDERR "Illegal back-merge from $parent into $branch.\n";
-        print STDERR "\n";
-        exit 1;
-    }
+    exit 0 unless $parent_local || $other_local;
+    exit 0 if $parent_local && $other_local && $parent_local eq $other_local;
 }
 
-exit 0;
+print STDERR "\n";
+print STDERR "Illegal back-merge from $other_branch into $parent_branch.\n";
+print STDERR "\n";
+
+exit 1;
