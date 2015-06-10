@@ -39,7 +39,7 @@ END
     local $?;
     my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
     chdir $FINROC_HOME;
-    system "scripts/tools/update_hg_hooks";
+    system "scripts/tools/update_hgrcs";
     chdir $working_directory;
 }
 
