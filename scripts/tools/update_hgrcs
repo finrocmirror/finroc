@@ -20,7 +20,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #----------------------------------------------------------------------
-# \file    finroc_update_hg_hooks
+# \file    finroc_update_hgrcs
 #
 # \author  Tobias Foehst
 #
@@ -36,6 +36,7 @@ use Data::Dumper;
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
 use FINROC::getopt;
+use FINROC::components;
 
 
 ############################
@@ -65,15 +66,28 @@ foreach my $hg_directory (@hg_directories)
     my $hgrc = "$hg_directory/hgrc";
 
     my $content = "";
+    my %paths;
     my %hooks;
     open HGRC, "<$hgrc" and eval {
+        my $in_section_paths = 0;
         my $in_section_hooks = 0;
         while (<HGRC>)
         {
-            $in_section_hooks = 0 if /^\s*\[(.+)\]/;
-            $in_section_hooks = 1 if /^\s*\[hooks\]/;
+            if (/^\s*\[(.+)\]/)
+            {
+                $in_section_paths = $1 eq "paths";
+                $in_section_hooks = $1 eq "hooks";
+            }
             chomp;
-            if ($in_section_hooks)
+            if ($in_section_paths)
+            {
+                if (/=/)
+                {
+                    my ($name, $value) = map { s/^\s*//; s/\s*$//; $_ } split "=";
+                    $paths{$name} = $value;
+                }
+            }
+            elsif ($in_section_hooks)
             {
                 if (/=/)
                 {
@@ -90,6 +104,9 @@ foreach my $hg_directory (@hg_directories)
         1;
     };
 
+    my $working_copy = substr $hgrc, 0, -9;
+    my $component = $working_copy eq $FINROC_HOME ? "finroc" : GetComponentNameFromDirectory $working_copy;
+    $paths{"finroc.org"} = sprintf "https://finroc.org/hg/%s", $component;
     $hooks{"precommit.finroc_code_formatter"} = sprintf "\"%s/scripts/hooks/hg/precommit.finroc_code_formatter\" %s", $FINROC_HOME, $FINROC_HOME;
     $hooks{"pretxncommit.license"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.license\"", $FINROC_HOME;
     $hooks{"pretxncommit.branches"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.branches\"", $FINROC_HOME;
@@ -101,12 +118,17 @@ foreach my $hg_directory (@hg_directories)
 
     open HGRC, ">$hgrc" or ERRORMSG "Could not open '$hgrc' for writing!";
     DEBUGMSG "Writing $hgrc ... ";
-    printf HGRC "$content";
+    printf HGRC "[paths]\n";
+    foreach my $name (keys %paths)
+    {
+        printf HGRC sprintf "%s = %s\n", $name, $paths{$name};
+    }
     printf HGRC "[hooks]\n";
     foreach my $name (keys %hooks)
     {
         printf HGRC sprintf "%s = %s\n", $name, $hooks{$name};
     }
+    printf HGRC "$content";
     DEBUGMSG "Done.\n";
     close HGRC;
 }
