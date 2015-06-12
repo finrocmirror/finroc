@@ -39,7 +39,7 @@ END
     local $?;
     my $working_directory = sprintf "%s", map { chomp; $_ } `pwd`;
     chdir $FINROC_HOME;
-    system "scripts/tools/update_hg_hooks";
+    system "scripts/tools/update_hgrcs";
     chdir $working_directory;
 }
 
@@ -123,16 +123,26 @@ sub Update($$$)
     my @heads = GetHeads($directory);
     my $not_on_head_before_pull = $parent && @heads && ! grep { int($parent) == $_ } @heads;
 
+    $command = sprintf "hg --cwd \"%s\" st", $directory;
+    DEBUGMSG sprintf "Executing '%s'\n", $command;
+    my $output = join "", `$command`;
+    DEBUGMSG $output;
+    ERRORMSG "Command failed!\n" if $?;
+
+    my $uncommitted_changes = $output ne "";
+
     $command = sprintf "hg %s --cwd \"%s\" pull -q", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     system $command;
     if ($?)
     {
         WARNMSG "Command failed!\n";
+        return "Uncommitted changes" if $uncommitted_changes;
         return "Not on head" if $not_on_head_before_pull;
         return "Up to date";
     }
 
+    return "Uncommitted changes" if $uncommitted_changes;
     return "Not on head" if $not_on_head_before_pull;
 
     @heads = GetHeads($directory);
@@ -145,9 +155,9 @@ sub Update($$$)
 
     return "Up to date" if $parent && int($parent) == $heads[0];
 
-    $command = sprintf "hg --cwd \"%s\" update -c -q", $directory;
+    $command = sprintf "hg --cwd \"%s\" update -q", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $output = join "", `$command 2> /dev/null`;
+    $output = join "", `$command 2> /dev/null`;
     DEBUGMSG $output;
     return "Uncommitted changes" if $?;
 
