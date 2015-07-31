@@ -117,8 +117,12 @@ sub Update($$$)
 
     my $command = sprintf "hg --cwd \"%s\" parent --template '{rev}\\n'", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $parent = `$command`;
+    my @parents = map { chomp; int($_) } `$command`;
     ERRORMSG "Command failed!\n" if $?;
+    return "Uncommitted changes" if scalar @parents > 1;
+    push @parents, -1;
+    my $parent = $parents[0];
+    DEBUGMSG sprintf "%d\n", $parent;
 
     my @heads = GetHeads($directory);
     my $not_on_head_before_pull = $parent && @heads && ! grep { int($parent) == $_ } @heads;
@@ -153,7 +157,7 @@ sub Update($$$)
         return "Multiple heads";
     }
 
-    return "Up to date" if $parent && int($parent) == $heads[0];
+    return "Up to date" if int($parent) == $heads[0];
 
     $command = sprintf "hg --cwd \"%s\" update -q", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
