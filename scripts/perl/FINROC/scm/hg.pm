@@ -98,7 +98,7 @@ sub GetHeads($)
 {
     my ($directory) = @_;
 
-    my $command = sprintf "hg --cwd \"%s\" heads \$(hg --cwd \"%s\" branch) --template '{rev}\\n'", $directory, $directory;
+    my $command = sprintf "hg --cwd \"%s\" heads -t \$(hg --cwd \"%s\" branch) --template '{rev}\\n'", $directory, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my @heads = map { chomp; int($_) } `$command 2> /dev/null`;
     DEBUGMSG sprintf "%s\n", join "\n", @heads;
@@ -129,7 +129,7 @@ sub Update($$$)
 
     $command = sprintf "hg --cwd \"%s\" st", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
-    my $output = join "", `$command`;
+    my $output = join "", grep { /^[^?] / } `$command`;
     DEBUGMSG $output;
     ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
