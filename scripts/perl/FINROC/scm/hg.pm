@@ -119,13 +119,13 @@ sub Update($$$)
     DEBUGMSG sprintf "Executing '%s'\n", $command;
     my @parents = map { chomp; int($_) } `$command`;
     ERRORMSG sprintf "Command failed: %s\n", $command if $?;
-    return "Uncommitted changes" if scalar @parents > 1;
+    my $uncommitted_changes = scalar @parents > 1;
     push @parents, -1;
     my $parent = $parents[0];
     DEBUGMSG sprintf "%d\n", $parent;
 
     my @heads = GetHeads($directory);
-    my $not_on_head_before_pull = $parent && @heads && ! grep { int($parent) == $_ } @heads;
+    my $not_on_head_before_pull = @heads && ! grep { $parent == $_ } @heads;
 
     $command = sprintf "hg --cwd \"%s\" st", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
@@ -133,7 +133,7 @@ sub Update($$$)
     DEBUGMSG $output;
     ERRORMSG sprintf "Command failed: %s\n", $command if $?;
 
-    my $uncommitted_changes = $output ne "";
+    $uncommitted_changes |= $output ne "";
 
     $command = sprintf "hg %s --cwd \"%s\" pull -q", $credentials, $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
@@ -146,8 +146,11 @@ sub Update($$$)
         return "Up to date";
     }
 
-    return "Uncommitted changes" if $uncommitted_changes;
-    return "Not on head" if $not_on_head_before_pull;
+    if ($not_on_head_before_pull)
+    {
+	return "Uncommitted changes" if $uncommitted_changes;
+	return "Not on head";
+    }
 
     @heads = GetHeads($directory);
     return "Up to date" unless @heads;
@@ -157,7 +160,8 @@ sub Update($$$)
         return "Multiple heads";
     }
 
-    return "Up to date" if int($parent) == $heads[0];
+    return "Up to date" if $parent == $heads[0];
+    return "Uncommitted changes" if $uncommitted_changes;
 
     $command = sprintf "hg --cwd \"%s\" update -q", $directory;
     DEBUGMSG sprintf "Executing '%s'\n", $command;
