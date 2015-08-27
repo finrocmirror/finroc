@@ -102,7 +102,7 @@ foreach my $target (@targets)
 }
 
 my $global_hostname = ${$$sync_config{'hostname'}}{'content'};
-my $global_port = ${$$sync_config{'username'}}{'port'};
+my $global_port = ${$$sync_config{'port'}}{'content'};
 my $global_username = ${$$sync_config{'username'}}{'content'};
 
 DEBUGMSG sprintf "Global hostname set to '%s'.\n", $global_hostname if defined $global_hostname;
@@ -135,9 +135,10 @@ sub Transfer($$$$$$)
 
     my $rsync_options = "-avP";
     $rsync_options .= "n" if defined GetCommandLineOption "simulate";
+    $rsync_options .= sprintf " --rsync-path=\"mkdir -p '%s' && rsync\"", $directory unless defined GetCommandLineOption "simulate";
     $rsync_options .= sprintf " --rsh='ssh -p %d'", $port if defined $port;
 
-    my $command = sprintf "rsync %s --exclude=.svn --rsync-path='mkdir -p %s && rsync' %s %s%s%s", $rsync_options, $directory, $files, $username, $hostname, $directory;
+    my $command = sprintf "rsync %s --exclude=.svn --exclude=.hg %s %s%s\"'%s'\"", $rsync_options, $files, $username, $hostname, $directory;
     DEBUGMSG sprintf "command = '%s'\n", $command;
     system $command;
     ERRORMSG "Sync failed!\n" if $?;
