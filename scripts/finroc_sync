@@ -32,9 +32,11 @@ use strict;
 
 use Env '$FINROC_HOME';
 use Env '$FINROC_PROJECT_HOME';
+use Env '$FINROC_TARGET';
 use Data::Dumper;
 use XML::Simple;
 use Net::Ping;
+use Cwd;
 
 use lib "$FINROC_HOME/scripts/perl";
 use FINROC::messages;
@@ -76,11 +78,12 @@ DEBUGMSG sprintf "Looking for config file '%s'.\n", GetCommandLineOption "config
 
 ERRORMSG sprintf "Configuration file '%s' not found!\n", GetCommandLineOption "config" unless -f GetCommandLineOption "config";
 
-my $sync_config = XMLin(GetCommandLineOption "config",
-                        ForceContent => 1,
-                        KeyAttr => [],
-                        ForceArray => [ "programs", "config", "misc", "target" ],
-                        NormalizeSpace => 2);
+my $sync_config = eval { XMLin(GetCommandLineOption "config",
+                               ForceContent => 1,
+                               KeyAttr => [],
+                               ForceArray => [ "programs", "finrocs", "config", "misc", "target" ],
+                               NormalizeSpace => 2) };
+ERRORMSG sprintf "Malformed xml file '%s'.\n", GetCommandLineOption "config" if $@;
 
 DEBUGMSG sprintf "sync_config:\n%s\n", Dumper \$sync_config;
 DEBUGMSG sprintf "targets:\n%s\n", Dumper \@targets;
@@ -109,23 +112,34 @@ DEBUGMSG sprintf "Global hostname set to '%s'.\n", $global_hostname if defined $
 DEBUGMSG sprintf "Global port set to '%s'.\n", $global_port if defined $global_port;
 DEBUGMSG sprintf "Global username set to '%s'.\n", $global_username if defined $global_username;
 
+my $global_prefix = ${$$sync_config{'directories'}}{'prefix'}{'content'};
 my $global_bin = ${$$sync_config{'directories'}}{'bin'}{'content'};
 my $global_lib = ${$$sync_config{'directories'}}{'lib'}{'content'};
 my $global_etc = ${$$sync_config{'directories'}}{'etc'}{'content'};
+my $global_finroc = ${$$sync_config{'directories'}}{'finroc'}{'content'};
 
-DEBUGMSG sprintf "Global bin target directory set to '%s'.\n", $global_bin if defined $global_bin;
-DEBUGMSG sprintf "Global lib target directory set to '%s'.\n", $global_lib if defined $global_lib;
-DEBUGMSG sprintf "Global etc target directory set to '%s'.\n", $global_etc if defined $global_etc;
-
+if (defined $global_prefix)
+{
+    DEBUGMSG sprintf "Global target directory prefix set to '%s'.\n", $global_prefix;
+    DEBUGMSG sprintf "Global bin target directory set to '%s/%s'.\n", $global_prefix, $global_bin if defined $global_bin;
+    DEBUGMSG sprintf "Global lib target directory set to '%s/%s'.\n", $global_prefix, $global_lib if defined $global_lib;
+    DEBUGMSG sprintf "Global etc target directory set to '%s/%s'.\n", $global_prefix, $global_etc if defined $global_etc;
+}
+else
+{
+    DEBUGMSG sprintf "Global bin target directory set to '%s'.\n", $global_bin if defined $global_bin;
+    DEBUGMSG sprintf "Global lib target directory set to '%s'.\n", $global_lib if defined $global_lib;
+    DEBUGMSG sprintf "Global etc target directory set to '%s'.\n", $global_etc if defined $global_etc;
+}
 
 
 #####################################
 #  Transferfunction for file lists  #
 #####################################
 
-sub Transfer($$$$$$)
+sub Transfer($$$$$$$)
 {
-    my ($hostname, $port, $username, $directory, $sub_directory, $files) = @_;
+    my ($hostname, $port, $username, $directory, $sub_directory, $relative_path, $files) = @_;
 
     $directory = "" unless defined $directory;
     $directory .= "/" if $directory ne "";
@@ -137,8 +151,16 @@ sub Transfer($$$$$$)
     $rsync_options .= "n" if defined GetCommandLineOption "simulate";
     $rsync_options .= sprintf " --rsync-path=\"mkdir -p '%s' && rsync\"", $directory unless defined GetCommandLineOption "simulate";
     $rsync_options .= sprintf " --rsh='ssh -p %d'", $port if defined $port;
+    my $pre = "";
+    my $post = "";
+    if (defined $relative_path)
+    {
+        $pre = "cd $relative_path ; ";
+        $post = " ; cd - > /dev/null";
+        $rsync_options .= " -R";
+    }
 
-    my $command = sprintf "rsync %s --exclude=.svn --exclude=.hg %s %s%s\"'%s'\"", $rsync_options, $files, $username, $hostname, $directory;
+    my $command = sprintf "%s rsync %s --exclude=.svn --exclude=.hg %s %s%s\"'%s'\" %s", $pre, $rsync_options, $files, $username, $hostname, $directory, $post;
     DEBUGMSG sprintf "command = '%s'\n", $command;
     system $command;
     ERRORMSG "Sync failed!\n" if $?;
@@ -180,18 +202,33 @@ foreach my $target (@{$$sync_config{'target'}})
         next;
     }
 
+    my $prefix = $target{'directories'}{'prefix'}{'content'};
     my $bin = $target{'directories'}{'bin'}{'content'};
     my $lib = $target{'directories'}{'lib'}{'content'};
     my $etc = $target{'directories'}{'etc'}{'content'};
+    my $finroc = $target{'directories'}{'finroc'}{'content'};
+    $prefix = $global_prefix unless defined $prefix;
     $bin = $global_bin unless defined $bin;
     $lib = $global_lib unless defined $lib;
     $etc = $global_etc unless defined $etc;
+    $finroc = $global_finroc unless defined $finroc;
+    $prefix = "." unless defined $prefix;
+    $bin = "bin" unless defined $bin;
+    $lib = "lib" unless defined $lib;
+    $etc = "etc" unless defined $etc;
+    $finroc = "" unless defined $finroc;
+    $bin = sprintf "%s/%s", $prefix, $bin;
+    $lib = sprintf "%s/%s", $prefix, $lib;
+    $etc = sprintf "%s/%s", $prefix, $etc;
+    $finroc = sprintf "%s/%s", $prefix, $finroc;
 
     DEBUGMSG sprintf "bin target directory = '%s'.\n", $bin if defined $bin;
     DEBUGMSG sprintf "lib target directory = '%s'.\n", $lib if defined $lib;
     DEBUGMSG sprintf "etc target directory = '%s'.\n", $etc if defined $etc;
+    DEBUGMSG sprintf "finroc target directory = '%s'.\n", $finroc if defined $finroc;
 
-    my @libraries;
+    my %libraries;
+    $libraries{"$FINROC_HOME/export/$FINROC_TARGET/lib/libenum_strings.so"} = 1 if -f "$FINROC_HOME/export/$FINROC_TARGET/lib/libenum_strings.so";
     foreach my $transfer_block ((@{$target{'programs'}}, @{$$sync_config{'programs'}}))
     {
         my @binaries;
@@ -199,7 +236,6 @@ foreach my $target (@{$$sync_config{'target'}})
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
         foreach my $source (split " ", $$transfer_block{'content'})
         {
-#            my $binary = $source =~ /\// ? $source : sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
             my $binary = sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
             ERRORMSG sprintf "Can not find program '%s'!\n", $source if $binary eq "";
             push @binaries, $binary;
@@ -208,42 +244,180 @@ foreach my $target (@{$$sync_config{'target'}})
                 s/^\s*//;
                 ERRORMSG sprintf "Can not resolve all dependencies. Try a rebuild and check your environment.\n" if /=> not found/;
                 next unless /^lib(rrlib|finroc)/;
-                my $library = $1 if /=> (\S+)/;
-                push @libraries, $library if defined $library;
+                if (/=> (\S+)/)
+                {
+                    my $library = Cwd::abs_path $1;
+                    $libraries{$library} = 1 if "$FINROC_HOME/export/$FINROC_TARGET/lib" eq substr $library, 0, length "$FINROC_HOME/export/$FINROC_TARGET/lib";
+                }
             }
         }
 
-        Transfer $hostname, $port, $username, $bin, $$transfer_block{'subdir'}, join " ", @binaries if @binaries;
+        Transfer $hostname, $port, $username, $bin, $$transfer_block{'subdir'}, undef, join " ", @binaries if @binaries;
     }
 
-    my %seen;
-    Transfer $hostname, $port, $username, $lib, undef, join " ", grep { !$seen{$_}++ } @libraries if @libraries;
-
-    foreach my $transfer_block ((@{$target{'config'}}, @{$$sync_config{'config'}}))
+    my %finstructables;
+    foreach my $transfer_block ((@{$target{'finrocs'}}, @{$$sync_config{'finrocs'}}))
     {
         DEBUGMSG Dumper \$transfer_block;
 
         my $prefix = "";
         $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
-        $prefix = sprintf "$FINROC_PROJECT_HOME/etc/%s", $prefix unless $prefix =~ /^\//;
+        $prefix = sprintf "$FINROC_PROJECT_HOME/%s", $prefix unless `echo $prefix` =~ /^\//;
+
+        ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
+        my @finrocs = map { "$prefix$_" } split " ", $$transfer_block{'content'};
+
+        if (@finrocs)
+        {
+            Transfer $hostname, $port, $username, $finroc, $$transfer_block{'subdir'}, undef, join " ", @finrocs;
+            foreach (@finrocs)
+            {
+                my $xml = eval { XMLin($_,
+                                       KeepRoot => 1,
+                                       ForceArray => [ 'parameter', 'element' ],
+                                       ContentKey => '-content',
+                                       GroupTags => { parameters => 'parameter' },
+                                       NormalizeSpace => 2) };
+                ERRORMSG sprintf "Malformed xml file '%s'.\n", $_ if $@;
+
+                foreach (grep { $_ } split /,| /, $$xml{FinstructableGroup}{dependencies})
+                {
+                    my $library = sprintf "$FINROC_HOME/export/$FINROC_TARGET/lib/lib%s.so", $_;
+                    $libraries{$library} = 1 if -f $library;
+                }
+
+                foreach my $element (keys %{$$xml{FinstructableGroup}{element}})
+                {
+                    next unless defined $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
+                    my $file = join "", $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
+                    my @files = map { "$_/$file" } grep { -f "$_/$file" } ( $FINROC_PROJECT_HOME, "$FINROC_HOME/sources/cpp" );
+                    ERRORMSG sprintf "Can not not resolve dependency of '%s': %s\n", $_, $file unless @files;
+                    $finstructables{$files[0]} = 1;
+                }
+            }
+        }
+    }
+
+    if (%libraries || %finstructables)
+    {
+        my %seen_libraries;
+        my %seen_finstructables;
+        do
+        {
+            my $item_added = 0;
+            foreach (keys %libraries)
+            {
+                next if $seen_libraries{$_};
+
+                foreach (split "\n", `ldd "$_"`)
+                {
+                    s/^\s*//;
+                    ERRORMSG sprintf "Can not resolve all dependencies. Try a rebuild and check your environment.\n" if /=> not found/;
+                    next unless /^lib(rrlib|finroc)/;
+                    if (/=> (\S+)/)
+                    {
+                        my $library = Cwd::abs_path $1;
+                        if ("$FINROC_HOME/export/$FINROC_TARGET/lib" eq substr $library, 0, length "$FINROC_HOME/export/$FINROC_TARGET/lib" && !$libraries{$library})
+                        {
+                            $libraries{$library} = 1;
+                            $item_added = 1;
+                        }
+                    }
+                }
+
+                foreach my $file (split "\n", `strings $_ | fgrep .h.xml`)
+                {
+                    my @files = map { "$_/$file" } grep { -f "$_/$file" } ( $FINROC_PROJECT_HOME, $FINROC_HOME );
+                    if (@files && !$finstructables{$files[0]})
+                    {
+                        $finstructables{$files[0]} = 1;
+                        $item_added = 1;
+                    }
+                }
+
+                $seen_libraries{$_} = 1;
+            }
+
+            foreach (keys %finstructables)
+            {
+                next if $seen_finstructables{$_};
+
+                my $xml = eval { XMLin($_,
+                                       KeepRoot => 1,
+                                       ForceArray => [ 'parameter', 'element' ],
+                                       ContentKey => '-content',
+                                       GroupTags => { parameters => 'parameter' },
+                                       NormalizeSpace => 2) };
+                ERRORMSG sprintf "Malformed xml file '%s'.\n", $_ if $@;
+
+                foreach (grep { $_ } split /,| /, $$xml{FinstructableGroup}{dependencies})
+                {
+                    my $library = sprintf "$FINROC_HOME/export/$FINROC_TARGET/lib/lib%s.so", $_;
+                    if (-f $library && !$libraries{$library})
+                    {
+                        $libraries{$library} = 1;
+                        $item_added = 1;
+                    }
+                }
+
+                foreach my $element (keys %{$$xml{FinstructableGroup}{element}})
+                {
+                    next unless defined $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
+                    my $file = join "", $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
+                    my @files = map { "$_/$file" } grep { -f "$_/$file" } ( $FINROC_PROJECT_HOME, "$FINROC_HOME/sources/cpp" );
+                    ERRORMSG sprintf "Can not not resolve dependency of '%s': %s\n", $_, $file unless @files;
+                    if (!$finstructables{$files[0]})
+                    {
+                        $finstructables{$files[0]} = 1;
+                        $item_added = 1;
+                    }
+                }
+
+                $seen_finstructables{$_} = 1;
+            }
+
+            last unless $item_added;
+        };
+
+        Transfer $hostname, $port, $username, $lib, undef, undef, join " ", keys %libraries if %libraries;
+        Transfer $hostname, $port, $username, $prefix, undef, $FINROC_HOME, join " ", map { substr $_, 1 + length $FINROC_HOME } keys %finstructables if %finstructables;
+    }
+
+    foreach my $transfer_block ((@{$target{'config'}}, @{$$sync_config{'config'}}))
+    {
+        DEBUGMSG Dumper \$transfer_block;
+
+        my $relative_path = "";
+        if (defined $$transfer_block{'relative_to'})
+        {
+            WARNMSG "Found deprecated attribute 'relative_to'. Use 'relative_path' instead.\n";
+            $relative_path = sprintf "%s/", $$transfer_block{'relative_to'};
+        }
+        $relative_path = sprintf "%s/", $$transfer_block{'relative_path'} if defined $$transfer_block{'relative_path'};
+        $relative_path = sprintf "$FINROC_PROJECT_HOME/etc/%s", $relative_path unless `echo $relative_path` =~ /^\//;
 
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
         my @files = split " ", $$transfer_block{'content'};
 
-        Transfer $hostname, $port, $username, $etc, $$transfer_block{'subdir'}, join " ", map { "$prefix$_" } @files if @files;
+        Transfer $hostname, $port, $username, $etc, $$transfer_block{'subdir'}, $relative_path, join " ", @files if @files;
     }
 
     foreach my $transfer_block ((@{$target{'misc'}}, @{$$sync_config{'misc'}}))
     {
         DEBUGMSG Dumper \$transfer_block;
 
-        my $prefix = "";
-        $prefix = sprintf "%s/", $$transfer_block{'relative_to'} if defined $$transfer_block{'relative_to'};
+        my $relative_path = "";
+        if (defined $$transfer_block{'relative_to'})
+        {
+            WARNMSG "Found deprecated attribute 'relative_to'. Use 'relative_path' instead.\n";
+            $relative_path = sprintf "%s/", $$transfer_block{'relative_to'};
+        }
+        $relative_path = sprintf "%s/", $$transfer_block{'relative_path'} if defined $$transfer_block{'relative_path'};
 
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
         my @files = split " ", $$transfer_block{'content'};
 
-        Transfer $hostname, $port, $username, "", $$transfer_block{'subdir'}, join " ", map { "\"$prefix$_\"" } @files if @files;
+        Transfer $hostname, $port, $username, $prefix, $$transfer_block{'subdir'}, $relative_path, join " ", @files if @files;
     }
 
     INFOMSG "Done.\n";
