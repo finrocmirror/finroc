@@ -106,7 +106,8 @@ foreach my $hg_directory (@hg_directories)
 
     my $working_copy = substr $hgrc, 0, -9;
     my $component = $working_copy eq $FINROC_HOME ? "finroc" : GetComponentNameFromDirectory $working_copy;
-    $paths{"finroc.org"} = sprintf "https://finroc.org/hg/%s", $component;
+    $paths{"finroc.org"} = sprintf "https://finroc.org/hg/%s", $component if $component;
+    delete $paths{"finroc.org"} if $paths{"finroc.org"} && $paths{"finroc.org"} eq "https://finroc.org/hg/";
     $hooks{"precommit.finroc_code_formatter"} = sprintf "\"%s/scripts/hooks/hg/precommit.finroc_code_formatter\" %s", $FINROC_HOME, $FINROC_HOME;
     $hooks{"pretxncommit.license"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.license\"", $FINROC_HOME;
     $hooks{"pretxncommit.branches"} = sprintf "\"%s/scripts/hooks/hg/pretxncommit.branches\"", $FINROC_HOME;
@@ -118,12 +119,12 @@ foreach my $hg_directory (@hg_directories)
 
     open HGRC, ">$hgrc" or ERRORMSG "Could not open '$hgrc' for writing!";
     DEBUGMSG "Writing $hgrc ... ";
-    printf HGRC "[paths]\n";
+    printf HGRC "[paths]\n" if %paths;
     foreach my $name (keys %paths)
     {
         printf HGRC sprintf "%s = %s\n", $name, $paths{$name};
     }
-    printf HGRC "[hooks]\n";
+    printf HGRC "[hooks]\n" if %hooks;
     foreach my $name (keys %hooks)
     {
         printf HGRC sprintf "%s = %s\n", $name, $hooks{$name};
