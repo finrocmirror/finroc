@@ -148,8 +148,8 @@ sub Update($$$)
 
     if ($not_on_head_before_pull)
     {
-	return "Uncommitted changes" if $uncommitted_changes;
-	return "Not on head";
+        return "Uncommitted changes" if $uncommitted_changes;
+        return "Not on head";
     }
 
     @heads = GetHeads($directory);
