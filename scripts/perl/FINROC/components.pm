@@ -75,6 +75,7 @@ sub ComponentInfo($)
         $directory =~ s/^finroc_plugins_/org\/finroc\/plugins\//;
         $directory =~ s/^finroc_libraries_/org\/finroc\/libraries\//;
         $directory =~ s/^finroc_tools_gui_plugins_/org\/finroc\/tools\/gui\/plugins\//;
+        $directory =~ s/^finroc_tools_finstruct_plugins_/org\/finroc\/tools\/finstruct\/plugins\//;
         $directory =~ s/^finroc_tools_/org\/finroc\/tools\//;
         $directory =~ s/^finroc_projects_/org\/finroc\/projects\//;
         $directory =~ s/^finroc_/org\/finroc\//;
@@ -84,6 +85,7 @@ sub ComponentInfo($)
     $directory =~ s/^finroc_plugins_/plugins\//;
     $directory =~ s/^finroc_libraries_/libraries\//;
     $directory =~ s/^finroc_tools_gui_plugins_/tools\/gui\/plugins\//;
+    $directory =~ s/^finroc_tools_finstruct_plugins_/tools\/finstruct\/plugins\//;
     $directory =~ s/^finroc_tools_/tools\//;
     $directory =~ s/^finroc_projects_/projects\//;
     $directory =~ s/^finroc_//;
