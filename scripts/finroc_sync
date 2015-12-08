@@ -302,9 +302,11 @@ foreach my $target (@{$$sync_config{'target'}})
     {
         my %seen_libraries;
         my %seen_finstructables;
+        my $item_added;
+
         do
         {
-            my $item_added = 0;
+            $item_added = 0;
             foreach (keys %libraries)
             {
                 next if $seen_libraries{$_};
@@ -342,6 +344,7 @@ foreach my $target (@{$$sync_config{'target'}})
             {
                 next if $seen_finstructables{$_};
 
+                DEBUGMSG sprintf "Processing xml file '%s'.\n", $_;
                 my $xml = eval { XMLin($_,
                                        KeepRoot => 1,
                                        ForceArray => [ 'parameter', 'element' ],
@@ -349,6 +352,12 @@ foreach my $target (@{$$sync_config{'target'}})
                                        GroupTags => { parameters => 'parameter' },
                                        NormalizeSpace => 2) };
                 ERRORMSG sprintf "Malformed xml file '%s'.\n", $_ if $@;
+
+                unless (keys %{$$xml{Finstructable}})
+                {
+                    WARNMSG sprintf "Found empty xml file '%s'.\n", $_;
+                    next;
+                }
 
                 foreach (grep { $_ } split /,| /, $$xml{Finstructable}{dependencies})
                 {
@@ -375,9 +384,8 @@ foreach my $target (@{$$sync_config{'target'}})
 
                 $seen_finstructables{$_} = 1;
             }
-
-            last unless $item_added;
-        };
+        }
+        while ($item_added);
 
         Transfer $hostname, $port, $username, $lib, undef, undef, join " ", keys %libraries if %libraries;
         Transfer $hostname, $port, $username, $prefix, undef, $FINROC_HOME, join " ", map { substr $_, 1 + length $FINROC_HOME } keys %finstructables if %finstructables;
