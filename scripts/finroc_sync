@@ -280,16 +280,16 @@ foreach my $target (@{$$sync_config{'target'}})
                                        NormalizeSpace => 2) };
                 ERRORMSG sprintf "Malformed xml file '%s'.\n", $_ if $@;
 
-                foreach (grep { $_ } split /,| /, $$xml{FinstructableGroup}{dependencies})
+                foreach (grep { $_ } split /,| /, $$xml{Finstructable}{dependencies})
                 {
                     my $library = sprintf "$FINROC_HOME/export/$FINROC_TARGET/lib/lib%s.so", $_;
                     $libraries{$library} = 1 if -f $library;
                 }
 
-                foreach my $element (keys %{$$xml{FinstructableGroup}{element}})
+                foreach my $element (keys %{$$xml{Finstructable}{element}})
                 {
-                    next unless defined $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
-                    my $file = join "", $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
+                    next unless defined $$xml{Finstructable}{element}{$element}{parameters}{'XML file'};
+                    my $file = join "", $$xml{Finstructable}{element}{$element}{parameters}{'XML file'};
                     my @files = map { "$_/$file" } grep { -f "$_/$file" } ( $FINROC_PROJECT_HOME, "$FINROC_HOME/sources/cpp" );
                     ERRORMSG sprintf "Can not not resolve dependency of '%s': %s\n", $_, $file unless @files;
                     $finstructables{$files[0]} = 1;
@@ -350,7 +350,7 @@ foreach my $target (@{$$sync_config{'target'}})
                                        NormalizeSpace => 2) };
                 ERRORMSG sprintf "Malformed xml file '%s'.\n", $_ if $@;
 
-                foreach (grep { $_ } split /,| /, $$xml{FinstructableGroup}{dependencies})
+                foreach (grep { $_ } split /,| /, $$xml{Finstructable}{dependencies})
                 {
                     my $library = sprintf "$FINROC_HOME/export/$FINROC_TARGET/lib/lib%s.so", $_;
                     if (-f $library && !$libraries{$library})
@@ -360,10 +360,10 @@ foreach my $target (@{$$sync_config{'target'}})
                     }
                 }
 
-                foreach my $element (keys %{$$xml{FinstructableGroup}{element}})
+                foreach my $element (keys %{$$xml{Finstructable}{element}})
                 {
-                    next unless defined $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
-                    my $file = join "", $$xml{FinstructableGroup}{element}{$element}{parameters}{'XML file'};
+                    next unless defined $$xml{Finstructable}{element}{$element}{parameters}{'XML file'};
+                    my $file = join "", $$xml{Finstructable}{element}{$element}{parameters}{'XML file'};
                     my @files = map { "$_/$file" } grep { -f "$_/$file" } ( $FINROC_PROJECT_HOME, "$FINROC_HOME/sources/cpp" );
                     ERRORMSG sprintf "Can not not resolve dependency of '%s': %s\n", $_, $file unless @files;
                     if (!$finstructables{$files[0]})
