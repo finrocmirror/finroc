@@ -147,7 +147,7 @@ _finroc_make()
     for i in `seq 0 ${COMP_CWORD}` ; do
         if [[ ${COMP_WORDS[$i]} == -@(C|-directory) ]] ; then
             eval MAKE_DIRECTORY=${COMP_WORDS[$i + 1]}
-	    [[ "$(abs_path "${MAKE_DIRECTORY}/.")" == "${FINROC_HOME}" ]] || return 0
+            [[ "$(abs_path "${MAKE_DIRECTORY}/.")" == "${FINROC_HOME}" ]] || return 0
         fi
     done
 
@@ -156,8 +156,8 @@ _finroc_make()
     for i in `seq 0 ${COMP_CWORD}` ; do
         if [[ ${COMP_WORDS[$i]} == -@(f|-?(make)file) ]] ; then
             eval MAKEFILE=${COMP_WORDS[$i + 1]}
-	    MAKEFILE="$(abs_path $(dirname "${MAKEFILE}"))/$(basename ${MAKEFILE})"
-	    [[ "${MAKEFILE}" == "${FINROC_HOME}/Makefile" ]] || return 0
+            MAKEFILE="$(abs_path $(dirname "${MAKEFILE}"))/$(basename ${MAKEFILE})"
+            [[ "${MAKEFILE}" == "${FINROC_HOME}/Makefile" ]] || return 0
         fi
     done
 
