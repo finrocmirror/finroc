@@ -43,6 +43,9 @@ use FINROC::messages;
 use FINROC::getopt;
 
 
+ERRORMSG "FINROC_PROJECT_HOME not set!\n" unless $FINROC_PROJECT_HOME;
+ERRORMSG "FINROC_TARGET not set!\n" unless $FINROC_TARGET;
+
 
 ############################
 ##  Command line options  ##
@@ -58,11 +61,11 @@ SetHelp "[<targets>]",
 ParseCommandLine [ "simulate", "config=s", "list" ], undef;
 
 # default values if not set
-AssignCommandLineOptionDefaultValue "config", "$FINROC_PROJECT_HOME/etc/sync_config.xml" if defined $FINROC_PROJECT_HOME and not defined GetCommandLineOption "config";
+AssignCommandLineOptionDefaultValue "config", "$FINROC_PROJECT_HOME/etc/sync_config.xml" unless defined GetCommandLineOption "config";
 
 
 
-ERRORMSG sprintf "Configuration file not specified and \$FINROC_PROJECT_HOME not set!. Use %s --help for more information!\n", ScriptName unless defined GetCommandLineOption "config";
+ERRORMSG sprintf "Configuration file not specified! Use %s --help for more information!\n", ScriptName unless defined GetCommandLineOption "config";
 
 
 
@@ -88,22 +91,6 @@ ERRORMSG sprintf "Malformed xml file '%s'.\n", GetCommandLineOption "config" if 
 DEBUGMSG sprintf "sync_config:\n%s\n", Dumper \$sync_config;
 DEBUGMSG sprintf "targets:\n%s\n", Dumper \@targets;
 
-if (defined GetCommandLineOption "list")
-{
-    my $max_target_length = 0;
-    sub max($$) { my ($a, $b) = @_; return $a > $b ? $a : $b; }
-    map { $max_target_length = max $max_target_length, length $$_{'name'}; } @{$$sync_config{'target'}};
-    my $format_string = sprintf "%%-%ds   %%s\n", $max_target_length;
-
-    map { printf "$format_string", $$_{'name'}, $$_{'hostname'}{'content'} } @{$$sync_config{'target'}};
-    exit 0;
-}
-
-foreach my $target (@targets)
-{
-    ERRORMSG sprintf "Target '%s' not found!\n", $target unless grep { $$_{'name'} eq $target } @{$$sync_config{'target'}};
-}
-
 my $global_hostname = ${$$sync_config{'hostname'}}{'content'};
 my $global_port = ${$$sync_config{'port'}}{'content'};
 my $global_username = ${$$sync_config{'username'}}{'content'};
@@ -111,6 +98,29 @@ my $global_username = ${$$sync_config{'username'}}{'content'};
 DEBUGMSG sprintf "Global hostname set to '%s'.\n", $global_hostname if defined $global_hostname;
 DEBUGMSG sprintf "Global port set to '%s'.\n", $global_port if defined $global_port;
 DEBUGMSG sprintf "Global username set to '%s'.\n", $global_username if defined $global_username;
+
+if (defined GetCommandLineOption "list")
+{
+    my $max_target_length = 0;
+    sub max($$) { my ($a, $b) = @_; return $a > $b ? $a : $b; }
+    map { $max_target_length = max $max_target_length, length $$_{'name'}; } @{$$sync_config{'target'}};
+    my $format_string = sprintf "%%-%ds   -> %%s\n", $max_target_length;
+
+    sub TargetDestination($)
+    {
+        my ($target) = @_;
+        return $global_hostname unless defined $$target{'hostname'}{'content'};
+        return $$target{'hostname'}{'content'};
+    }
+
+    map { printf "$format_string", $$_{'name'}, TargetDestination $_ } @{$$sync_config{'target'}};
+    exit 0;
+}
+
+foreach my $target (@targets)
+{
+    ERRORMSG sprintf "Target '%s' not found!\n", $target unless grep { $$_{'name'} eq $target } @{$$sync_config{'target'}};
+}
 
 my $global_prefix = ${$$sync_config{'directories'}}{'prefix'}{'content'};
 my $global_bin = ${$$sync_config{'directories'}}{'bin'}{'content'};
@@ -145,7 +155,16 @@ sub Transfer($$$$$$$)
     $directory .= "/" if $directory ne "";
     $directory .= $sub_directory if defined $sub_directory;
     $username .= "@" if defined $username;
-    $hostname .= ":" if defined $hostname;
+    $hostname .= ":";
+
+    $username = "" unless $username;
+    $directory = "" unless $directory;
+
+    unless ($files)
+    {
+        WARNMSG "Transfer called without files to transfer.\n";
+        return;
+    }
 
     my $rsync_options = "-avP";
     $rsync_options .= "n" if defined GetCommandLineOption "simulate";
@@ -192,7 +211,8 @@ foreach my $target (@{$$sync_config{'target'}})
     $port = $global_port unless defined $port;
     $username = $global_username unless defined $username;
 
-    DEBUGMSG sprintf "hostname = '%s'.\n", $hostname if defined $hostname;
+    ERRORMSG "ERROR: hostname not defined.\n" unless $hostname;
+    DEBUGMSG sprintf "hostname = '%s'.\n", $hostname;
     DEBUGMSG sprintf "port = '%d'.\n", $port if defined $port;
     DEBUGMSG sprintf "username = '%s'.\n", $username if defined $username;
 
@@ -236,7 +256,8 @@ foreach my $target (@{$$sync_config{'target'}})
         ERRORMSG "Found empty transfer block!\n" unless defined $$transfer_block{'content'};
         foreach my $source (split " ", $$transfer_block{'content'})
         {
-            my $binary = sprintf "%s", map { chomp; $_ } `which $source 2> /dev/null`;
+            chomp (my $binary = `which $source 2> /dev/null`);
+	    DEBUGMSG sprintf "binary: %s\n", $binary;
             ERRORMSG sprintf "Can not find program '%s'!\n", $source if $binary eq "";
             push @binaries, $binary;
             foreach (split "\n", `ldd "$binary"`)
@@ -302,9 +323,11 @@ foreach my $target (@{$$sync_config{'target'}})
     {
         my %seen_libraries;
         my %seen_finstructables;
+        my $item_added;
+
         do
         {
-            my $item_added = 0;
+            $item_added = 0;
             foreach (keys %libraries)
             {
                 next if $seen_libraries{$_};
@@ -342,6 +365,7 @@ foreach my $target (@{$$sync_config{'target'}})
             {
                 next if $seen_finstructables{$_};
 
+                DEBUGMSG sprintf "Processing xml file '%s'.\n", $_;
                 my $xml = eval { XMLin($_,
                                        KeepRoot => 1,
                                        ForceArray => [ 'parameter', 'element' ],
@@ -349,6 +373,12 @@ foreach my $target (@{$$sync_config{'target'}})
                                        GroupTags => { parameters => 'parameter' },
                                        NormalizeSpace => 2) };
                 ERRORMSG sprintf "Malformed xml file '%s'.\n", $_ if $@;
+
+                unless (keys %{$$xml{Finstructable}})
+                {
+                    WARNMSG sprintf "Found empty xml file '%s'.\n", $_;
+                    next;
+                }
 
                 foreach (grep { $_ } split /,| /, $$xml{Finstructable}{dependencies})
                 {
@@ -375,9 +405,8 @@ foreach my $target (@{$$sync_config{'target'}})
 
                 $seen_finstructables{$_} = 1;
             }
-
-            last unless $item_added;
-        };
+        }
+        while ($item_added);
 
         Transfer $hostname, $port, $username, $lib, undef, undef, join " ", keys %libraries if %libraries;
         Transfer $hostname, $port, $username, $prefix, undef, $FINROC_HOME, join " ", map { substr $_, 1 + length $FINROC_HOME } keys %finstructables if %finstructables;
