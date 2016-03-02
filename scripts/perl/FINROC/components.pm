@@ -103,7 +103,7 @@ sub ReplaceSlashesByUnderscores($)
 sub GetComponentNameFromDirectory($)
 {
     my ($directory) = @_;
-    $directory =~ s/^$FINROC_HOME\/// if $directory =~ /^\//;
+    $directory =~ s/^\Q$FINROC_HOME\E\/// if $directory =~ /^\//;
 
     return "make_builder" if $directory eq "make_builder";
 
