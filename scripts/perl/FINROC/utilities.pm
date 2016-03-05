@@ -102,7 +102,7 @@ sub ForEachWithProgress($$$)
 sub EscapeFinrocHome($)
 {
     my ($name) = @_;
-    $name =~ s/$FINROC_HOME/\$FINROC_HOME/;
+    $name =~ s/\Q$FINROC_HOME\E/\$FINROC_HOME/;
     return $name;
 }
 
