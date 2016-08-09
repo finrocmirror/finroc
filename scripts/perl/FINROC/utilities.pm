@@ -93,7 +93,7 @@ sub ForEachWithProgress($$$)
     my $format_string = sprintf "%%%dd/%d", length "".scalar @$items, scalar @$items;
     foreach my $item (@$items)
     {
-        my $progress = sprintf $format_string, ++$i, scalar @$items;
+        my $progress = sprintf $format_string, ++$i;
         INFOMSG sprintf " [%s] %s\n", $progress, &$item_description($item);
         &$process_item($item);
     }
