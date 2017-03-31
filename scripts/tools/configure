@@ -164,7 +164,7 @@ close CONFIG;
 
 # additional configuration
 $configuration{"restrict-components"} = "no" unless defined $configuration{"restrict-components"};
-$configuration{"make_builder_flags"} = [ "--report-unmanaged-files" ];
+$configuration{"make_builder_flags"} = [ "--report-unmanaged-files", "--soversion=17.03" ];
 push @{$configuration{"make_builder_flags"}}, "--local-libs-only" if $configuration{"restrict-components"} eq "yes";
 $configuration{"architecture"} = $architecture;
 $configuration{"architecture-native"} = $architecture_native;
