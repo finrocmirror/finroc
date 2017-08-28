@@ -257,7 +257,7 @@ foreach my $target (@{$$sync_config{'target'}})
         foreach my $source (split " ", $$transfer_block{'content'})
         {
             chomp (my $binary = `which $source 2> /dev/null`);
-	    DEBUGMSG sprintf "binary: %s\n", $binary;
+            DEBUGMSG sprintf "binary: %s\n", $binary;
             ERRORMSG sprintf "Can not find program '%s'!\n", $source if $binary eq "";
             push @binaries, $binary;
             foreach (split "\n", `ldd "$binary"`)
